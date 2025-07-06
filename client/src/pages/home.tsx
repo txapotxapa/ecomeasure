@@ -1,238 +1,431 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { TreePine, Camera, BarChart3, MapPin, Leaf } from "lucide-react";
-import ImageUpload from "@/components/image-upload";
-import LocationDisplay from "@/components/location-display";
-import ProcessingModal from "@/components/processing-modal";
-import ToolSelector, { ToolType } from "@/components/tool-selector";
-import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
-import DaubenmireTool from "@/components/daubenmire-tool";
-import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { Switch } from "@/components/ui/switch";
+import { 
+  TreePine, 
+  Camera, 
+  BarChart3, 
+  MapPin, 
+  Leaf, 
+  History, 
+  Settings, 
+  TrendingUp,
+  Sun,
+  Moon,
+  Bell,
+  FileSpreadsheet,
+  Eye,
+  Grid3X3,
+  Home as HomeIcon,
+  Clock,
+  Calendar,
+  Award,
+  Target,
+  Download,
+  Zap,
+  Info
+} from "lucide-react";
 import { useLocation } from "wouter";
+import { format } from "date-fns";
+import { AnalysisSession } from "@shared/schema";
+import BottomNavigation from "@/components/bottom-navigation";
+import { useTheme } from "next-themes";
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [selectedTool, setSelectedTool] = useState<ToolType>('canopy');
-  const [selectedImage, setSelectedImage] = useState<{ url: string; file: File } | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentStage, setCurrentStage] = useState("");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { theme, setTheme } = useTheme();
+  const [gpsEnabled, setGpsEnabled] = useState(true);
+  const [autoSave, setAutoSave] = useState(true);
+  const [notifications, setNotifications] = useState(true);
 
-  const createSessionMutation = useMutation({
-    mutationFn: async (sessionData: any) => {
-      return await apiRequest("/api/analysis-sessions", {
-        method: "POST",
-        body: JSON.stringify(sessionData),
-        headers: { "Content-Type": "application/json" },
-      });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
-      setLocation(`/analysis?id=${data.id}`);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to save analysis session",
-        variant: "destructive",
-      });
-    },
+  // Fetch recent sessions for dashboard
+  const { data: sessions = [], isLoading } = useQuery<AnalysisSession[]>({
+    queryKey: ["/api/analysis-sessions"],
   });
 
-  const handleImageUpload = (imageData: { url: string; file: File }) => {
-    setSelectedImage(imageData);
-  };
+  const recentSessions = sessions.slice(0, 3);
+  const totalSessions = sessions.length;
+  const completedSessions = sessions.filter(s => s.isCompleted).length;
+  
+  // Calculate stats
+  const avgCanopyCover = sessions.length > 0 
+    ? sessions.reduce((sum, s) => sum + (s.canopyCover || 0), 0) / sessions.length 
+    : 0;
 
-  const handleCanopyAnalysis = async () => {
-    if (!selectedImage) return;
+  const todaysSessions = sessions.filter(s => {
+    const today = new Date();
+    const sessionDate = new Date(s.timestamp);
+    return sessionDate.toDateString() === today.toDateString();
+  }).length;
 
-    const validation = validateImage(selectedImage.file);
-    if (!validation.isValid) {
-      toast({
-        title: "Invalid Image",
-        description: validation.error,
-        variant: "destructive",
-      });
-      return;
+  const tools = [
+    {
+      id: 'canopy',
+      title: 'Canopy Analysis',
+      description: 'Measure forest canopy cover and light transmission using upward-facing camera',
+      icon: TreePine,
+      color: 'bg-green-500',
+      lightColor: 'bg-green-50',
+      darkColor: 'bg-green-900/20',
+      textColor: 'text-green-600',
+      features: ['Gap light measurement', 'GLAMA/Canopeo methods', 'LAI calculation'],
+      route: '/tools?tool=canopy'
+    },
+    {
+      id: 'horizontal_vegetation',
+      title: 'Horizontal Vegetation',
+      description: 'Analyze vegetation density using camera-based Digital Robel Pole method',
+      icon: Eye,
+      color: 'bg-blue-500',
+      lightColor: 'bg-blue-50',
+      darkColor: 'bg-blue-900/20',
+      textColor: 'text-blue-600',
+      features: ['4m distance analysis', 'Cardinal directions', 'Density profiling'],
+      route: '/tools?tool=horizontal_vegetation'
+    },
+    {
+      id: 'daubenmire',
+      title: 'Daubenmire Frame',
+      description: 'Digital quadrat sampling for ground cover analysis from 1.5m height',
+      icon: Grid3X3,
+      color: 'bg-purple-500',
+      lightColor: 'bg-purple-50',
+      darkColor: 'bg-purple-900/20',
+      textColor: 'text-purple-600',
+      features: ['Ground cover analysis', 'Species identification', 'Frame-free sampling'],
+      route: '/tools?tool=daubenmire'
     }
+  ];
 
-    setIsProcessing(true);
-    setProgress(0);
-    setCurrentStage("Starting analysis...");
-
-    try {
-      const results = await analyzeCanopyImage(selectedImage.file, {
-        method: "GLAMA",
-        zenithAngle: 90,
-        onProgress: (progress, stage) => {
-          setProgress(progress);
-          setCurrentStage(stage);
-        },
-      });
-
-      const sessionData = {
-        plotName: `Canopy Analysis ${new Date().toLocaleDateString()}`,
-        imageUrl: selectedImage.url,
-        toolType: 'canopy',
-        analysisMethod: "GLAMA",
-        zenithAngle: 90,
-        canopyCover: results.canopyCover,
-        lightTransmission: results.lightTransmission,
-        leafAreaIndex: results.leafAreaIndex,
-        pixelsAnalyzed: results.pixelsAnalyzed,
-        processingTime: results.processingTime,
-        isCompleted: true,
-      };
-
-      createSessionMutation.mutate(sessionData);
-    } catch (error) {
-      toast({
-        title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
+  const quickActions = [
+    {
+      title: 'Start Analysis',
+      description: 'Begin new field measurement',
+      icon: Camera,
+      color: 'bg-primary',
+      action: () => setLocation('/tools')
+    },
+    {
+      title: 'View Results',
+      description: 'See recent analysis results',
+      icon: BarChart3,
+      color: 'bg-green-600',
+      action: () => setLocation('/analysis')
+    },
+    {
+      title: 'Session History',
+      description: 'Browse past measurements',
+      icon: History,
+      color: 'bg-blue-600',
+      action: () => setLocation('/history')
+    },
+    {
+      title: 'Export Data',
+      description: 'Download or share results',
+      icon: Download,
+      color: 'bg-purple-600',
+      action: () => setLocation('/history')
     }
-  };
+  ];
 
-  const handleHorizontalVegetationAnalysis = async (results: any) => {
-    const sessionData = {
-      plotName: `Horizontal Vegetation ${new Date().toLocaleDateString()}`,
-      imageUrl: '', // Multiple images, we'll use first one's URL
-      toolType: 'horizontal_vegetation',
-      analysisMethod: 'Multi-height analysis',
-      canopyCover: results.averageCover,
-      pixelsAnalyzed: results.measurements.reduce((sum: number, m: any) => sum + m.pixelsAnalyzed, 0),
-      processingTime: results.measurements.reduce((sum: number, m: any) => sum + m.processingTime, 0),
-      horizontalVegetationData: results,
-      isCompleted: true,
-    };
-
-    createSessionMutation.mutate(sessionData);
-  };
-
-  const handleDaubenmireAnalysis = async (results: any) => {
-    const sessionData = {
-      plotName: `Daubenmire Frame ${new Date().toLocaleDateString()}`,
-      imageUrl: '', // Will be set when image is uploaded
-      toolType: 'daubenmire',
-      analysisMethod: 'Quadrat sampling',
-      canopyCover: results.totalCoverage,
-      pixelsAnalyzed: results.cells.reduce((sum: number, cell: any) => sum + (cell.width * cell.height), 0),
-      processingTime: results.processingTime,
-      daubenmireData: results,
-      isCompleted: true,
-    };
-
-    createSessionMutation.mutate(sessionData);
-  };
-
-  const renderToolInterface = () => {
-    switch (selectedTool) {
-      case 'canopy':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <TreePine className="w-5 h-5 mr-2" />
-                Canopy Analysis
-              </CardTitle>
-              <CardDescription>
-                Analyze forest canopy cover and light transmission using camera images
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Camera className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm">Camera Required</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-green-600" />
-                  <span className="text-sm">GPS Optional</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <BarChart3 className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm">Real-time Analysis</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">1. Capture Image</h3>
-                <ImageUpload onImageUploaded={handleImageUpload} currentImage={selectedImage?.url} />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">2. Location (Optional)</h3>
-                <LocationDisplay />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">3. Analyze</h3>
-                <Button 
-                  onClick={handleCanopyAnalysis}
-                  disabled={!selectedImage || isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Leaf className="w-4 h-4 mr-2" />
-                      Analyze Canopy
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      
-      case 'horizontal_vegetation':
-        return <HorizontalVegetationTool onAnalysisComplete={handleHorizontalVegetationAnalysis} />;
-      
-      case 'daubenmire':
-        return <DaubenmireTool onAnalysisComplete={handleDaubenmireAnalysis} />;
-      
-      default:
-        return null;
-    }
+  const handleToolSelect = (route: string) => {
+    setLocation(route);
   };
 
   return (
-    <div className="space-y-6">
-      <ToolSelector
-        selectedTool={selectedTool}
-        onToolSelect={setSelectedTool}
-      />
-      
-      {renderToolInterface()}
+    <div className="pb-20">
+      {/* Header */}
+      <div className="analysis-gradient text-white p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-12 w-12 bg-white/20">
+              <AvatarFallback className="bg-white/20 text-white">
+                <Leaf className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-xl font-bold">Ecological Suite</h1>
+              <p className="text-sm opacity-90">Field Research Tools</p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setLocation('/settings')}
+            className="text-white hover:bg-white/20"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
 
-      <ProcessingModal
-        isOpen={isProcessing}
-        onClose={() => {}}
-        progress={progress}
-        stage={currentStage}
-        canCancel={false}
-      />
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <Target className="h-4 w-4" />
+              <span className="text-xs font-medium">Total Sessions</span>
+            </div>
+            <p className="text-2xl font-bold">{totalSessions}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <Calendar className="h-4 w-4" />
+              <span className="text-xs font-medium">Today</span>
+            </div>
+            <p className="text-2xl font-bold">{todaysSessions}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <Award className="h-4 w-4" />
+              <span className="text-xs font-medium">Completed</span>
+            </div>
+            <p className="text-2xl font-bold">{completedSessions}</p>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-xs font-medium">Avg Canopy</span>
+            </div>
+            <p className="text-2xl font-bold">{avgCanopyCover.toFixed(0)}%</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Zap className="h-5 w-5 mr-2" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
+              {quickActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="h-20 flex-col space-y-2"
+                  onClick={action.action}
+                >
+                  <action.icon className="h-6 w-6" />
+                  <div className="text-center">
+                    <div className="font-medium text-sm">{action.title}</div>
+                    <div className="text-xs text-muted-foreground">{action.description}</div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Measurement Tools */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Camera className="h-5 w-5 mr-2" />
+              Measurement Tools
+            </CardTitle>
+            <CardDescription>
+              Choose your ecological measurement method
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {tools.map((tool) => (
+              <div
+                key={tool.id}
+                className="border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => handleToolSelect(tool.route)}
+              >
+                <div className="flex items-start space-x-4">
+                  <div className={`p-3 rounded-lg ${tool.lightColor} dark:${tool.darkColor}`}>
+                    <tool.icon className={`h-6 w-6 ${tool.textColor}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1">{tool.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{tool.description}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {tool.features.map((feature, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center">
+                <Clock className="h-5 w-5 mr-2" />
+                Recent Activity
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setLocation('/history')}>
+                View All
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : recentSessions.length > 0 ? (
+              <div className="space-y-3">
+                {recentSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setLocation(`/analysis?id=${session.id}`)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        {session.toolType === 'canopy' && <TreePine className="h-4 w-4 text-green-600" />}
+                        {session.toolType === 'horizontal_vegetation' && <Eye className="h-4 w-4 text-blue-600" />}
+                        {session.toolType === 'daubenmire' && <Grid3X3 className="h-4 w-4 text-purple-600" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{session.plotName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(session.timestamp), 'PPp')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {session.canopyCover && (
+                        <p className="text-sm font-medium">{session.canopyCover.toFixed(1)}%</p>
+                      )}
+                      <Badge variant={session.isCompleted ? "default" : "secondary"} className="text-xs">
+                        {session.isCompleted ? "Complete" : "In Progress"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No recent activity</p>
+                <p className="text-sm">Start your first measurement to see results here</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Quick Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2" />
+              Quick Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <MapPin className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium">GPS Location</p>
+                  <p className="text-sm text-muted-foreground">Auto-capture coordinates</p>
+                </div>
+              </div>
+              <Switch checked={gpsEnabled} onCheckedChange={setGpsEnabled} />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium">Auto-save Results</p>
+                  <p className="text-sm text-muted-foreground">Automatically save completed analyses</p>
+                </div>
+              </div>
+              <Switch checked={autoSave} onCheckedChange={setAutoSave} />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Bell className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="font-medium">Notifications</p>
+                  <p className="text-sm text-muted-foreground">Analysis completion alerts</p>
+                </div>
+              </div>
+              <Switch checked={notifications} onCheckedChange={setNotifications} />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {theme === 'dark' ? (
+                  <Moon className="h-5 w-5 text-gray-600" />
+                ) : (
+                  <Sun className="h-5 w-5 text-yellow-600" />
+                )}
+                <div>
+                  <p className="font-medium">Theme</p>
+                  <p className="text-sm text-muted-foreground">
+                    {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                  </p>
+                </div>
+              </div>
+              <Switch 
+                checked={theme === 'dark'} 
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} 
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Help & Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Info className="h-5 w-5 mr-2" />
+              Help & Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Button variant="outline" className="w-full justify-start">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                View Technical Documentation
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Camera className="h-4 w-4 mr-2" />
+                Photography Guidelines
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Measurement Accuracy Info
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <BottomNavigation />
     </div>
   );
 }

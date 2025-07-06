@@ -132,6 +132,12 @@ Changelog:
 - Redesigned horizontal vegetation tool to use Digital Robel Pole Method with camera-based analysis
 - Camera-based approach provides better accuracy (r² = 0.62 vs 0.26) and eliminates observer bias
 - Updated instructions and metrics to reflect literature-standard 4m viewing distance and 1m camera height
+- Added comprehensive Google Sheets integration for data export and running datasheets
+- Created user-friendly home screen with dashboard, quick actions, recent activity, and settings
+- Implemented dashboard statistics: total sessions, today's sessions, completion rate, average canopy cover
+- Added quick access toggles for GPS, auto-save, notifications, and dark/light theme
+- Separated tools interface into dedicated /tools page for better navigation flow
+- Enhanced bottom navigation with Home, Tools, History, and Settings tabs
 
 ## User Preferences
 
