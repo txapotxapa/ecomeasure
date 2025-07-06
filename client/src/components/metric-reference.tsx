@@ -47,7 +47,7 @@ const metricStandards = {
       { metric: "Camera Height", value: "1.5m", description: "Standard height above ground for consistent 1m² coverage" },
       { metric: "Ground Coverage", value: "1m²", description: "Area captured per photo at 1.5m height" },
       { metric: "Camera Angle", value: "90°", description: "Directly downward for accurate ground assessment" },
-      { metric: "Sample Size", value: "≥30 points", description: "Literature standard for statistical validity" },
+      { metric: "Sample Size", value: "Variable", description: "30+ points recommended for statistical comparisons" },
       { metric: "Point Spacing", value: "≥5m", description: "Minimum distance between sampling points" },
       { metric: "Image Resolution", value: "≥3000×3000px", description: "Required for detailed ground cover analysis" }
     ],
@@ -139,9 +139,9 @@ export default function MetricReference({ toolType, className }: MetricReference
             )}
             {toolType === 'daubenmire' && (
               <>
-                <p>• 1m × 1m frame = 1 square meter sampling area</p>
-                <p>• Higher camera height = less geometric distortion</p>
-                <p>• Grid analysis accuracy improves with image resolution</p>
+                <p>• 1.5m camera height = consistent 1m² ground coverage</p>
+                <p>• Single point analysis or continue sampling as needed</p>
+                <p>• Higher resolution = better species identification accuracy</p>
               </>
             )}
           </div>

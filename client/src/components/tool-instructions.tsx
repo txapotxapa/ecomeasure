@@ -144,8 +144,8 @@ const toolInstructions = {
           "Verify sharp focus across entire ground area in photo",
           "Check that 1m² area is clearly captured (arm's length coverage)",
           "Record GPS coordinates: ±3m accuracy required",
-          "Take minimum 30 sampling points per study area (literature standard)",
-          "Space sampling points ≥5m apart to avoid spatial autocorrelation"
+          "Sample as many points as needed for your study objectives",
+          "Literature suggests 30+ points spaced ≥5m apart for statistical comparisons"
         ]
       }
     ],
@@ -153,7 +153,8 @@ const toolInstructions = {
       "Best results with overcast sky for even lighting",
       "1.5m camera height captures approximately 1m² at arm's length",
       "Keep camera angle consistent (90° downward) across all samples",
-      "Remove debris only if it obscures vegetation assessment"
+      "Sample size depends on study goals: exploratory (5-10), comparative (30+)",
+      "You can analyze single points or continue sampling as needed"
     ],
     measurements: [
       "Vegetation cover percentage per sample",

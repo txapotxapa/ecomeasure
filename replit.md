@@ -128,6 +128,7 @@ Changelog:
 - Updated database schema to support multiple measurement types
 - Enhanced mobile-responsive interface for field research applications
 - Simplified Daubenmire to frame-free photo sampling from 1.5m distance
+- Made sampling flexible: analyze single points or continue as needed per study goals
 
 ## User Preferences
 
