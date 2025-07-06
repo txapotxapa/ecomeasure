@@ -10,9 +10,7 @@ interface DaubenmireGridCell {
 }
 
 interface DaubenmireResult {
-  gridSize: number; // e.g., 5 for 5x5 grid
-  quadratSize: number; // cm
-  cells: DaubenmireGridCell[];
+  samplingArea: number; // m² (always 1 for standardized sampling)
   totalCoverage: number;
   speciesDiversity: number;
   dominantSpecies: string[];
@@ -25,12 +23,9 @@ interface DaubenmireResult {
 }
 
 interface DaubenmireAnalysisOptions {
-  gridSize: number; // 5x5, 10x10, etc.
-  quadratSize: number; // cm
   method: 'color_analysis' | 'supervised_classification' | 'manual_assisted';
   speciesLibrary?: string[]; // Known species for classification
   onProgress?: (progress: number, stage: string) => void;
-  onCellAnalysis?: (cell: DaubenmireGridCell, cellIndex: number) => void;
 }
 
 export async function analyzeDaubenmireFrame(
@@ -399,9 +394,7 @@ function calculateDaubenmireStatistics(
     .map(([species]) => species);
   
   return {
-    gridSize: options.gridSize,
-    quadratSize: options.quadratSize,
-    cells,
+    samplingArea: 1, // Standardized 1m² sampling area
     totalCoverage,
     speciesDiversity: allSpecies.size,
     dominantSpecies,

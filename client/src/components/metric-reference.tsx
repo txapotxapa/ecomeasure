@@ -47,7 +47,7 @@ const metricStandards = {
       { metric: "Camera Height", value: "1.5m", description: "Standard height above ground for consistent 1m² coverage" },
       { metric: "Ground Coverage", value: "1m²", description: "Area captured per photo at 1.5m height" },
       { metric: "Camera Angle", value: "90°", description: "Directly downward for accurate ground assessment" },
-      { metric: "Sample Size", value: "≥20 points", description: "Minimum sampling points for statistical validity" },
+      { metric: "Sample Size", value: "≥30 points", description: "Literature standard for statistical validity" },
       { metric: "Point Spacing", value: "≥5m", description: "Minimum distance between sampling points" },
       { metric: "Image Resolution", value: "≥3000×3000px", description: "Required for detailed ground cover analysis" }
     ],

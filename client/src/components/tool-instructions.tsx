@@ -144,7 +144,7 @@ const toolInstructions = {
           "Verify sharp focus across entire ground area in photo",
           "Check that 1m² area is clearly captured (arm's length coverage)",
           "Record GPS coordinates: ±3m accuracy required",
-          "Take minimum 20 sampling points per study area",
+          "Take minimum 30 sampling points per study area (literature standard)",
           "Space sampling points ≥5m apart to avoid spatial autocorrelation"
         ]
       }
