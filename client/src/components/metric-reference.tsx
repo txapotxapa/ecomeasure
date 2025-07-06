@@ -26,19 +26,19 @@ const metricStandards = {
     ]
   },
   horizontal_vegetation: {
-    title: "Horizontal Vegetation - Metric Standards", 
+    title: "Horizontal Vegetation - Robel Pole Method", 
     measurements: [
-      { metric: "Transect Length", value: "20m", description: "Standard transect for vegetation sampling" },
-      { metric: "Sampling Points", value: "Every 5m", description: "Measurement intervals along transect" },
-      { metric: "Camera Distance", value: "2m", description: "Distance from vegetation to camera" },
-      { metric: "Frame Area", value: "1m²", description: "Area captured in each photograph" },
-      { metric: "Height Intervals", value: "25cm steps", description: "Standard height measurements" },
-      { metric: "Standard Heights", value: "25, 50, 100, 150, 200cm", description: "Recommended measurement levels" }
+      { metric: "Pole Height", value: "2m", description: "Standard vertical pole with colored bands every 10cm" },
+      { metric: "Viewing Distance", value: "4m", description: "Distance from pole in each cardinal direction" },
+      { metric: "Eye Height", value: "1m", description: "Observer eye height above ground level" },
+      { metric: "Reading Directions", value: "4 cardinal", description: "North, East, South, West readings per site" },
+      { metric: "Obstruction Height", value: "0-200cm", description: "Lowest point 100% obscured by vegetation" },
+      { metric: "Site Average", value: "Mean of 4 readings", description: "Average obstruction height for site" }
     ],
     fieldSizes: [
-      { area: "Sampling Frame", dimension: "1m × 1m", description: "Area captured per height level" },
-      { area: "Transect", dimension: "20m × 2m", description: "Total sampling area per transect" },
-      { area: "Plot", dimension: "100m × 100m", description: "Large scale vegetation study area" }
+      { area: "Small Study", dimension: "0.1 hectare", description: "10-15 sampling sites" },
+      { area: "Medium Study", dimension: "1 hectare", description: "20-30 sampling sites" },
+      { area: "Large Study", dimension: "10+ hectares", description: "50+ sampling sites" }
     ]
   },
   daubenmire: {
@@ -132,9 +132,9 @@ export default function MetricReference({ toolType, className }: MetricReference
             )}
             {toolType === 'horizontal_vegetation' && (
               <>
-                <p>• 25cm intervals capture fine-scale vegetation structure</p>
-                <p>• 2m camera distance provides 1m² field of view</p>
-                <p>• Take photos at same time of day for consistent lighting</p>
+                <p>• Robel Pole Method is the literature standard for horizontal vegetation cover</p>
+                <p>• 4m viewing distance provides optimal balance of accuracy and practicality</p>
+                <p>• Average of 4 cardinal readings gives representative site measurement</p>
               </>
             )}
             {toolType === 'daubenmire' && (
