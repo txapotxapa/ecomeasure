@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Download, Share2, TreePine } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { BarChart3, Download, Share2, TreePine, FileSpreadsheet } from "lucide-react";
 import { AnalysisSession } from "@shared/schema";
+import GoogleSheetsExport from "./google-sheets-export";
 
 interface AnalysisResultsProps {
   session: AnalysisSession;
@@ -18,6 +21,7 @@ export default function AnalysisResults({
   onShare, 
   compact = false 
 }: AnalysisResultsProps) {
+  const [showGoogleSheetsDialog, setShowGoogleSheetsDialog] = useState(false);
   
   const formatProcessingTime = (ms?: number) => {
     if (!ms) return "N/A";
@@ -180,8 +184,25 @@ export default function AnalysisResults({
         <div className="flex space-x-2">
           <Button onClick={onExport} variant="outline" className="flex-1">
             <Download className="h-4 w-4 mr-2" />
-            Export Data
+            Export CSV
           </Button>
+          <Dialog open={showGoogleSheetsDialog} onOpenChange={setShowGoogleSheetsDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Google Sheets
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Export to Google Sheets</DialogTitle>
+              </DialogHeader>
+              <GoogleSheetsExport 
+                sessions={[session]} 
+                selectedSessionIds={[session.id]} 
+              />
+            </DialogContent>
+          </Dialog>
           <Button onClick={onShare} variant="outline" className="flex-1">
             <Share2 className="h-4 w-4 mr-2" />
             Share Results

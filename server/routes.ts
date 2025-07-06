@@ -6,6 +6,7 @@ import { insertAnalysisSessionSchema, updateAnalysisSessionSchema, insertAnalysi
 import multer from "multer";
 import path from "path";
 import { promises as fs } from "fs";
+import { GoogleSheetsService } from "./google-sheets";
 
 const upload = multer({ 
   dest: 'uploads/',
@@ -165,6 +166,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error: any) {
       res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Google Sheets integration routes
+  app.post("/api/google-sheets/export", async (req, res) => {
+    try {
+      const { spreadsheetId, sessionIds, serviceAccountEmail, privateKey } = req.body;
+      
+      if (!spreadsheetId || !serviceAccountEmail || !privateKey) {
+        return res.status(400).json({ 
+          message: "Missing required fields: spreadsheetId, serviceAccountEmail, privateKey" 
+        });
+      }
+
+      const googleSheets = new GoogleSheetsService({
+        spreadsheetId,
+        worksheetName: 'Ecological Measurements',
+        serviceAccountEmail,
+        privateKey
+      });
+
+      // Get sessions to export
+      let sessions;
+      if (sessionIds && sessionIds.length > 0) {
+        sessions = [];
+        for (const id of sessionIds) {
+          const session = await storage.getAnalysisSession(id);
+          if (session) sessions.push(session);
+        }
+      } else {
+        sessions = await storage.getAllAnalysisSessions();
+      }
+
+      await googleSheets.exportSessionsToSheet(spreadsheetId, sessions);
+      const sheetUrl = await googleSheets.getSheetUrl(spreadsheetId);
+
+      res.json({ 
+        success: true, 
+        message: `Exported ${sessions.length} sessions to Google Sheets`,
+        sheetUrl,
+        sessionCount: sessions.length
+      });
+    } catch (error: any) {
+      console.error('Google Sheets export error:', error);
+      res.status(500).json({ 
+        message: "Failed to export to Google Sheets", 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/google-sheets/create", async (req, res) => {
+    try {
+      const { title, serviceAccountEmail, privateKey } = req.body;
+      
+      if (!title || !serviceAccountEmail || !privateKey) {
+        return res.status(400).json({ 
+          message: "Missing required fields: title, serviceAccountEmail, privateKey" 
+        });
+      }
+
+      const googleSheets = new GoogleSheetsService({
+        spreadsheetId: '', // Will be created
+        worksheetName: 'Ecological Measurements',
+        serviceAccountEmail,
+        privateKey
+      });
+
+      const spreadsheetId = await googleSheets.createDatasheet(title);
+      const sheetUrl = await googleSheets.getSheetUrl(spreadsheetId);
+
+      res.json({ 
+        success: true, 
+        spreadsheetId,
+        sheetUrl,
+        message: "Google Sheets datasheet created successfully"
+      });
+    } catch (error: any) {
+      console.error('Google Sheets creation error:', error);
+      res.status(500).json({ 
+        message: "Failed to create Google Sheets datasheet", 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/google-sheets/append", async (req, res) => {
+    try {
+      const { spreadsheetId, sessionId, serviceAccountEmail, privateKey } = req.body;
+      
+      if (!spreadsheetId || !sessionId || !serviceAccountEmail || !privateKey) {
+        return res.status(400).json({ 
+          message: "Missing required fields: spreadsheetId, sessionId, serviceAccountEmail, privateKey" 
+        });
+      }
+
+      const googleSheets = new GoogleSheetsService({
+        spreadsheetId,
+        worksheetName: 'Ecological Measurements',
+        serviceAccountEmail,
+        privateKey
+      });
+
+      const session = await storage.getAnalysisSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      await googleSheets.appendToDatasheet(spreadsheetId, [session]);
+      const sheetUrl = await googleSheets.getSheetUrl(spreadsheetId);
+
+      res.json({ 
+        success: true, 
+        message: "Session added to Google Sheets datasheet",
+        sheetUrl
+      });
+    } catch (error: any) {
+      console.error('Google Sheets append error:', error);
+      res.status(500).json({ 
+        message: "Failed to append to Google Sheets datasheet", 
+        error: error.message 
+      });
+    }
+  });
+
+  app.post("/api/google-sheets/share", async (req, res) => {
+    try {
+      const { spreadsheetId, email, role, serviceAccountEmail, privateKey } = req.body;
+      
+      if (!spreadsheetId || !email || !serviceAccountEmail || !privateKey) {
+        return res.status(400).json({ 
+          message: "Missing required fields: spreadsheetId, email, serviceAccountEmail, privateKey" 
+        });
+      }
+
+      const googleSheets = new GoogleSheetsService({
+        spreadsheetId,
+        worksheetName: 'Ecological Measurements',
+        serviceAccountEmail,
+        privateKey
+      });
+
+      await googleSheets.shareSheet(spreadsheetId, email, role || 'writer');
+
+      res.json({ 
+        success: true, 
+        message: `Google Sheets shared with ${email} as ${role || 'writer'}`
+      });
+    } catch (error: any) {
+      console.error('Google Sheets sharing error:', error);
+      res.status(500).json({ 
+        message: "Failed to share Google Sheets", 
+        error: error.message 
+      });
     }
   });
 

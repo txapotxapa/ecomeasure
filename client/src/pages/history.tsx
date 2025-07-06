@@ -13,12 +13,15 @@ import {
   Trash2, 
   MapPin,
   Calendar,
-  BarChart3
+  BarChart3,
+  FileSpreadsheet
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AnalysisSession } from "@shared/schema";
 import { format } from "date-fns";
 
 import BottomNavigation from "@/components/bottom-navigation";
+import GoogleSheetsExport from "@/components/google-sheets-export";
 import { exportToCSV, exportSessionToCSV } from "@/lib/export";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,6 +31,7 @@ export default function History() {
   const [methodFilter, setMethodFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [selectedSessions, setSelectedSessions] = useState<number[]>([]);
+  const [showGoogleSheetsDialog, setShowGoogleSheetsDialog] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -182,15 +186,38 @@ export default function History() {
                 <Filter className="h-5 w-5" />
                 <span>Filter & Search</span>
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportAll}
-                disabled={filteredSessions.length === 0}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export All
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportAll}
+                  disabled={filteredSessions.length === 0}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Dialog open={showGoogleSheetsDialog} onOpenChange={setShowGoogleSheetsDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={filteredSessions.length === 0}
+                    >
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Google Sheets
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Export to Google Sheets</DialogTitle>
+                    </DialogHeader>
+                    <GoogleSheetsExport 
+                      sessions={filteredSessions} 
+                      selectedSessionIds={selectedSessions.length > 0 ? selectedSessions : undefined} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
