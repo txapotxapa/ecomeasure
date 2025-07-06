@@ -129,8 +129,9 @@ Changelog:
 - Enhanced mobile-responsive interface for field research applications
 - Simplified Daubenmire to frame-free photo sampling from 1.5m distance
 - Made sampling flexible: analyze single points or continue as needed per study goals
-- Redesigned horizontal vegetation tool to use Robel Pole Method with cardinal direction readings
-- Updated instructions and metrics to reflect literature-standard 4m viewing distance and 1m eye height
+- Redesigned horizontal vegetation tool to use Digital Robel Pole Method with camera-based analysis
+- Camera-based approach provides better accuracy (r² = 0.62 vs 0.26) and eliminates observer bias
+- Updated instructions and metrics to reflect literature-standard 4m viewing distance and 1m camera height
 
 ## User Preferences
 

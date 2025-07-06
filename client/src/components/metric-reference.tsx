@@ -26,14 +26,14 @@ const metricStandards = {
     ]
   },
   horizontal_vegetation: {
-    title: "Horizontal Vegetation - Robel Pole Method", 
+    title: "Horizontal Vegetation - Digital Robel Pole Method", 
     measurements: [
       { metric: "Pole Height", value: "2m", description: "Standard vertical pole with colored bands every 10cm" },
-      { metric: "Viewing Distance", value: "4m", description: "Distance from pole in each cardinal direction" },
-      { metric: "Eye Height", value: "1m", description: "Observer eye height above ground level" },
-      { metric: "Reading Directions", value: "4 cardinal", description: "North, East, South, West readings per site" },
-      { metric: "Obstruction Height", value: "0-200cm", description: "Lowest point 100% obscured by vegetation" },
-      { metric: "Site Average", value: "Mean of 4 readings", description: "Average obstruction height for site" }
+      { metric: "Camera Distance", value: "4m", description: "Distance from pole in each cardinal direction" },
+      { metric: "Camera Height", value: "1m", description: "Camera positioned at 1m above ground on tripod" },
+      { metric: "Photo Directions", value: "4 cardinal", description: "North, East, South, West photos per site" },
+      { metric: "Digital Analysis", value: "Automated", description: "Software detects obstruction bands from photos" },
+      { metric: "Image Resolution", value: "≥2000×2000px", description: "Required for accurate band detection" }
     ],
     fieldSizes: [
       { area: "Small Study", dimension: "0.1 hectare", description: "10-15 sampling sites" },
@@ -132,9 +132,9 @@ export default function MetricReference({ toolType, className }: MetricReference
             )}
             {toolType === 'horizontal_vegetation' && (
               <>
-                <p>• Robel Pole Method is the literature standard for horizontal vegetation cover</p>
-                <p>• 4m viewing distance provides optimal balance of accuracy and practicality</p>
-                <p>• Average of 4 cardinal readings gives representative site measurement</p>
+                <p>• Digital photography provides better accuracy than visual readings (r² = 0.62 vs 0.26)</p>
+                <p>• Camera eliminates observer bias and creates permanent analysis records</p>
+                <p>• 4m distance and 1m height are literature standards for optimal measurement</p>
               </>
             )}
             {toolType === 'daubenmire' && (

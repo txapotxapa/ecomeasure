@@ -70,50 +70,50 @@ const toolInstructions = {
   },
   
   horizontal_vegetation: {
-    title: "Horizontal Vegetation Cover (Robel Pole Method)", 
+    title: "Horizontal Vegetation Cover (Digital Robel Pole Method)", 
     icon: Layers,
-    description: "Visual obstruction assessment using cardinal direction readings at 4m distance",
+    description: "Camera-based vegetation analysis using 4m distance photography of marked pole",
     equipment: [
       "2m vertical pole with colored bands (red/white) every 10cm",
+      "Smartphone or digital camera with timer function",
       "Measuring tape (minimum 4m length)",
-      "1m measuring stick for eye height",
-      "Compass or GPS for cardinal directions"
+      "Tripod or stable camera support at 1m height"
     ],
     procedure: [
       {
         step: 1,
-        title: "Pole Setup & Positioning",
+        title: "Pole Setup & Camera Positioning",
         details: [
           "Place 2m pole vertically at sampling center point",
-          "Ensure pole has alternating colored bands every 10cm",
-          "Secure pole so it remains perfectly vertical",
-          "Use compass to identify cardinal directions from pole",
-          "Record GPS coordinates of pole location"
+          "Ensure pole has alternating colored bands every 10cm for clear digital analysis",
+          "Set up camera/phone on tripod at 1m height above ground",
+          "Measure exactly 4m distance from pole to camera position",
+          "Use compass or GPS to identify cardinal directions"
         ]
       },
       {
         step: 2,
-        title: "Cardinal Direction Readings",
+        title: "Digital Photography Protocol",
         details: [
-          "Take readings from 4 cardinal directions: North, East, South, West",
-          "Stand exactly 4m from pole in each direction (measure with tape)",
-          "Position eye height at 1m above ground using measuring stick",
-          "Record lowest point on pole 100% obscured by vegetation",
-          "Note reading in centimeters from ground level for each direction"
+          "Take photos from 4 cardinal directions: North, East, South, West",
+          "Position camera 4m from pole at 1m height for each direction",
+          "Frame pole centrally with surrounding vegetation visible",
+          "Use timer or remote to avoid camera shake during capture",
+          "Ensure consistent lighting and focus across all 4 photos"
         ]
       }
     ],
     tips: [
-      "Robel Pole Method is the literature standard for horizontal vegetation cover",
-      "4m viewing distance provides optimal balance of accuracy and practicality",
-      "Take readings when vegetation is dry for consistent results",
-      "Average of 4 cardinal readings gives representative site measurement"
+      "Digital photography provides better accuracy than visual readings (literature confirmed)",
+      "Camera eliminates observer bias and creates permanent analysis records",
+      "4m distance and 1m height are literature standards for optimal measurement",
+      "Overcast lighting conditions provide most consistent results across photos"
     ],
     measurements: [
-      "Visual obstruction height (cm) per direction",
-      "Average obstruction height (cm)",
-      "Vegetation density index",
-      "Horizontal cover percentage"
+      "Digital obstruction analysis per direction",
+      "Average vegetation density index",
+      "Obstruction uniformity across directions",
+      "Automated band detection from photos"
     ]
   },
 
