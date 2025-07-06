@@ -144,7 +144,7 @@ export default function ImageUpload({ onImageUploaded, currentImage }: ImageUplo
             <>
               <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-sm text-gray-600 mb-4">
-                Take or upload hemispherical photo
+                {isDragging ? "Drop image here to upload" : "Drag and drop image here or click to capture"}
               </p>
               <div className="space-y-2">
                 <Button
@@ -162,7 +162,7 @@ export default function ImageUpload({ onImageUploaded, currentImage }: ImageUplo
                   className="w-full"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload from Gallery
+                  Select Image File
                 </Button>
               </div>
             </>

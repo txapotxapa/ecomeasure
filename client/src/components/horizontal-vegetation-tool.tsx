@@ -23,6 +23,7 @@ interface DirectionPhoto {
   file: File | null;
   preview: string | null;
   analyzed: boolean;
+  isDragging: boolean;
 }
 
 interface HorizontalVegetationToolProps {
@@ -35,20 +36,40 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState('');
   const [directionPhotos, setDirectionPhotos] = useState<DirectionPhoto[]>([
-    { direction: 'North', file: null, preview: null, analyzed: false },
-    { direction: 'East', file: null, preview: null, analyzed: false },
-    { direction: 'South', file: null, preview: null, analyzed: false },
-    { direction: 'West', file: null, preview: null, analyzed: false }
+    { direction: 'North', file: null, preview: null, analyzed: false, isDragging: false },
+    { direction: 'East', file: null, preview: null, analyzed: false, isDragging: false },
+    { direction: 'South', file: null, preview: null, analyzed: false, isDragging: false },
+    { direction: 'West', file: null, preview: null, analyzed: false, isDragging: false }
   ]);
   
   const { toast } = useToast();
 
   const handlePhotoUpload = (direction: 'North' | 'East' | 'South' | 'West', file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a JPEG or PNG image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const preview = URL.createObjectURL(file);
     
     setDirectionPhotos(prev => prev.map(photo => 
       photo.direction === direction 
-        ? { ...photo, file, preview, analyzed: false }
+        ? { ...photo, file, preview, analyzed: false, isDragging: false }
         : photo
     ));
   };
@@ -72,9 +93,41 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
   const removePhoto = (direction: 'North' | 'East' | 'South' | 'West') => {
     setDirectionPhotos(prev => prev.map(photo => 
       photo.direction === direction 
-        ? { ...photo, file: null, preview: null, analyzed: false }
+        ? { ...photo, file: null, preview: null, analyzed: false, isDragging: false }
         : photo
     ));
+  };
+
+  const handleDragOver = (e: React.DragEvent, direction: 'North' | 'East' | 'South' | 'West') => {
+    e.preventDefault();
+    setDirectionPhotos(prev => prev.map(photo => 
+      photo.direction === direction 
+        ? { ...photo, isDragging: true }
+        : photo
+    ));
+  };
+
+  const handleDragLeave = (e: React.DragEvent, direction: 'North' | 'East' | 'South' | 'West') => {
+    e.preventDefault();
+    setDirectionPhotos(prev => prev.map(photo => 
+      photo.direction === direction 
+        ? { ...photo, isDragging: false }
+        : photo
+    ));
+  };
+
+  const handleDrop = (e: React.DragEvent, direction: 'North' | 'East' | 'South' | 'West') => {
+    e.preventDefault();
+    setDirectionPhotos(prev => prev.map(photo => 
+      photo.direction === direction 
+        ? { ...photo, isDragging: false }
+        : photo
+    ));
+    
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handlePhotoUpload(direction, files[0]);
+    }
   };
 
   const handleAnalysis = async () => {
@@ -268,8 +321,21 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
                       </Button>
                     </div>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                    <div 
+                      className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                        photo.isDragging
+                          ? "border-primary bg-primary/10"
+                          : "border-gray-300 bg-gray-50"
+                      }`}
+                      onDragOver={(e) => handleDragOver(e, photo.direction)}
+                      onDragLeave={(e) => handleDragLeave(e, photo.direction)}
+                      onDrop={(e) => handleDrop(e, photo.direction)}
+                    >
                       <div className="flex flex-col gap-2">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-xs text-gray-600 mb-2">
+                          {photo.isDragging ? "Drop image here" : "Drag & drop image or click below"}
+                        </p>
                         <Button
                           variant="outline"
                           size="sm"
@@ -283,7 +349,7 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
                           <Button variant="outline" size="sm" asChild className="w-full">
                             <span>
                               <Upload className="w-4 h-4 mr-2" />
-                              Upload File
+                              Select Image
                             </span>
                           </Button>
                         </Label>
