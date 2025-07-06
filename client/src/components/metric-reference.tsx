@@ -42,18 +42,18 @@ const metricStandards = {
     ]
   },
   daubenmire: {
-    title: "Daubenmire Frame - Metric Standards",
+    title: "Digital Daubenmire Sampling - Metric Standards",
     measurements: [
-      { metric: "Quadrat Size", value: "1m × 1m", description: "Standard Daubenmire frame dimensions" },
-      { metric: "Camera Height", value: "1.5-2m", description: "Height above quadrat for complete coverage" },
-      { metric: "Grid Resolution", value: "5×5 or 10×10", description: "Analysis grid subdivision" },
-      { metric: "Sample Size", value: "≥20 quadrats", description: "Minimum quadrats for statistical validity" },
-      { metric: "Quadrat Spacing", value: "≥5m", description: "Minimum distance between quadrats" },
-      { metric: "Image Resolution", value: "≥3000×3000px", description: "Required for grid analysis accuracy" }
+      { metric: "Camera Height", value: "1.5m", description: "Standard height above ground for consistent 1m² coverage" },
+      { metric: "Ground Coverage", value: "1m²", description: "Area captured per photo at 1.5m height" },
+      { metric: "Camera Angle", value: "90°", description: "Directly downward for accurate ground assessment" },
+      { metric: "Sample Size", value: "≥20 points", description: "Minimum sampling points for statistical validity" },
+      { metric: "Point Spacing", value: "≥5m", description: "Minimum distance between sampling points" },
+      { metric: "Image Resolution", value: "≥3000×3000px", description: "Required for detailed ground cover analysis" }
     ],
     fieldSizes: [
-      { area: "Quadrat", dimension: "1m × 1m", description: "Individual sampling unit" },
-      { area: "Plot", dimension: "50m × 50m", description: "Area for systematic quadrat placement" },
+      { area: "Sampling Area", dimension: "1m²", description: "Ground area captured per photo" },
+      { area: "Plot", dimension: "50m × 50m", description: "Area for systematic point placement" },
       { area: "Study Site", dimension: "1ha (100m × 100m)", description: "Large-scale community analysis" }
     ]
   }

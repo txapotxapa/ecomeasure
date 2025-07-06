@@ -51,14 +51,14 @@ const tools = [
   },
   {
     id: 'daubenmire' as ToolType,
-    name: 'Digital Daubenmire Frame',
-    description: 'Simple photo-based quadrat sampling for ground cover analysis',
+    name: 'Digital Daubenmire Sampling',
+    description: 'Frame-free photo-based ground cover analysis from standardized distance',
     icon: Grid3x3,
     color: 'hover:bg-amber-50 border-amber-200',
     iconColor: 'text-amber-600',
     badgeColor: 'bg-amber-100',
-    features: ['Ground Cover Analysis', 'Species Diversity', 'Photo-Based Sampling'],
-    methods: ['Grid Analysis', 'Automated Classification', 'Coverage Calculation']
+    features: ['Ground Cover Analysis', 'Frame-Free Sampling', 'Standardized Distance'],
+    methods: ['Photo Analysis', 'Automated Classification', 'Coverage Calculation']
   },
 ];
 

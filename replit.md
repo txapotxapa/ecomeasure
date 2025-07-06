@@ -33,11 +33,11 @@ This is a comprehensive mobile-first web application for ecological field resear
 1. **Multi-Tool Support**: Three ecological measurement tools in one application
    - Canopy cover analysis (gap light measurement)
    - Horizontal vegetation cover analysis (multi-height photos)
-   - Digital Daubenmire frame (quadrat sampling replacement)
+   - Digital Daubenmire sampling (frame-free ground cover analysis)
 2. **Image Processing**: Advanced algorithms for each measurement type
    - GLAMA, Canopeo, Custom methods for canopy analysis
    - Color threshold, edge detection, ML for vegetation analysis
-   - Grid-based species identification and ground cover classification
+   - Frame-free ground cover analysis from standardized camera distance
 3. **GPS Integration**: Location tracking for all field measurements
 4. **Data Export**: CSV and PDF export functionality for all tool types
 5. **History Management**: Session storage and retrieval across all tools
@@ -122,11 +122,12 @@ Changelog:
 - July 06, 2025. Expanded to ecological measurement suite with three tools:
   - Canopy cover analysis (gap light measurement)
   - Horizontal vegetation cover analysis (multi-height photos)  
-  - Digital Daubenmire frame (quadrat sampling replacement)
+  - Digital Daubenmire sampling (frame-free ground cover analysis)
 - Added comprehensive tool selector interface
 - Implemented advanced image processing algorithms for each tool type
 - Updated database schema to support multiple measurement types
 - Enhanced mobile-responsive interface for field research applications
+- Simplified Daubenmire to frame-free photo sampling from 1.5m distance
 
 ## User Preferences
 

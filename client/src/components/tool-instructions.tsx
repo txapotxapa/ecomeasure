@@ -117,49 +117,49 @@ const toolInstructions = {
   },
 
   daubenmire: {
-    title: "Digital Daubenmire Frame Instructions",
+    title: "Digital Daubenmire Sampling Instructions",
     icon: Grid3x3, 
-    description: "Simple photo-based quadrat sampling for ground cover analysis",
+    description: "Frame-free photo-based ground cover analysis from standardized distance",
     equipment: [
       "Smartphone or digital camera",
-      "1m × 1m quadrat frame (PVC or metal)",
-      "GPS device (or smartphone GPS)"
+      "GPS device (or smartphone GPS)",
+      "Optional: measuring tape for distance verification"
     ],
     procedure: [
       {
         step: 1,
-        title: "Setup & Photography",
+        title: "Camera Position & Photo Capture",
         details: [
-          "Place 1m × 1m frame on representative ground area",
-          "Position camera 1.5-2m directly above center of frame",
-          "Take high-resolution photo (≥3000×3000 pixels) showing entire quadrat",
-          "Ensure frame edges are visible for scale reference",
-          "Record GPS coordinates: ±3m accuracy required"
+          "Stand at representative ground area for sampling",
+          "Hold camera 1.5m above ground level (consistent height)",
+          "Point camera directly downward at 90° angle to ground",
+          "Take high-resolution photo (≥3000×3000 pixels) of 1m² ground area",
+          "Ensure even lighting across entire sampling area"
         ]
       },
       {
         step: 2,
         title: "Quality Check & Sampling Protocol",
         details: [
-          "Verify sharp focus across entire quadrat area",
-          "Check even lighting (no harsh shadows)",
-          "Minimum 20 quadrats per study area for statistical validity",
-          "Space quadrats ≥5m apart to avoid spatial autocorrelation",
-          "Complete sampling within 2-3 hours for uniform conditions"
+          "Verify sharp focus across entire ground area in photo",
+          "Check that 1m² area is clearly captured (arm's length coverage)",
+          "Record GPS coordinates: ±3m accuracy required",
+          "Take minimum 20 sampling points per study area",
+          "Space sampling points ≥5m apart to avoid spatial autocorrelation"
         ]
       }
     ],
     tips: [
       "Best results with overcast sky for even lighting",
-      "Keep camera height consistent (1.5-2m) across all quadrats",
-      "Include frame in photo - provides scale and analysis reference",
+      "1.5m camera height captures approximately 1m² at arm's length",
+      "Keep camera angle consistent (90° downward) across all samples",
       "Remove debris only if it obscures vegetation assessment"
     ],
     measurements: [
-      "Vegetation cover percentage per quadrat",
+      "Vegetation cover percentage per sample",
       "Bare ground percentage", 
       "Litter/organic matter percentage",
-      "Species diversity analysis (automatic photo analysis)"
+      "Ground cover diversity analysis (automatic photo analysis)"
     ]
   }
 };
