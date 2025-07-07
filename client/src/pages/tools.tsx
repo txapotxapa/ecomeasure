@@ -306,7 +306,7 @@ export default function Tools() {
     }
   };
 
-  const handleDaubenmireAnalysis = async (results: DaubenmireResult) => {
+  const handleDaubenmireAnalysis = async (results: DaubenmireResult, imageUrl?: string) => {
     // Get GPS location if available
     let gpsData = { latitude: null, longitude: null };
     try {
@@ -326,16 +326,34 @@ export default function Tools() {
     }
 
     const sessionData = {
+      siteName: currentSite?.name || 'Untitled Location',
       plotName: currentSite?.name || `Untitled Location ${new Date().toLocaleDateString()}`,
-      imageUrl: "", // Will be set by the tool
+      imageUrl: imageUrl || "/placeholder.jpg",
       toolType: 'daubenmire',
       analysisMethod: "Frame-free Analysis",
-      pixelsAnalyzed: 0,
+      pixelsAnalyzed: results.samplingArea * 1000000, // Convert m² to approximate pixels
+      processingTime: results.processingTime,
       latitude: currentSite?.latitude || gpsData.latitude,
       longitude: currentSite?.longitude || gpsData.longitude,
-      daubenmireData: results,
+      // Daubenmire specific fields
+      totalCoverage: results.totalCoverage,
+      speciesDiversity: results.speciesDiversity,
+      bareGroundPercentage: results.bareGroundPercentage,
+      litterPercentage: results.litterPercentage,
+      rockPercentage: results.rockPercentage,
+      shannonIndex: results.shannonIndex,
+      evennessIndex: results.evennessIndex,
+      dominantSpecies: results.dominantSpecies,
       isCompleted: true,
     };
+
+    console.log('Creating Daubenmire session with data:', sessionData);
+    
+    // Store results for display in data sheet
+    setCurrentAnalysisResults({
+      ...sessionData,
+      timestamp: new Date().toISOString(),
+    });
 
     createSessionMutation.mutate(sessionData);
     

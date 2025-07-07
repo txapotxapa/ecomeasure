@@ -28,6 +28,20 @@ export const analysisSession = pgTable("analysis_sessions", {
   horizontalVegetationData: jsonb("horizontal_vegetation_data"), // For height-based analysis
   daubenmireData: jsonb("daubenmire_data"), // For quadrat sampling data
   
+  // Daubenmire-specific fields
+  totalCoverage: real("total_coverage"),
+  speciesDiversity: integer("species_diversity"),
+  bareGroundPercentage: real("bare_ground_percentage"),
+  litterPercentage: real("litter_percentage"),
+  rockPercentage: real("rock_percentage"),
+  shannonIndex: real("shannon_index"),
+  evennessIndex: real("evenness_index"),
+  dominantSpecies: text("dominant_species").array(),
+  
+  // Horizontal vegetation fields
+  vegetationDensity: real("vegetation_density"),
+  averageHeight: real("average_height"),
+  
   notes: text("notes"),
   isCompleted: boolean("is_completed").notNull().default(false),
 });

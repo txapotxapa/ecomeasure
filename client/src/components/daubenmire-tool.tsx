@@ -18,7 +18,7 @@ import ProcessingModal from "./processing-modal";
 import { useToast } from "@/hooks/use-toast";
 
 interface DaubenmireToolProps {
-  onAnalysisComplete: (results: DaubenmireResult) => void;
+  onAnalysisComplete: (results: DaubenmireResult, imageUrl?: string) => void;
 }
 
 export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolProps) {
@@ -119,13 +119,27 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       return;
     }
 
-    // Site name is now handled at app level - no longer required here
-
     setIsProcessing(true);
     setProgress(0);
-    setCurrentStage('Initializing digital frame analysis...');
+    setCurrentStage('Uploading image...');
 
     try {
+      // Upload image first
+      const formData = new FormData();
+      formData.append('image', image);
+      
+      const uploadResponse = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const uploadData = await uploadResponse.json();
+      setCurrentStage('Analyzing ground cover with Canopeo-like method...');
+
       const results = await analyzeDaubenmireFrame(image, {
         method: 'color_analysis',
         onProgress: (progress, stage) => {
@@ -134,7 +148,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
         }
       });
 
-      onAnalysisComplete(results);
+      onAnalysisComplete(results, uploadData.imageUrl);
       
       toast({
         title: "Analysis complete",

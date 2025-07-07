@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,18 @@ export default function Analysis() {
       return response.json() as Promise<AnalysisSession[]>;
     },
   });
+
+  // Handle URL parameters to show specific session
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('id');
+    if (sessionId && sessions.length > 0) {
+      const session = sessions.find(s => s.id === parseInt(sessionId));
+      if (session) {
+        setSelectedSession(session);
+      }
+    }
+  }, [sessions]);
 
   const handleExport = async (session: AnalysisSession) => {
     try {
@@ -70,9 +82,17 @@ export default function Analysis() {
   const calculateStats = () => {
     if (sessions.length === 0) return null;
 
-    const avgCanopyCover = sessions.reduce((sum, s) => sum + s.canopyCover, 0) / sessions.length;
-    const avgLightTransmission = sessions.reduce((sum, s) => sum + s.lightTransmission, 0) / sessions.length;
-    const totalPixels = sessions.reduce((sum, s) => sum + s.pixelsAnalyzed, 0);
+    const canopySessions = sessions.filter(s => s.toolType === 'canopy');
+    const daubenmireSessions = sessions.filter(s => s.toolType === 'daubenmire');
+    const horizontalSessions = sessions.filter(s => s.toolType === 'horizontal_vegetation');
+
+    const avgCanopyCover = canopySessions.length > 0 
+      ? canopySessions.reduce((sum, s) => sum + (s.canopyCover || 0), 0) / canopySessions.length
+      : 0;
+    const avgLightTransmission = canopySessions.length > 0
+      ? canopySessions.reduce((sum, s) => sum + (s.lightTransmission || 0), 0) / canopySessions.length
+      : 0;
+    const totalPixels = sessions.reduce((sum, s) => sum + (s.pixelsAnalyzed || 0), 0);
     const avgProcessingTime = sessions.reduce((sum, s) => sum + (s.processingTime || 0), 0) / sessions.length;
 
     return {
@@ -81,6 +101,9 @@ export default function Analysis() {
       totalPixels,
       avgProcessingTime,
       totalSessions: sessions.length,
+      canopySessions: canopySessions.length,
+      daubenmireSessions: daubenmireSessions.length,
+      horizontalSessions: horizontalSessions.length,
     };
   };
 
@@ -228,10 +251,14 @@ export default function Analysis() {
                     
                     <div className="text-right">
                       <div className="text-lg font-bold text-primary">
-                        {session.canopyCover.toFixed(1)}%
+                        {session.toolType === 'canopy' ? `${(session.canopyCover || 0).toFixed(1)}%` : 
+                         session.toolType === 'daubenmire' ? `${(session.totalCoverage || 0).toFixed(1)}%` :
+                         session.toolType === 'horizontal_vegetation' ? `${(session.vegetationDensity || 0).toFixed(1)}%` : 'N/A'}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {session.lightTransmission.toFixed(1)}% light
+                        {session.toolType === 'canopy' ? `${(session.lightTransmission || 0).toFixed(1)}% light` :
+                         session.toolType === 'daubenmire' ? `${session.speciesDiversity || 0} species` :
+                         session.toolType === 'horizontal_vegetation' ? `${session.averageHeight || 0}cm avg` : 'Complete'}
                       </div>
                       <div className="flex items-center space-x-1 mt-2">
                         <Button
