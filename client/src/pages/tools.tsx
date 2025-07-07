@@ -713,41 +713,12 @@ export default function Tools() {
                 </Button>
               )}
 
-              {/* Debug: Show if we have results */}
-              {currentAnalysisResults && (
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 text-sm rounded">
-                  Debug: Results loaded (Tool: {currentAnalysisResults.toolType})
-                </div>
-              )}
 
-              {/* Debug: Test button to set dummy results */}
-              {!currentAnalysisResults && (
-                <Button 
-                  onClick={() => {
-                    console.log('Setting test results...');
-                    setCurrentAnalysisResults({
-                      toolType: 'canopy',
-                      canopyCover: 75.0,
-                      lightTransmission: 25.0,
-                      leafAreaIndex: 1.5,
-                      pixelsAnalyzed: 1000000,
-                      processingTime: 500,
-                      analysisMethod: 'GLAMA',
-                      timestamp: new Date().toISOString(),
-                      siteName: 'Test Site'
-                    });
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  Test Results Display
-                </Button>
-              )}
+
+
 
               {/* Analysis Results Data Sheet */}
               {currentAnalysisResults && (
-                console.log('Rendering analysis results:', currentAnalysisResults) || true) && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-lg font-semibold">Analysis Results</Label>
