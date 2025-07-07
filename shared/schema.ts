@@ -4,9 +4,11 @@ import { z } from "zod";
 
 export const analysisSession = pgTable("analysis_sessions", {
   id: serial("id").primaryKey(),
+  siteName: text("site_name").notNull(), // Research site name
   plotName: text("plot_name").notNull(),
   latitude: real("latitude"),
   longitude: real("longitude"),
+  altitude: real("altitude"), // Elevation in meters
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   imageUrl: text("image_url").notNull(),
   toolType: text("tool_type").notNull().default("canopy"), // 'canopy', 'horizontal_vegetation', 'daubenmire'

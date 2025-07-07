@@ -138,6 +138,9 @@ Changelog:
 - Added quick access toggles for GPS, auto-save, notifications, and dark/light theme
 - Separated tools interface into dedicated /tools page for better navigation flow
 - Enhanced bottom navigation with Home, Tools, History, and Settings tabs
+- Implemented site-based workflow system with site selector component for naming and organizing measurements by location
+- Updated navigation structure with dedicated tools page and mobile-optimized bottom navigation
+- Modified header to display current site information (name, coordinates, altitude) instead of statistics to support field workflow
 
 ## User Preferences
 

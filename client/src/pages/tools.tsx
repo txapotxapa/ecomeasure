@@ -17,6 +17,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
+interface SiteInfo {
+  name: string;
+  latitude: number;
+  longitude: number;
+  altitude?: number;
+  createdAt: Date;
+  sessionCounts: {
+    canopy: number;
+    horizontal_vegetation: number;
+    daubenmire: number;
+  };
+}
+
 export default function Tools() {
   const [, setLocation] = useLocation();
   const [selectedTool, setSelectedTool] = useState<ToolType>('canopy');
@@ -24,11 +37,27 @@ export default function Tools() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState("");
+  const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Check for tool parameter in URL
+  // Load current site from localStorage and check for tool parameter in URL
   useEffect(() => {
+    // Load site from localStorage - should sync with home page
+    const savedCurrentSite = localStorage.getItem('current-research-site');
+    if (savedCurrentSite) {
+      try {
+        const siteData = JSON.parse(savedCurrentSite);
+        setCurrentSite({
+          ...siteData,
+          createdAt: new Date(siteData.createdAt)
+        });
+      } catch (error) {
+        console.error('Error loading current site:', error);
+      }
+    }
+
+    // Check for tool parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     const toolParam = urlParams.get('tool') as ToolType;
     if (toolParam && ['canopy', 'horizontal_vegetation', 'daubenmire'].includes(toolParam)) {
@@ -38,6 +67,14 @@ export default function Tools() {
 
   const createSessionMutation = useMutation({
     mutationFn: async (sessionData: any) => {
+      // Add current site information to session data
+      if (currentSite) {
+        sessionData.siteName = currentSite.name;
+        sessionData.latitude = currentSite.latitude;
+        sessionData.longitude = currentSite.longitude;
+        sessionData.altitude = currentSite.altitude;
+      }
+      
       return await apiRequest("/api/analysis-sessions", {
         method: "POST",
         body: JSON.stringify(sessionData),

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,13 +28,29 @@ import {
   Target,
   Download,
   Zap,
-  Info
+  Info,
+  Mountain,
+  Navigation
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { AnalysisSession } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
+import SiteSelector from "@/components/site-selector";
 import { useTheme } from "next-themes";
+
+interface SiteInfo {
+  name: string;
+  latitude: number;
+  longitude: number;
+  altitude?: number;
+  createdAt: Date;
+  sessionCounts: {
+    canopy: number;
+    horizontal_vegetation: number;
+    daubenmire: number;
+  };
+}
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -42,26 +58,45 @@ export default function Home() {
   const [gpsEnabled, setGpsEnabled] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
   const [notifications, setNotifications] = useState(true);
+  const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
 
   // Fetch recent sessions for dashboard
   const { data: sessions = [], isLoading } = useQuery<AnalysisSession[]>({
     queryKey: ["/api/analysis-sessions"],
   });
 
-  const recentSessions = sessions.slice(0, 3);
-  const totalSessions = sessions.length;
-  const completedSessions = sessions.filter(s => s.isCompleted).length;
-  
-  // Calculate stats
-  const avgCanopyCover = sessions.length > 0 
-    ? sessions.reduce((sum, s) => sum + (s.canopyCover || 0), 0) / sessions.length 
-    : 0;
+  // Filter sessions for current site
+  const siteSessionsFilter = currentSite 
+    ? sessions.filter(s => s.siteName === currentSite.name)
+    : sessions;
 
-  const todaysSessions = sessions.filter(s => {
-    const today = new Date();
-    const sessionDate = new Date(s.timestamp);
-    return sessionDate.toDateString() === today.toDateString();
-  }).length;
+  const recentSessions = siteSessionsFilter.slice(0, 3);
+
+  const formatCoordinates = (lat: number, lng: number) => {
+    return `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`;
+  };
+
+  // Save current site to localStorage when it changes
+  const handleSiteChange = (site: SiteInfo) => {
+    setCurrentSite(site);
+    localStorage.setItem('current-research-site', JSON.stringify(site));
+  };
+
+  // Load current site from localStorage
+  useEffect(() => {
+    const savedCurrentSite = localStorage.getItem('current-research-site');
+    if (savedCurrentSite) {
+      try {
+        const siteData = JSON.parse(savedCurrentSite);
+        setCurrentSite({
+          ...siteData,
+          createdAt: new Date(siteData.createdAt)
+        });
+      } catch (error) {
+        console.error('Error loading current site:', error);
+      }
+    }
+  }, []);
 
   const tools = [
     {
@@ -163,37 +198,33 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Target className="h-4 w-4" />
-              <span className="text-xs font-medium">Total Sessions</span>
+        {/* Site Information */}
+        {currentSite ? (
+          <div className="bg-white/10 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <Target className="h-5 w-5" />
+              <h2 className="text-lg font-semibold">{currentSite.name}</h2>
             </div>
-            <p className="text-2xl font-bold">{totalSessions}</p>
-          </div>
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Calendar className="h-4 w-4" />
-              <span className="text-xs font-medium">Today</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" />
+                <span className="text-sm">{formatCoordinates(currentSite.latitude, currentSite.longitude)}</span>
+              </div>
+              {currentSite.altitude && (
+                <div className="flex items-center space-x-2">
+                  <Mountain className="h-4 w-4" />
+                  <span className="text-sm">{currentSite.altitude.toFixed(0)}m elevation</span>
+                </div>
+              )}
             </div>
-            <p className="text-2xl font-bold">{todaysSessions}</p>
           </div>
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <Award className="h-4 w-4" />
-              <span className="text-xs font-medium">Completed</span>
-            </div>
-            <p className="text-2xl font-bold">{completedSessions}</p>
+        ) : (
+          <div className="bg-white/10 rounded-lg p-4 text-center">
+            <Target className="h-8 w-8 mx-auto mb-2 opacity-60" />
+            <p className="text-sm opacity-80">No research site selected</p>
+            <p className="text-xs opacity-60">Create a site below to start logging measurements</p>
           </div>
-          <div className="bg-white/10 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-1">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-xs font-medium">Avg Canopy</span>
-            </div>
-            <p className="text-2xl font-bold">{avgCanopyCover.toFixed(0)}%</p>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="p-6 space-y-6">
@@ -224,6 +255,12 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Site Selector */}
+        <SiteSelector 
+          currentSite={currentSite}
+          onSiteChange={handleSiteChange}
+        />
 
         {/* Measurement Tools */}
         <Card>
