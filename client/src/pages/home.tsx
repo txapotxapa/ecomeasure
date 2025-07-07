@@ -30,7 +30,8 @@ import {
   Zap,
   Info,
   Mountain,
-  Navigation
+  Navigation,
+  Layers
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
