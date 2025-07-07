@@ -707,7 +707,7 @@ export default function Tools() {
                   size="lg"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  {isProcessing ? "Analyzing..." : "Analyze with GLAMA"}
+                  {isProcessing ? "Analyzing..." : "Analyze"}
                 </Button>
               )}
 
