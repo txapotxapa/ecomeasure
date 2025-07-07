@@ -315,20 +315,24 @@ export default function Home() {
           </Card>
         ) : (
           <Card>
-            <CardHeader>
+            <CardHeader 
+              className="cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => setLocation('/tools')}
+            >
               <CardTitle className="flex items-center">
                 <Camera className="h-5 w-5 mr-2" />
                 Measurement Tools
               </CardTitle>
               <CardDescription>
-                Create a site first to enable measurements
+                Click to access measurement tools (site creation optional)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {tools.map((tool) => (
                 <div
                   key={tool.id}
-                  className="border rounded-lg p-4 opacity-50"
+                  className="border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors hover:opacity-100"
+                  onClick={() => setLocation(tool.route)}
                 >
                   <div className="flex items-start space-x-4">
                     <div className={`p-3 rounded-lg ${tool.lightColor} dark:${tool.darkColor}`}>
