@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, Eye, Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, TrendingUp, Eye, Download, FileText } from "lucide-react";
 import { AnalysisSession } from "@shared/schema";
 
 import BottomNavigation from "@/components/bottom-navigation";
 import AnalysisResults from "@/components/analysis-results";
+import DataVisualization from "@/components/data-visualization";
 import { exportSessionToCSV, shareResults } from "@/lib/export";
 import { useToast } from "@/hooks/use-toast";
 
@@ -119,16 +121,24 @@ export default function Analysis() {
           <BarChart3 className="h-6 w-6" />
           <div>
             <h1 className="text-lg font-semibold">Analysis Dashboard</h1>
-            <p className="text-xs opacity-80">Canopy Cover Statistics</p>
+            <p className="text-xs opacity-80">Ecological Measurement Statistics</p>
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
-        {/* Summary Statistics */}
-        {stats && (
-          <Card>
-            <CardHeader>
+      <div className="p-4">
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="visualizations">Visualizations</TabsTrigger>
+            <TabsTrigger value="details">Session Details</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Summary Statistics */}
+            {stats && (
+              <Card>
+                <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <TrendingUp className="h-5 w-5" />
                 <span>Summary Statistics</span>
@@ -252,6 +262,46 @@ export default function Analysis() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+          
+          <TabsContent value="visualizations">
+            <DataVisualization sessions={sessions} />
+          </TabsContent>
+          
+          <TabsContent value="details">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Recent Sessions</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {sessions.map(session => (
+                    <Card 
+                      key={session.id} 
+                      className="p-3 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => setSelectedSession(session)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{session.plotName}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(session.timestamp).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge className={getMethodColor(session.analysisMethod)}>
+                          {session.analysisMethod}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <BottomNavigation />

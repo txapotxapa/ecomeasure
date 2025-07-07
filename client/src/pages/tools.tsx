@@ -25,11 +25,14 @@ import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
 import DaubenmireTool from "@/components/daubenmire-tool";
 import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
+import VoiceNotes from "@/components/voice-notes";
+import BatchProcessor from "@/components/batch-processor";
+import QuickActions from "@/components/quick-actions";
+import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
 import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
 import type { DaubenmireResult } from "@/lib/daubenmire-frame";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -477,6 +480,47 @@ export default function Tools() {
             onAnalysisComplete={handleDaubenmireAnalysis}
           />
         )}
+
+        {/* Advanced Features Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Voice Notes */}
+          <VoiceNotes 
+            sessionId={currentSite?.name}
+            onNoteRecorded={(blob) => {
+              console.log('Voice note recorded:', blob.size, 'bytes');
+            }}
+          />
+          
+          {/* Quick Actions */}
+          <QuickActions
+            onQuickCapture={() => {
+              // Trigger camera for selected tool
+              const uploadButton = document.querySelector('input[type="file"]') as HTMLInputElement;
+              uploadButton?.click();
+            }}
+            onQuickSave={() => {
+              // Save current session data
+              console.log('Quick save triggered');
+            }}
+            onLocationMark={() => {
+              // GPS marking handled in component
+            }}
+            onQuickShare={() => {
+              // Share functionality handled in component
+            }}
+          />
+        </div>
+
+        {/* Batch Processing */}
+        <BatchProcessor
+          toolType={selectedTool}
+          onBatchComplete={(results) => {
+            toast({
+              title: "Batch processing complete",
+              description: `Successfully analyzed ${results.length} images`,
+            });
+          }}
+        />
 
         <ProcessingModal
           isOpen={isProcessing}
