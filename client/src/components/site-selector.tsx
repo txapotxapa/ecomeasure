@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
@@ -58,6 +59,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     altitude: ""
   });
   const [useManualCoords, setUseManualCoords] = useState(false);
+  const [allowNoCoordinates, setAllowNoCoordinates] = useState(false);
   const [newSitePhoto, setNewSitePhoto] = useState<{ url: string; file: File } | null>(null);
   const { toast } = useToast();
 
@@ -155,10 +157,10 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
       finalLocation = { latitude: lat, longitude: lng, altitude: alt };
     }
 
-    if (!finalLocation) {
+    if (!finalLocation && !allowNoCoordinates) {
       toast({
         title: "Location required",
-        description: "Please get GPS location or enter coordinates manually",
+        description: "Please get GPS location, enter coordinates manually, or enable 'Create without coordinates'",
         variant: "destructive",
       });
       return;
@@ -166,9 +168,9 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
 
     const newSite: SiteInfo = {
       name: newSiteName.trim(),
-      latitude: finalLocation.latitude,
-      longitude: finalLocation.longitude,
-      altitude: finalLocation.altitude,
+      latitude: finalLocation?.latitude || 0,
+      longitude: finalLocation?.longitude || 0,
+      altitude: finalLocation?.altitude,
       photoUrl: newSitePhoto?.url,
       createdAt: new Date(),
       sessionCounts: {
@@ -187,6 +189,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     setNewSiteLocation(null);
     setManualCoords({ latitude: "", longitude: "", altitude: "" });
     setUseManualCoords(false);
+    setAllowNoCoordinates(false);
     setNewSitePhoto(null);
     setShowNewSiteDialog(false);
 
@@ -269,6 +272,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                       onClick={() => {
                         setUseManualCoords(true);
                         setNewSiteLocation(null);
+                        setAllowNoCoordinates(false);
                       }}
                       variant={useManualCoords ? "default" : "outline"}
                       className="w-full"
@@ -276,6 +280,23 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                       <MapPin className="h-4 w-4 mr-2" />
                       Enter Coordinates Manually
                     </Button>
+                  </div>
+
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                    <Checkbox
+                      id="allowNoCoordinates"
+                      checked={allowNoCoordinates}
+                      onCheckedChange={(checked) => {
+                        setAllowNoCoordinates(checked as boolean);
+                        if (checked) {
+                          setUseManualCoords(false);
+                          setNewSiteLocation(null);
+                        }
+                      }}
+                    />
+                    <Label htmlFor="allowNoCoordinates" className="text-sm font-normal cursor-pointer">
+                      Create site without coordinates (location can be added later)
+                    </Label>
                   </div>
 
                   {useManualCoords ? (
@@ -348,7 +369,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                 <Button 
                   onClick={createNewSite} 
                   className="w-full"
-                  disabled={!newSiteName.trim() || !newSiteLocation}
+                  disabled={!newSiteName.trim() || (!newSiteLocation && !useManualCoords && !allowNoCoordinates)}
                 >
                   Create Site
                 </Button>
@@ -364,10 +385,17 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
             <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <h3 className="font-semibold text-lg mb-2">{currentSite.name}</h3>
               <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-sm">
-                  <MapPin className="h-4 w-4 text-green-600" />
-                  <span>{formatCoordinates(currentSite.latitude, currentSite.longitude)}</span>
-                </div>
+                {(currentSite.latitude !== 0 || currentSite.longitude !== 0) ? (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    <span>{formatCoordinates(currentSite.latitude, currentSite.longitude)}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-500">No coordinates set</span>
+                  </div>
+                )}
                 {currentSite.altitude && (
                   <div className="flex items-center space-x-2 text-sm">
                     <Mountain className="h-4 w-4 text-blue-600" />
