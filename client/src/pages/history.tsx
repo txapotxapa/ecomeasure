@@ -83,9 +83,9 @@ export default function History() {
         case "name":
           return a.plotName.localeCompare(b.plotName);
         case "canopy":
-          return b.canopyCover - a.canopyCover;
+          return (b.canopyCover || 0) - (a.canopyCover || 0);
         case "light":
-          return b.lightTransmission - a.lightTransmission;
+          return (b.lightTransmission || 0) - (a.lightTransmission || 0);
         default:
           return 0;
       }
@@ -316,7 +316,11 @@ export default function History() {
                       <BarChart3 className="h-5 w-5 text-green-600" />
                       <div>
                         <div className="font-medium text-green-800">
-                          Latest: {latestSession.canopyCover.toFixed(1)}% canopy cover
+                          Latest: {latestSession.toolType === 'canopy' 
+                            ? `${latestSession.canopyCover?.toFixed(1)}% canopy cover`
+                            : latestSession.toolType === 'daubenmire'
+                            ? `${latestSession.totalCoverage?.toFixed(1)}% ground cover`
+                            : 'Analysis completed'}
                         </div>
                         <div className="text-xs text-green-600">
                           {latestSession.siteName} • {format(new Date(latestSession.timestamp), "MMM d, HH:mm")} • Logged ✓
@@ -483,12 +487,36 @@ export default function History() {
                       
                       <div className="flex items-center space-x-4">
                         <div className="text-right">
-                          <div className={`text-lg font-bold ${getCanopyCoverColor(session.canopyCover)}`}>
-                            {session.canopyCover.toFixed(1)}%
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {session.lightTransmission.toFixed(1)}% light
-                          </div>
+                          {session.toolType === 'canopy' && (
+                            <>
+                              <div className={`text-lg font-bold ${getCanopyCoverColor(session.canopyCover || 0)}`}>
+                                {session.canopyCover?.toFixed(1)}%
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {session.lightTransmission?.toFixed(1)}% light
+                              </div>
+                            </>
+                          )}
+                          {session.toolType === 'daubenmire' && (
+                            <>
+                              <div className="text-lg font-bold text-purple-600">
+                                {session.totalCoverage?.toFixed(1)}%
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                ground cover
+                              </div>
+                            </>
+                          )}
+                          {session.toolType === 'horizontal_vegetation' && (
+                            <>
+                              <div className="text-lg font-bold text-blue-600">
+                                Complete
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                vegetation analysis
+                              </div>
+                            </>
+                          )}
                           {session.leafAreaIndex && (
                             <div className="text-xs text-gray-500">
                               LAI: {session.leafAreaIndex.toFixed(2)}
