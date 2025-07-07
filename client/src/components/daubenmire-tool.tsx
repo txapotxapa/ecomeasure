@@ -115,14 +115,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       return;
     }
 
-    if (!siteName.trim()) {
-      toast({
-        title: "Site Name Required",
-        description: "Please enter a site name before analyzing.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Site name is now handled at app level - no longer required here
 
     setIsProcessing(true);
     setProgress(0);
@@ -137,26 +130,19 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
         }
       });
 
-      // Add site name to results
-      const enhancedResults = {
-        ...results,
-        siteName: siteName.trim(),
-        timestamp: new Date(),
-        samplingMethod: 'Frame-Free Digital Analysis'
-      };
-
-      onAnalysisComplete(enhancedResults);
+      onAnalysisComplete(results);
       
       toast({
-        title: "Analysis Complete",
-        description: `Digital analysis of "${siteName}" completed successfully`,
+        title: "Analysis complete",
+        description: `Ground cover analysis finished. Found ${results.speciesDiversity} vegetation types with ${results.totalCoverage.toFixed(1)}% total coverage.`,
       });
       
     } catch (error) {
+      console.error('Daubenmire analysis error:', error);
       toast({
-        title: "Analysis Failed",
-        description: error instanceof Error ? error.message : "An error occurred during analysis",
-        variant: "destructive"
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -164,7 +150,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
   };
 
   const isReadyToAnalyze = () => {
-    return siteName.trim() && image;
+    return image !== null;
   };
 
   return (
