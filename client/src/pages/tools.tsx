@@ -229,100 +229,106 @@ export default function Tools() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24 space-y-6">
-        {/* Site Requirement Notice */}
+        {/* Streamlined Site Status */}
         {!currentSite && (
-          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+          <Card>
             <CardContent className="pt-6">
-              <div className="flex items-start space-x-3">
-                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">Site Required</h3>
-                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                    Please create or select a research site from the Home page before starting measurements. 
-                    This ensures all data is properly organized and logged to the correct location.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-3 border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
-                    onClick={() => setLocation('/')}
-                  >
-                    Go to Home Page
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Current Site Display */}
-        {currentSite && (
-          <Card className="border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
-            <CardContent className="pt-6">
-              <div className="flex items-start space-x-3">
-                <Target className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-green-800 dark:text-green-200 truncate">
-                    Active Site: {currentSite.name}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-green-700 dark:text-green-300">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{currentSite.latitude.toFixed(6)}°, {currentSite.longitude.toFixed(6)}°</span>
-                    </div>
-                    {currentSite.altitude && (
-                      <div className="flex items-center space-x-1">
-                        <Mountain className="h-3 w-3 flex-shrink-0" />
-                        <span>{currentSite.altitude.toFixed(0)}m</span>
-                      </div>
-                    )}
+              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Target className="h-5 w-5 text-amber-600" />
+                  <div>
+                    <div className="font-medium text-amber-800">No site selected</div>
+                    <div className="text-xs text-amber-600">Create a site to start measuring</div>
                   </div>
                 </div>
+                <Button 
+                  size="sm"
+                  onClick={() => setLocation('/')}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  Create Site
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Tool Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Camera className="h-5 w-5 mr-2" />
-              Choose Measurement Tool
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ToolSelector 
-              selectedTool={selectedTool} 
-              onToolSelect={setSelectedTool}
-            />
-          </CardContent>
-        </Card>
+        {/* Combined Site and Tool Selection */}
+        {currentSite && (
+          <Card>
+            <CardHeader className="space-y-4">
+              {/* Compact Site Info */}
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Target className="h-5 w-5 text-green-600" />
+                  <div>
+                    <div className="font-medium text-green-800">{currentSite.name}</div>
+                    <div className="text-xs text-green-600">
+                      {currentSite.latitude !== 0 || currentSite.longitude !== 0 
+                        ? `${currentSite.latitude.toFixed(4)}°, ${currentSite.longitude.toFixed(4)}°`
+                        : "No coordinates"
+                      }
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setLocation('/')}
+                  className="border-green-300 text-green-700"
+                >
+                  Change
+                </Button>
+              </div>
 
-        {/* Tool-specific Interface */}
-        {selectedTool === 'canopy' && (
+              {/* Quick Tool Selection */}
+              <div>
+                <CardTitle className="flex items-center mb-3">
+                  <Camera className="h-5 w-5 mr-2" />
+                  Quick Measurement
+                </CardTitle>
+                <ToolSelector 
+                  selectedTool={selectedTool} 
+                  onToolSelect={setSelectedTool}
+                />
+              </div>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* Streamlined Tool Interface */}
+        {selectedTool === 'canopy' && currentSite && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <TreePine className="h-5 w-5 mr-2" />
-                Canopy Cover Analysis
+                Canopy Analysis
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {/* Image Upload */}
-              <div className="space-y-2">
-                <Label>Upload Canopy Photo</Label>
-                <ImageUpload 
-                  onImageUploaded={setSelectedImage} 
-                  currentImage={selectedImage?.url}
-                />
-              </div>
+              <ImageUpload 
+                onImageUploaded={setSelectedImage} 
+                currentImage={selectedImage?.url}
+              />
 
-              {/* Optional Canopy Height */}
-              <div className="space-y-2">
-                <Label htmlFor="canopy-height">Canopy Height (meters) - Optional</Label>
-                <div className="flex items-center space-x-2">
-                  <Ruler className="h-4 w-4 text-gray-500" />
+              {/* Auto-analyze on upload or show analyze button */}
+              {selectedImage && !currentAnalysisResults && (
+                <Button 
+                  onClick={() => handleCanopyAnalysis('GLAMA')}
+                  disabled={isProcessing}
+                  className="w-full"
+                  size="lg"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  {isProcessing ? "Analyzing..." : "Analyze with GLAMA"}
+                </Button>
+              )}
+
+              {/* Optional Height Entry - Only after analysis */}
+              {currentAnalysisResults && (
+                <div className="space-y-2">
+                  <Label htmlFor="canopy-height">Canopy Height (optional)</Label>
                   <Input
                     id="canopy-height"
                     type="number"
@@ -331,31 +337,8 @@ export default function Tools() {
                     max="100"
                     value={canopyHeight}
                     onChange={(e) => setCanopyHeight(e.target.value)}
-                    placeholder="e.g., 15.5"
-                    className="flex-1"
+                    placeholder="e.g., 15.5 meters"
                   />
-                </div>
-                <p className="text-xs text-gray-600">
-                  Measure from ground to highest vegetation point for complete site characterization
-                </p>
-              </div>
-
-              {/* Analysis Button */}
-              {selectedImage && (
-                <div className="space-y-3">
-                  <Button 
-                    onClick={() => handleCanopyAnalysis('GLAMA')}
-                    disabled={isProcessing || !currentSite}
-                    className="w-full"
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Analyze with GLAMA
-                  </Button>
-                  {!currentSite && (
-                    <p className="text-xs text-amber-600 text-center">
-                      Select a site to enable analysis
-                    </p>
-                  )}
                 </div>
               )}
 

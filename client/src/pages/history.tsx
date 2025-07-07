@@ -283,110 +283,34 @@ export default function History() {
           </CardContent>
         </Card>
 
-        {/* Current Session Data */}
-        {showCurrentData && (
+        {/* Latest Measurement Quick View */}
+        {sessions.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span>Current Session Data</span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCurrentData(false)}
-                >
-                  ×
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {sessions.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="text-sm text-gray-600">
-                    Showing data from your current session to verify measurements are being logged correctly.
-                  </div>
-                  
-                  {/* Latest Session Display */}
-                  {(() => {
-                    const latestSession = sessions.sort((a, b) => 
-                      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-                    )[0];
-                    
-                    if (!latestSession) return null;
-                    
-                    return (
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Site:</span>
-                              <span className="text-sm">{latestSession.siteName || "Not set"}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Method:</span>
-                              <Badge className={getMethodColor(latestSession.analysisMethod)}>
-                                {latestSession.analysisMethod}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Canopy Cover:</span>
-                              <span className={`text-sm font-mono ${getCanopyCoverColor(latestSession.canopyCover)}`}>
-                                {latestSession.canopyCover.toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Light Transmission:</span>
-                              <span className="text-sm font-mono">
-                                {latestSession.lightTransmission.toFixed(1)}%
-                              </span>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Timestamp:</span>
-                              <span className="text-xs">
-                                {format(new Date(latestSession.timestamp), "MMM d, HH:mm")}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Pixels Analyzed:</span>
-                              <span className="text-sm font-mono">
-                                {latestSession.pixelsAnalyzed.toLocaleString()}
-                              </span>
-                            </div>
-                            {latestSession.canopyHeight && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Canopy Height:</span>
-                                <span className="text-sm font-mono">
-                                  {latestSession.canopyHeight}m
-                                </span>
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium">Processing Time:</span>
-                              <span className="text-sm font-mono">
-                                {latestSession.processingTime.toFixed(2)}s
-                              </span>
-                            </div>
-                          </div>
+            <CardContent className="pt-6">
+              {(() => {
+                const latestSession = sessions.sort((a, b) => 
+                  new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                )[0];
+                
+                return (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <BarChart3 className="h-5 w-5 text-green-600" />
+                      <div>
+                        <div className="font-medium text-green-800">
+                          Latest: {latestSession.canopyCover.toFixed(1)}% canopy cover
                         </div>
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                            <span>Latest measurement from this session</span>
-                            <span>Status: Logged successfully ✓</span>
-                          </div>
+                        <div className="text-xs text-green-600">
+                          {latestSession.siteName} • {format(new Date(latestSession.timestamp), "MMM d, HH:mm")} • Logged ✓
                         </div>
                       </div>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  No measurements logged yet. Complete an analysis in the Tools tab to see data here.
-                </div>
-              )}
+                    </div>
+                    <Badge className={getMethodColor(latestSession.analysisMethod)}>
+                      {latestSession.analysisMethod}
+                    </Badge>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         )}
