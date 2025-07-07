@@ -620,44 +620,48 @@ export default function Tools() {
               {/* GPS Accuracy Indicator */}
               <GPSAccuracyIndicator className="mb-2" />
 
-              {/* Image Upload - supports single or batch */}
-              <ImageUpload 
-                onImageUploaded={setSelectedImage} 
-                onBatchUploaded={(images) => {
-                  if (images.length > 1) {
-                    // Show batch processor for multiple images
-                    toast({
-                      title: "Batch Upload Complete",
-                      description: `${images.length} images ready for batch processing. Use the batch processor below.`,
-                    });
-                  } else {
-                    // Single image - set as selected image
-                    setSelectedImage(images[0]);
-                  }
-                }}
-                currentImage={selectedImage?.url}
-                allowBatch={true}
-              />
-
-              {/* Batch Processing Section */}
+              {/* Unified Image Upload - handles both single and batch */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Layers className="h-4 w-4 mr-2" />
-                    Batch Processing
+                    <Camera className="h-4 w-4 mr-2" />
+                    Photo Upload
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BatchProcessor
-                    toolType={selectedTool}
-                    onBatchComplete={(results) => {
-                      toast({
-                        title: "Batch processing complete",
-                        description: `Successfully analyzed ${results.length} images`,
-                      });
+                  <ImageUpload 
+                    onImageUploaded={setSelectedImage} 
+                    onBatchUploaded={(images) => {
+                      if (images.length > 1) {
+                        // Trigger batch processing directly
+                        toast({
+                          title: "Batch Processing Started",
+                          description: `Processing ${images.length} images...`,
+                        });
+                        // Auto-start batch processing
+                        // The BatchProcessor component will handle the processing
+                      } else {
+                        // Single image - set as selected image
+                        setSelectedImage(images[0]);
+                      }
                     }}
-                    className="w-full"
+                    currentImage={selectedImage?.url}
+                    allowBatch={true}
                   />
+                  
+                  {/* Integrated batch processor (hidden when not needed) */}
+                  <div className="mt-4">
+                    <BatchProcessor
+                      toolType={selectedTool}
+                      onBatchComplete={(results) => {
+                        toast({
+                          title: "Batch analysis complete",
+                          description: `Successfully analyzed ${results.length} images`,
+                        });
+                      }}
+                      className="w-full"
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

@@ -189,15 +189,10 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
               <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
                 {isDragging 
-                  ? `Drop image${allowBatch ? "(s)" : ""} here to upload` 
-                  : `Drag and drop image${allowBatch ? "(s)" : ""} here or click to ${allowBatch ? "select/capture" : "capture"}`
+                  ? "Drop image(s) here to upload" 
+                  : "Upload single image for analysis or multiple images for batch processing"
                 }
               </p>
-              {allowBatch && (
-                <p className="text-xs text-muted-foreground mb-4">
-                  Select multiple files for batch processing
-                </p>
-              )}
               <div className="space-y-2">
                 <Button
                   onClick={handleCameraCapture}
@@ -214,7 +209,7 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
                   className="w-full"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  {allowBatch ? "Select Image File(s)" : "Select Image File"}
+                  Select Image File(s)
                 </Button>
               </div>
             </>
