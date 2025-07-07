@@ -156,6 +156,9 @@ Changelog:
   - Added checkbox option to create sites without coordinates for maximum flexibility
   - Restricted canopy analysis to GLAMA method only for consistency with original research tool
   - Fixed button positioning issue in canopy tool - GLAMA analysis button now properly positioned above bottom navigation
+  - Added analysis results data sheet display below canopy height section to verify successful processing
+  - Added current session data view in history tab to monitor real-time data logging and verification
+  - Enhanced mobile layout with proper spacing to prevent UI overlap with bottom navigation
 
 ## User Preferences
 

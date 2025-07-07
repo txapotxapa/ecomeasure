@@ -56,6 +56,7 @@ export default function Tools() {
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState("");
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
+  const [currentAnalysisResults, setCurrentAnalysisResults] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -177,6 +178,13 @@ export default function Tools() {
       };
 
       console.log('Creating session with data:', sessionData);
+      
+      // Store results for display in data sheet
+      setCurrentAnalysisResults({
+        ...sessionData,
+        timestamp: new Date().toISOString(),
+      });
+      
       createSessionMutation.mutate(sessionData);
     } catch (error) {
       console.error('Canopy analysis error:', error);
@@ -348,6 +356,72 @@ export default function Tools() {
                       Select a site to enable analysis
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Analysis Results Data Sheet */}
+              {currentAnalysisResults && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold">Analysis Results</Label>
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(currentAnalysisResults.timestamp).toLocaleTimeString()}
+                    </Badge>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Canopy Cover:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.canopyCover?.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Light Transmission:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.lightTransmission?.toFixed(1)}%
+                          </span>
+                        </div>
+                        {currentAnalysisResults.leafAreaIndex && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Leaf Area Index:</span>
+                            <span className="text-sm font-mono">
+                              {currentAnalysisResults.leafAreaIndex?.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Pixels Analyzed:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.pixelsAnalyzed?.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Processing Time:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.processingTime?.toFixed(2)}s
+                          </span>
+                        </div>
+                        {currentAnalysisResults.canopyHeight && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Canopy Height:</span>
+                            <span className="text-sm font-mono">
+                              {currentAnalysisResults.canopyHeight}m
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                        <span>Site: {currentSite?.name}</span>
+                        <span>Method: {currentAnalysisResults.analysisMethod}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
