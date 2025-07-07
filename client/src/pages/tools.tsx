@@ -691,29 +691,31 @@ export default function Tools() {
                 }} 
               />
 
-              {/* Single Unified Photo Upload */}
-              <ImageUpload 
-                onImageUploaded={setSelectedImage} 
-                onBatchUploaded={(images) => {
-                  if (images.length > 1) {
-                    // Process multiple images for batch analysis
-                    toast({
-                      title: "Multiple Images Selected",
-                      description: `${images.length} images ready for analysis`,
-                    });
-                    // For now, just use the first image for single analysis
-                    // TODO: Implement batch canopy analysis
-                    setSelectedImage(images[0]);
-                  } else {
-                    setSelectedImage(images[0]);
-                  }
-                }}
-                currentImage={selectedImage?.url}
-                allowBatch={true}
-              />
+              {/* Single Unified Photo Upload - Only show when no results */}
+              {!currentAnalysisResults && (
+                <ImageUpload 
+                  onImageUploaded={setSelectedImage} 
+                  onBatchUploaded={(images) => {
+                    if (images.length > 1) {
+                      // Process multiple images for batch analysis
+                      toast({
+                        title: "Multiple Images Selected",
+                        description: `${images.length} images ready for analysis`,
+                      });
+                      // For now, just use the first image for single analysis
+                      // TODO: Implement batch canopy analysis
+                      setSelectedImage(images[0]);
+                    } else {
+                      setSelectedImage(images[0]);
+                    }
+                  }}
+                  currentImage={selectedImage?.url}
+                  allowBatch={true}
+                />
+              )}
 
               {/* Optional Height Entry - Available before analysis */}
-              {selectedImage && (
+              {selectedImage && !currentAnalysisResults && (
                 <div className="space-y-2">
                   <Label htmlFor="canopy-height">Canopy Height (optional)</Label>
                   <Input
@@ -880,44 +882,21 @@ export default function Tools() {
                 </div>
               )}
 
-              {/* Photo Upload Available After Analysis */}
+              {/* Reset button to analyze another image */}
               {currentAnalysisResults && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-medium">Analyze Another Image</Label>
-                    <Button 
-                      onClick={() => {
-                        setCurrentAnalysisResults(null);
-                        setSelectedImage(null);
-                        setCanopyHeight("");
-                      }}
-                      variant="outline" 
-                      size="sm"
-                    >
-                      Clear Results
-                    </Button>
-                  </div>
-                  
-                  <ImageUpload 
-                    onImageUploaded={(imageData) => {
-                      setSelectedImage(imageData);
-                      setCurrentAnalysisResults(null); // Clear previous results when new image is selected
-                    }} 
-                    onBatchUploaded={(images) => {
-                      if (images.length > 1) {
-                        toast({
-                          title: "Multiple Images Selected",
-                          description: `${images.length} images ready for analysis`,
-                        });
-                        setSelectedImage(images[0]);
-                      } else {
-                        setSelectedImage(images[0]);
-                      }
-                      setCurrentAnalysisResults(null); // Clear previous results
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Button 
+                    onClick={() => {
+                      setCurrentAnalysisResults(null);
+                      setSelectedImage(null);
+                      setCanopyHeight("");
                     }}
-                    currentImage={undefined} // Don't show previous image
-                    allowBatch={true}
-                  />
+                    variant="outline" 
+                    className="w-full"
+                    size="lg"
+                  >
+                    Analyze Another Image
+                  </Button>
                 </div>
               )}
             </CardContent>
