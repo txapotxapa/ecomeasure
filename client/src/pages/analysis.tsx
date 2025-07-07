@@ -203,7 +203,7 @@ export default function Analysis() {
                       <div>
                         <p className="font-medium text-gray-800">{session.plotName}</p>
                         <p className="text-sm text-gray-600">
-                          {session.timestamp.toLocaleDateString()} • {session.timestamp.toLocaleTimeString()}
+                          {new Date(session.timestamp).toLocaleDateString()} • {new Date(session.timestamp).toLocaleTimeString()}
                         </p>
                         <div className="flex items-center space-x-2 mt-1">
                           <Badge variant="outline" className={getMethodColor(session.analysisMethod)}>

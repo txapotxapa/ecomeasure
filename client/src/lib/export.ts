@@ -129,7 +129,7 @@ function generateHTMLReport(sessions: AnalysisSession[]): string {
                 ${sessions.map(session => `
                     <tr>
                         <td>${session.plotName}</td>
-                        <td>${session.timestamp.toLocaleString()}</td>
+                        <td>${new Date(session.timestamp).toLocaleString()}</td>
                         <td>${session.latitude && session.longitude ? 
                             `${session.latitude.toFixed(6)}, ${session.longitude.toFixed(6)}` : 
                             'N/A'}</td>

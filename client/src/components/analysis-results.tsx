@@ -42,7 +42,7 @@ export default function AnalysisResults({
               <h3 className="font-semibold text-gray-800">{session.plotName}</h3>
             </div>
             <span className="text-xs text-gray-500">
-              {session.timestamp.toLocaleTimeString()}
+              {new Date(session.timestamp).toLocaleTimeString()}
             </span>
           </div>
           
