@@ -25,7 +25,6 @@ import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
 import DaubenmireTool from "@/components/daubenmire-tool";
 import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
-import BatchProcessor from "@/components/batch-processor";
 import SiteSelector from "@/components/site-selector";
 import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +70,11 @@ export default function Tools() {
   const [showSiteCreator, setShowSiteCreator] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Scroll to top when component mounts or tool changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [selectedTool]);
 
 
 
@@ -656,46 +660,26 @@ export default function Tools() {
               {/* GPS Accuracy Indicator */}
               <GPSAccuracyIndicator className="mb-2" />
 
-              {/* Hybrid Photo Upload - Single and Batch */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Photo Upload
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ImageUpload 
-                    onImageUploaded={setSelectedImage} 
-                    onBatchUploaded={(images) => {
-                      if (images.length > 1) {
-                        toast({
-                          title: "Batch Processing Started",
-                          description: `Processing ${images.length} images...`,
-                        });
-                      } else {
-                        setSelectedImage(images[0]);
-                      }
-                    }}
-                    currentImage={selectedImage?.url}
-                    allowBatch={true}
-                  />
-                  
-                  {/* Integrated batch processor */}
-                  <div className="mt-4">
-                    <BatchProcessor
-                      toolType="canopy"
-                      onBatchComplete={(results) => {
-                        toast({
-                          title: "Batch Analysis Complete",
-                          description: `Successfully analyzed ${results.length} images`,
-                        });
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Single Unified Photo Upload */}
+              <ImageUpload 
+                onImageUploaded={setSelectedImage} 
+                onBatchUploaded={(images) => {
+                  if (images.length > 1) {
+                    // Process multiple images for batch analysis
+                    toast({
+                      title: "Multiple Images Selected",
+                      description: `${images.length} images ready for analysis`,
+                    });
+                    // For now, just use the first image for single analysis
+                    // TODO: Implement batch canopy analysis
+                    setSelectedImage(images[0]);
+                  } else {
+                    setSelectedImage(images[0]);
+                  }
+                }}
+                currentImage={selectedImage?.url}
+                allowBatch={true}
+              />
 
               {/* Optional Height Entry - Available before analysis */}
               {selectedImage && (

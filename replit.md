@@ -218,15 +218,15 @@ Changelog:
   - Site names now persist across tool switches for consistent data organization
   - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
   - Improved field workflow with clearer visual instructions for proper setup
-- July 07, 2025. Added comprehensive setup guides with visual diagrams:
+- July 07, 2025. Streamlined tools interface with unified photo upload:
   - Created detailed setup guide for canopy cover analysis with side-view diagram showing proper 1.3m camera height
   - Added comprehensive setup guide for ground cover analysis with visual quadrat sampling diagram
   - Visual diagrams show proper camera positioning, height requirements, and sampling areas
-  - Enhanced canopy tool with hybrid photo upload supporting both single and batch processing
-  - Combined batch processing functionality directly into canopy tool photo upload card
+  - Implemented single unified photo upload interface that handles both single and multiple images
+  - Removed separate batch processor and quick actions components for cleaner interface
+  - Added automatic scroll to top when tools tab is clicked or tool is changed
   - Setup guides include step-by-step instructions and accuracy specifications
   - Visual diagrams use gradient backgrounds and illustrated elements for clear field guidance
-  - Maintained tool-specific workflows with improved visual instruction clarity
 
 ## User Preferences
 
