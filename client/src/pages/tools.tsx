@@ -480,9 +480,9 @@ export default function Tools() {
         {/* Tool Selection - Always Visible */}
         <Card className="border-2 border-blue-500">
           <CardHeader className="space-y-4">
-            <CardTitle className="flex items-center text-blue-600">
+            <CardTitle className="flex items-center text-red-600 bg-yellow-200 p-4 rounded">
               <Camera className="h-5 w-5 mr-2" />
-              Choose Your Measurement Tool
+              🔧 ALL THREE TOOLS AVAILABLE 🔧
             </CardTitle>
             <div className="grid gap-4">
               <div 
