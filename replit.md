@@ -149,6 +149,10 @@ Changelog:
   - Enhanced database schema to support site photo documentation and canopy height measurements
   - Improved field research workflow: site creation → consecutive tool usage → comprehensive vegetation profiling
   - Site-based data organization enables succession level assessment through combined metrics
+  - Fixed canopy analysis API request issues and timestamp display problems
+  - Added manual coordinate input option for site creation - users can now create sites with GPS or manual coordinates
+  - Enhanced site creation with dual location options: GPS auto-capture or manual latitude/longitude entry
+  - Added coordinate validation for manual entry with proper range checking and error messages
 
 ## User Preferences
 

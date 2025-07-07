@@ -52,6 +52,12 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     longitude: number;
     altitude?: number;
   } | null>(null);
+  const [manualCoords, setManualCoords] = useState({
+    latitude: "",
+    longitude: "",
+    altitude: ""
+  });
+  const [useManualCoords, setUseManualCoords] = useState(false);
   const [newSitePhoto, setNewSitePhoto] = useState<{ url: string; file: File } | null>(null);
   const { toast } = useToast();
 
@@ -111,10 +117,48 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
       return;
     }
 
-    if (!newSiteLocation) {
+    let finalLocation = newSiteLocation;
+
+    // If using manual coordinates, validate and convert them
+    if (useManualCoords) {
+      const lat = parseFloat(manualCoords.latitude);
+      const lng = parseFloat(manualCoords.longitude);
+      const alt = manualCoords.altitude ? parseFloat(manualCoords.altitude) : undefined;
+
+      if (isNaN(lat) || isNaN(lng)) {
+        toast({
+          title: "Invalid coordinates",
+          description: "Please enter valid latitude and longitude values",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (lat < -90 || lat > 90) {
+        toast({
+          title: "Invalid latitude",
+          description: "Latitude must be between -90 and 90 degrees",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (lng < -180 || lng > 180) {
+        toast({
+          title: "Invalid longitude", 
+          description: "Longitude must be between -180 and 180 degrees",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      finalLocation = { latitude: lat, longitude: lng, altitude: alt };
+    }
+
+    if (!finalLocation) {
       toast({
         title: "Location required",
-        description: "Please get location or enter coordinates manually",
+        description: "Please get GPS location or enter coordinates manually",
         variant: "destructive",
       });
       return;
@@ -122,9 +166,9 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
 
     const newSite: SiteInfo = {
       name: newSiteName.trim(),
-      latitude: newSiteLocation.latitude,
-      longitude: newSiteLocation.longitude,
-      altitude: newSiteLocation.altitude,
+      latitude: finalLocation.latitude,
+      longitude: finalLocation.longitude,
+      altitude: finalLocation.altitude,
       photoUrl: newSitePhoto?.url,
       createdAt: new Date(),
       sessionCounts: {
@@ -141,6 +185,8 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     // Reset form
     setNewSiteName("");
     setNewSiteLocation(null);
+    setManualCoords({ latitude: "", longitude: "", altitude: "" });
+    setUseManualCoords(false);
     setNewSitePhoto(null);
     setShowNewSiteDialog(false);
 
@@ -193,28 +239,85 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                   />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Location</Label>
-                  <Button
-                    onClick={getCurrentLocationForNewSite}
-                    disabled={isGettingLocation}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {isGettingLocation ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mr-2" />
-                        Getting location...
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Get Current Location
-                      </>
-                    )}
-                  </Button>
                   
-                  {newSiteLocation && (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => {
+                        setUseManualCoords(false);
+                        getCurrentLocationForNewSite();
+                      }}
+                      disabled={isGettingLocation}
+                      variant={!useManualCoords ? "default" : "outline"}
+                      className="w-full"
+                    >
+                      {isGettingLocation ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mr-2" />
+                          Getting location...
+                        </>
+                      ) : (
+                        <>
+                          <Navigation className="h-4 w-4 mr-2" />
+                          Use Current GPS Location
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button
+                      onClick={() => {
+                        setUseManualCoords(true);
+                        setNewSiteLocation(null);
+                      }}
+                      variant={useManualCoords ? "default" : "outline"}
+                      className="w-full"
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Enter Coordinates Manually
+                    </Button>
+                  </div>
+
+                  {useManualCoords ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="latitude" className="text-sm">Latitude</Label>
+                        <Input
+                          id="latitude"
+                          type="number"
+                          step="any"
+                          value={manualCoords.latitude}
+                          onChange={(e) => setManualCoords(prev => ({ ...prev, latitude: e.target.value }))}
+                          placeholder="e.g., 40.123456"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="longitude" className="text-sm">Longitude</Label>
+                        <Input
+                          id="longitude"
+                          type="number"
+                          step="any"
+                          value={manualCoords.longitude}
+                          onChange={(e) => setManualCoords(prev => ({ ...prev, longitude: e.target.value }))}
+                          placeholder="e.g., -74.123456"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label htmlFor="altitude" className="text-sm">Altitude (optional)</Label>
+                        <Input
+                          id="altitude"
+                          type="number"
+                          step="any"
+                          value={manualCoords.altitude}
+                          onChange={(e) => setManualCoords(prev => ({ ...prev, altitude: e.target.value }))}
+                          placeholder="e.g., 120 (meters)"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  ) : newSiteLocation && (
                     <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div className="flex items-center space-x-2 text-sm">
                         <MapPin className="h-4 w-4 text-green-600" />
