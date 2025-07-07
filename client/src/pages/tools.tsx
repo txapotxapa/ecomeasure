@@ -879,6 +879,47 @@ export default function Tools() {
                   </div>
                 </div>
               )}
+
+              {/* Photo Upload Available After Analysis */}
+              {currentAnalysisResults && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-medium">Analyze Another Image</Label>
+                    <Button 
+                      onClick={() => {
+                        setCurrentAnalysisResults(null);
+                        setSelectedImage(null);
+                        setCanopyHeight("");
+                      }}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Clear Results
+                    </Button>
+                  </div>
+                  
+                  <ImageUpload 
+                    onImageUploaded={(imageData) => {
+                      setSelectedImage(imageData);
+                      setCurrentAnalysisResults(null); // Clear previous results when new image is selected
+                    }} 
+                    onBatchUploaded={(images) => {
+                      if (images.length > 1) {
+                        toast({
+                          title: "Multiple Images Selected",
+                          description: `${images.length} images ready for analysis`,
+                        });
+                        setSelectedImage(images[0]);
+                      } else {
+                        setSelectedImage(images[0]);
+                      }
+                      setCurrentAnalysisResults(null); // Clear previous results
+                    }}
+                    currentImage={undefined} // Don't show previous image
+                    allowBatch={true}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
