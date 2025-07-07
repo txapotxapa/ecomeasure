@@ -94,11 +94,12 @@ export default function Tools() {
         sessionData.sitePhotoUrl = currentSite.photoUrl;
       }
       
-      return await apiRequest("/api/analysis-sessions", {
+      const response = await apiRequest("/api/analysis-sessions", {
         method: "POST",
         body: JSON.stringify(sessionData),
         headers: { "Content-Type": "application/json" },
       });
+      return await response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
