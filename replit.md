@@ -209,6 +209,15 @@ Changelog:
   - Applied consistent dark theme styling across all components
   - Added gradient backgrounds mimicking Gaia GPS's outdoor mapping aesthetic
   - Improved contrast ratios for better visibility in outdoor conditions
+- July 07, 2025. Enhanced Horizontal Vegetation tool with visual diagram and site syncing:
+  - Added comprehensive visual diagram showing Digital Robel Pole Method setup
+  - Created top-view diagram showing camera positions at 4 cardinal directions
+  - Added side-view diagram illustrating 1m camera height and 4m distance
+  - Implemented automatic site name syncing across all tools via localStorage
+  - When site is selected in home or any tool, it automatically populates in other tools
+  - Site names now persist across tool switches for consistent data organization
+  - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
+  - Improved field workflow with clearer visual instructions for proper setup
 
 ## User Preferences
 

@@ -31,7 +31,11 @@ interface HorizontalVegetationToolProps {
 }
 
 export default function HorizontalVegetationTool({ onAnalysisComplete }: HorizontalVegetationToolProps) {
-  const [siteName, setSiteName] = useState('');
+  // Load current site from localStorage to sync across tools
+  const savedSite = localStorage.getItem('current-research-site');
+  const currentSiteName = savedSite ? JSON.parse(savedSite).name : '';
+  
+  const [siteName, setSiteName] = useState(currentSiteName);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState('');
@@ -259,28 +263,113 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
 
           <Separator />
 
-          {/* Method Setup Information */}
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium flex items-center mb-2">
+          {/* Method Setup Information with Visual Diagram */}
+          <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
+            <h4 className="font-medium flex items-center mb-4">
               <Target className="w-4 h-4 mr-2" />
-              Camera Setup Requirements
+              Digital Robel Pole Method - Setup Guide
             </h4>
+            
+            {/* Visual Diagram */}
+            <div className="mb-4 p-4 bg-card rounded-lg">
+              <div className="relative mx-auto max-w-sm">
+                {/* Top view diagram */}
+                <svg viewBox="0 0 300 300" className="w-full h-auto">
+                  {/* Background circle */}
+                  <circle cx="150" cy="150" r="140" fill="none" stroke="currentColor" strokeWidth="1" className="text-border" strokeDasharray="4 4" />
+                  
+                  {/* Center pole */}
+                  <circle cx="150" cy="150" r="8" fill="currentColor" className="text-primary" />
+                  <text x="150" y="155" textAnchor="middle" className="text-xs font-medium fill-card">P</text>
+                  
+                  {/* 4m radius circle */}
+                  <circle cx="150" cy="150" r="100" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary" strokeDasharray="2 2" />
+                  
+                  {/* Cardinal directions with camera positions */}
+                  {/* North */}
+                  <circle cx="150" cy="50" r="6" fill="currentColor" className="text-primary" />
+                  <text x="150" y="35" textAnchor="middle" className="text-sm font-medium fill-foreground">N</text>
+                  <path d="M150 50 L145 40 L155 40 Z" fill="currentColor" className="text-primary" />
+                  
+                  {/* East */}
+                  <circle cx="250" cy="150" r="6" fill="currentColor" className="text-primary" />
+                  <text x="265" y="155" textAnchor="start" className="text-sm font-medium fill-foreground">E</text>
+                  <path d="M250 150 L260 145 L260 155 Z" fill="currentColor" className="text-primary" />
+                  
+                  {/* South */}
+                  <circle cx="150" cy="250" r="6" fill="currentColor" className="text-primary" />
+                  <text x="150" y="270" textAnchor="middle" className="text-sm font-medium fill-foreground">S</text>
+                  <path d="M150 250 L145 260 L155 260 Z" fill="currentColor" className="text-primary" />
+                  
+                  {/* West */}
+                  <circle cx="50" cy="150" r="6" fill="currentColor" className="text-primary" />
+                  <text x="35" y="155" textAnchor="end" className="text-sm font-medium fill-foreground">W</text>
+                  <path d="M50 150 L40 145 L40 155 Z" fill="currentColor" className="text-primary" />
+                  
+                  {/* Distance labels */}
+                  <text x="200" y="100" textAnchor="middle" className="text-xs fill-muted-foreground">4m</text>
+                  
+                  {/* Legend */}
+                  <text x="150" y="290" textAnchor="middle" className="text-xs fill-muted-foreground">Top View - Camera positions around pole</text>
+                </svg>
+              </div>
+              
+              {/* Side view diagram */}
+              <div className="mt-4 p-3 bg-muted/20 rounded">
+                <p className="text-xs font-medium mb-2">Side View Setup:</p>
+                <div className="flex items-end justify-center space-x-8">
+                  {/* Camera */}
+                  <div className="text-center">
+                    <div className="w-8 h-6 bg-primary rounded-sm mb-1"></div>
+                    <div className="h-16 w-1 bg-border mx-auto"></div>
+                    <p className="text-xs mt-1">Camera<br/>1m high</p>
+                  </div>
+                  
+                  {/* Arrow */}
+                  <div className="mb-8">
+                    <svg width="60" height="20" className="text-muted-foreground">
+                      <line x1="0" y1="10" x2="50" y2="10" stroke="currentColor" strokeWidth="2" />
+                      <path d="M50 10 L45 5 L45 15 Z" fill="currentColor" />
+                      <text x="25" y="8" textAnchor="middle" className="text-xs fill-foreground">4m</text>
+                    </svg>
+                  </div>
+                  
+                  {/* Pole */}
+                  <div className="text-center">
+                    <div className="relative">
+                      {/* Pole with bands */}
+                      <div className="w-4 bg-gradient-to-b from-primary to-primary/80 relative" style={{height: '80px'}}>
+                        {/* 10cm bands */}
+                        <div className="absolute inset-x-0 top-0 h-2 bg-card border-y border-border"></div>
+                        <div className="absolute inset-x-0 top-4 h-2 bg-card border-y border-border"></div>
+                        <div className="absolute inset-x-0 top-8 h-2 bg-card border-y border-border"></div>
+                        <div className="absolute inset-x-0 top-12 h-2 bg-card border-y border-border"></div>
+                        <div className="absolute inset-x-0 top-16 h-2 bg-card border-y border-border"></div>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-1">Pole<br/>2m with<br/>10cm bands</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick reference */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Pole Height:</span>
-                <p className="text-blue-700">2m with 10cm bands</p>
+              <div className="text-center p-2 bg-card rounded">
+                <span className="font-medium text-primary">2m</span>
+                <p className="text-xs text-muted-foreground">Pole height</p>
               </div>
-              <div>
-                <span className="font-medium">Camera Distance:</span>
-                <p className="text-blue-700">4m from pole</p>
+              <div className="text-center p-2 bg-card rounded">
+                <span className="font-medium text-primary">4m</span>
+                <p className="text-xs text-muted-foreground">Camera distance</p>
               </div>
-              <div>
-                <span className="font-medium">Camera Height:</span>
-                <p className="text-blue-700">1m above ground</p>
+              <div className="text-center p-2 bg-card rounded">
+                <span className="font-medium text-primary">1m</span>
+                <p className="text-xs text-muted-foreground">Camera height</p>
               </div>
-              <div>
-                <span className="font-medium">Photos Needed:</span>
-                <p className="text-blue-700">4 cardinal directions</p>
+              <div className="text-center p-2 bg-card rounded">
+                <span className="font-medium text-primary">N, E, S, W</span>
+                <p className="text-xs text-muted-foreground">4 directions</p>
               </div>
             </div>
           </div>
