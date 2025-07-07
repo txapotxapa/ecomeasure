@@ -120,6 +120,8 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       return;
     }
 
+    console.log('Starting Daubenmire analysis with image:', image.name, 'size:', image.size);
+    
     setIsProcessing(true);
     setProgress(0);
     setCurrentStage('Uploading image...');
@@ -129,26 +131,32 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       const formData = new FormData();
       formData.append('image', image);
       
+      console.log('Uploading image to server...');
       const uploadResponse = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
+        const errorText = await uploadResponse.text();
+        console.error('Upload failed:', uploadResponse.status, errorText);
+        throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
       }
 
       const uploadData = await uploadResponse.json();
+      console.log('Upload successful, starting analysis...');
       setCurrentStage('Analyzing ground cover with Canopeo-like method...');
 
       const results = await analyzeDaubenmireFrame(image, {
         method: 'color_analysis',
         onProgress: (progress, stage) => {
+          console.log(`Analysis progress: ${progress}% - ${stage}`);
           setProgress(progress);
           setCurrentStage(stage);
         }
       });
 
+      console.log('Analysis complete:', results);
       onAnalysisComplete(results, uploadData.imageUrl);
       
       toast({
