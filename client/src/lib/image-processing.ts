@@ -19,6 +19,12 @@ export async function analyzeCanopyImage(
 ): Promise<CanopyAnalysisResult> {
   const startTime = performance.now();
   
+  // Validate the image file first
+  const validation = validateImage(imageFile);
+  if (!validation.isValid) {
+    throw new Error(validation.error || 'Invalid image file');
+  }
+  
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -26,6 +32,8 @@ export async function analyzeCanopyImage(
     
     img.onload = async () => {
       try {
+        console.log(`Image loaded: ${img.width}x${img.height}`);
+        
         // Set canvas size
         canvas.width = img.width;
         canvas.height = img.height;
@@ -40,6 +48,8 @@ export async function analyzeCanopyImage(
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const data = imageData.data;
         
+        console.log(`Processing ${data.length / 4} pixels with ${options.method} method`);
+        
         let result: CanopyAnalysisResult;
         
         switch (options.method) {
@@ -53,19 +63,38 @@ export async function analyzeCanopyImage(
             result = await processCustom(data, canvas.width, canvas.height, options);
             break;
           default:
-            throw new Error('Unknown analysis method');
+            throw new Error(`Unknown analysis method: ${options.method}`);
         }
         
         result.processingTime = performance.now() - startTime;
+        console.log('Analysis complete:', result);
+        
+        // Clean up
+        URL.revokeObjectURL(img.src);
+        
         resolve(result);
         
       } catch (error) {
+        console.error('Analysis processing error:', error);
+        URL.revokeObjectURL(img.src);
         reject(error);
       }
     };
     
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(imageFile);
+    img.onerror = (error) => {
+      console.error('Image loading error:', error);
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image for analysis'));
+    };
+    
+    // Create object URL and load image
+    try {
+      img.src = URL.createObjectURL(imageFile);
+      console.log('Created object URL for image analysis');
+    } catch (error) {
+      console.error('Error creating object URL:', error);
+      reject(new Error('Failed to process image file'));
+    }
   });
 }
 

@@ -26,7 +26,7 @@ import DaubenmireTool from "@/components/daubenmire-tool";
 import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
 
-import { analyzeCanopyImage } from "@/lib/image-processing";
+import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
 import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
 import type { DaubenmireResult } from "@/lib/daubenmire-frame";
 import { useToast } from "@/hooks/use-toast";
@@ -114,21 +114,45 @@ export default function Tools() {
   });
 
   const handleCanopyAnalysis = async (method: 'GLAMA' | 'Canopeo') => {
-    if (!selectedImage || !currentSite) return;
+    if (!selectedImage || !currentSite) {
+      toast({
+        title: "Missing Requirements",
+        description: !selectedImage ? "Please upload an image first" : "Please select a research site",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate image file
+    const validation = validateImage(selectedImage.file);
+    if (!validation.isValid) {
+      toast({
+        title: "Invalid Image",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsProcessing(true);
     setProgress(0);
     setCurrentStage("Starting analysis...");
 
     try {
+      console.log('Starting canopy analysis with method:', method);
+      console.log('Image file:', selectedImage.file.name, selectedImage.file.size, 'bytes');
+      
       const results = await analyzeCanopyImage(selectedImage.file, {
         method: method,
         zenithAngle: 90,
         onProgress: (progress, stage) => {
+          console.log(`Progress: ${progress}% - ${stage}`);
           setProgress(progress);
           setCurrentStage(stage);
         },
       });
+
+      console.log('Analysis results:', results);
 
       const sessionData = {
         plotName: `Canopy Analysis ${new Date().toLocaleDateString()}`,
@@ -145,8 +169,10 @@ export default function Tools() {
         isCompleted: true,
       };
 
+      console.log('Creating session with data:', sessionData);
       createSessionMutation.mutate(sessionData);
     } catch (error) {
+      console.error('Canopy analysis error:', error);
       toast({
         title: "Analysis Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
