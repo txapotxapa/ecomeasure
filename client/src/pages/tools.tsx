@@ -141,6 +141,8 @@ export default function Tools() {
     try {
       console.log('Starting canopy analysis with method:', method);
       console.log('Image file:', selectedImage.file.name, selectedImage.file.size, 'bytes');
+      console.log('Image file type:', selectedImage.file.type);
+      console.log('Current site:', currentSite);
       
       const results = await analyzeCanopyImage(selectedImage.file, {
         method: method,
@@ -153,6 +155,10 @@ export default function Tools() {
       });
 
       console.log('Analysis results:', results);
+      
+      if (!results || typeof results.canopyCover !== 'number') {
+        throw new Error('Invalid analysis results received');
+      }
 
       const sessionData = {
         plotName: `Canopy Analysis ${new Date().toLocaleDateString()}`,

@@ -104,6 +104,8 @@ async function processGLAMA(
   height: number,
   options: AnalysisOptions
 ): Promise<CanopyAnalysisResult> {
+  console.log('GLAMA processing started for', width, 'x', height, 'image');
+  
   const centerX = width / 2;
   const centerY = height / 2;
   const radius = Math.min(width, height) / 2;
@@ -116,7 +118,19 @@ async function processGLAMA(
   const zenithRadians = (options.zenithAngle * Math.PI) / 180;
   const effectiveRadius = radius * Math.sin(zenithRadians);
   
+  console.log('Effective radius:', effectiveRadius, 'from', radius, 'at', options.zenithAngle, 'degrees');
+  
   options.onProgress?.(30, 'Analyzing pixels...');
+  
+  // Ensure we have valid data
+  if (!data || data.length === 0) {
+    throw new Error('No image data to process');
+  }
+  
+  const expectedPixels = width * height * 4;
+  if (data.length !== expectedPixels) {
+    throw new Error(`Image data length mismatch: expected ${expectedPixels}, got ${data.length}`);
+  }
   
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -150,6 +164,17 @@ async function processGLAMA(
     }
   }
   
+  console.log('GLAMA analysis complete:', {
+    totalPixels,
+    canopyPixels,
+    skyPixels,
+    canopyPercent: (canopyPixels / totalPixels) * 100
+  });
+  
+  if (totalPixels === 0) {
+    throw new Error('No pixels were analyzed - check image data');
+  }
+  
   options.onProgress?.(80, 'Calculating results...');
   
   const canopyCover = (canopyPixels / totalPixels) * 100;
@@ -160,13 +185,16 @@ async function processGLAMA(
   
   options.onProgress?.(100, 'Complete');
   
-  return {
-    canopyCover,
-    lightTransmission,
-    leafAreaIndex,
+  const result = {
+    canopyCover: Number(canopyCover.toFixed(2)),
+    lightTransmission: Number(lightTransmission.toFixed(2)),
+    leafAreaIndex: Number(leafAreaIndex.toFixed(3)),
     pixelsAnalyzed: totalPixels,
     processingTime: 0, // Will be set by caller
   };
+  
+  console.log('GLAMA final result:', result);
+  return result;
 }
 
 async function processCanopeo(
@@ -175,10 +203,17 @@ async function processCanopeo(
   height: number,
   options: AnalysisOptions
 ): Promise<CanopyAnalysisResult> {
+  console.log('Canopeo processing started for', width, 'x', height, 'image');
+  
   let greenPixels = 0;
   let totalPixels = 0;
   
   options.onProgress?.(30, 'Applying Canopeo algorithm...');
+  
+  // Ensure we have valid data
+  if (!data || data.length === 0) {
+    throw new Error('No image data to process');
+  }
   
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
@@ -204,6 +239,16 @@ async function processCanopeo(
     }
   }
   
+  console.log('Canopeo analysis complete:', {
+    totalPixels,
+    greenPixels,
+    greenPercent: (greenPixels / totalPixels) * 100
+  });
+  
+  if (totalPixels === 0) {
+    throw new Error('No pixels were analyzed - check image data');
+  }
+  
   options.onProgress?.(80, 'Calculating results...');
   
   const canopyCover = (greenPixels / totalPixels) * 100;
@@ -211,12 +256,15 @@ async function processCanopeo(
   
   options.onProgress?.(100, 'Complete');
   
-  return {
-    canopyCover,
-    lightTransmission,
+  const result = {
+    canopyCover: Number(canopyCover.toFixed(2)),
+    lightTransmission: Number(lightTransmission.toFixed(2)),
     pixelsAnalyzed: totalPixels,
     processingTime: 0,
   };
+  
+  console.log('Canopeo final result:', result);
+  return result;
 }
 
 async function processCustom(
