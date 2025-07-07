@@ -15,10 +15,10 @@ import {
   AlertTriangle,
   Ruler,
   BarChart3,
-  Leaf
+  Leaf,
+  Layers
 } from "lucide-react";
 import { useLocation } from "wouter";
-import ToolSelector from "@/components/tool-selector";
 import type { ToolType } from "@/components/tool-selector";
 import ImageUpload from "@/components/image-upload";
 import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
@@ -294,10 +294,58 @@ export default function Tools() {
                   <Camera className="h-5 w-5 mr-2" />
                   Quick Measurement
                 </CardTitle>
-                <ToolSelector 
-                  selectedTool={selectedTool} 
-                  onToolSelect={setSelectedTool}
-                />
+                <div className="grid gap-4">
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedTool === 'canopy' 
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedTool('canopy')}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <TreePine className="h-8 w-8 text-green-600" />
+                      <div>
+                        <h3 className="font-semibold">Canopy Cover Analysis</h3>
+                        <p className="text-sm text-muted-foreground">GLAMA method for gap light measurement</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedTool === 'horizontal_vegetation' 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedTool('horizontal_vegetation')}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Layers className="h-8 w-8 text-blue-600" />
+                      <div>
+                        <h3 className="font-semibold">Horizontal Vegetation</h3>
+                        <p className="text-sm text-muted-foreground">Multi-height density analysis</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedTool === 'daubenmire' 
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedTool('daubenmire')}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Grid3X3 className="h-8 w-8 text-amber-600" />
+                      <div>
+                        <h3 className="font-semibold">Ground Cover Analysis</h3>
+                        <p className="text-sm text-muted-foreground">Digital quadrat sampling</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardHeader>
           </Card>

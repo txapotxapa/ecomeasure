@@ -180,26 +180,12 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Site Information */}
+          {/* Site information is handled at the app level - removed redundant input */}
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="site-name">Site Name</Label>
-                <Input
-                  id="site-name"
-                  value={siteName}
-                  onChange={(e) => setSiteName(e.target.value)}
-                  placeholder="Enter site name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={isReadyToAnalyze() ? "default" : "secondary"}>
-                    {image ? "Photo Ready" : "No Photo"}
-                  </Badge>
-                </div>
-              </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant={isReadyToAnalyze() ? "default" : "secondary"}>
+                {image ? "Photo Ready" : "No Photo"}
+              </Badge>
             </div>
           </div>
 
