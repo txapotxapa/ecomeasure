@@ -218,6 +218,14 @@ Changelog:
   - Site names now persist across tool switches for consistent data organization
   - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
   - Improved field workflow with clearer visual instructions for proper setup
+- July 07, 2025. Streamlined tools interface with integrated batch processing:
+  - Removed Quick Actions component from tools tab per user request to reduce interface clutter
+  - Enhanced ImageUpload component to support batch processing by default
+  - Users can now select multiple image files for automatic batch processing
+  - Batch upload functionality available on all measurement tools (canopy, horizontal vegetation, daubenmire)
+  - Added visual indicators for batch vs single file selection in upload interface
+  - Integrated BatchProcessor directly into tools interface for seamless workflow
+  - Simplified tool interface focuses on core measurement functionality without secondary features
 
 ## User Preferences
 

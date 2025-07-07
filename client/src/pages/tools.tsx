@@ -27,7 +27,6 @@ import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
 import VoiceNotes from "@/components/voice-notes";
 import BatchProcessor from "@/components/batch-processor";
-import QuickActions from "@/components/quick-actions";
 import SiteSelector from "@/components/site-selector";
 import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
@@ -621,11 +620,46 @@ export default function Tools() {
               {/* GPS Accuracy Indicator */}
               <GPSAccuracyIndicator className="mb-2" />
 
-              {/* Image Upload */}
+              {/* Image Upload - supports single or batch */}
               <ImageUpload 
                 onImageUploaded={setSelectedImage} 
+                onBatchUploaded={(images) => {
+                  if (images.length > 1) {
+                    // Show batch processor for multiple images
+                    toast({
+                      title: "Batch Upload Complete",
+                      description: `${images.length} images ready for batch processing. Use the batch processor below.`,
+                    });
+                  } else {
+                    // Single image - set as selected image
+                    setSelectedImage(images[0]);
+                  }
+                }}
                 currentImage={selectedImage?.url}
+                allowBatch={true}
               />
+
+              {/* Batch Processing Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Layers className="h-4 w-4 mr-2" />
+                    Batch Processing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BatchProcessor
+                    toolType={selectedTool}
+                    onBatchComplete={(results) => {
+                      toast({
+                        title: "Batch processing complete",
+                        description: `Successfully analyzed ${results.length} images`,
+                      });
+                    }}
+                    className="w-full"
+                  />
+                </CardContent>
+              </Card>
 
               {/* Optional Height Entry - Available before analysis */}
               {selectedImage && (
@@ -831,44 +865,11 @@ export default function Tools() {
           />
         )}
 
-        {/* Advanced Features Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Voice Notes */}
-          <VoiceNotes 
-            sessionId={currentSite?.name}
-            onNoteRecorded={(blob) => {
-              console.log('Voice note recorded:', blob.size, 'bytes');
-            }}
-          />
-          
-          {/* Quick Actions */}
-          <QuickActions
-            onQuickCapture={() => {
-              // Trigger camera for selected tool
-              const uploadButton = document.querySelector('input[type="file"]') as HTMLInputElement;
-              uploadButton?.click();
-            }}
-            onQuickSave={() => {
-              // Save current session data
-              console.log('Quick save triggered');
-            }}
-            onLocationMark={() => {
-              // GPS marking handled in component
-            }}
-            onQuickShare={() => {
-              // Share functionality handled in component
-            }}
-          />
-        </div>
-
-        {/* Batch Processing */}
-        <BatchProcessor
-          toolType={selectedTool}
-          onBatchComplete={(results) => {
-            toast({
-              title: "Batch processing complete",
-              description: `Successfully analyzed ${results.length} images`,
-            });
+        {/* Voice Notes */}
+        <VoiceNotes 
+          sessionId={currentSite?.name}
+          onNoteRecorded={(blob) => {
+            console.log('Voice note recorded:', blob.size, 'bytes');
           }}
         />
 
