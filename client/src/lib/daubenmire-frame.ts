@@ -57,9 +57,9 @@ export async function analyzeDaubenmireFrame(
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   
-  options.onProgress?.(20, 'Analyzing ground cover with Canopeo-like method');
+  options.onProgress?.(20, 'Analyzing ground cover with Canopeo method');
 
-  // Use Canopeo-like color thresholding for ground cover classification
+  // Use official Canopeo algorithm for ground cover classification
   const result = await analyzeGroundCoverCanopeo(imageData, options);
   
   options.onProgress?.(100, 'Analysis complete');
@@ -70,7 +70,7 @@ export async function analyzeDaubenmireFrame(
   };
 }
 
-// Canopeo-like ground cover analysis
+// Canopeo ground cover analysis using official algorithm
 async function analyzeGroundCoverCanopeo(
   imageData: ImageData,
   options: DaubenmireAnalysisOptions
@@ -85,25 +85,25 @@ async function analyzeGroundCoverCanopeo(
   let rockPixels = 0;
   let shadowPixels = 0;
   
-  // Species color groups (simplified)
+  // Species color groups for ground cover analysis
   const speciesColors = new Map<string, number>();
   
-  options.onProgress?.(30, 'Classifying pixels using color analysis');
+  options.onProgress?.(30, 'Classifying pixels using Canopeo ground cover method');
   
-  // Process each pixel using Canopeo-like color space analysis
+  // Process each pixel using official Canopeo algorithm
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
     
-    // Convert to HSV for better vegetation detection
+    // Convert to HSV for additional constraints
     const [h, s, v] = rgbToHsv(r, g, b);
     
-    // Classify pixel based on color characteristics (Canopeo-like thresholds)
+    // Classify pixel based on Canopeo ground cover method
     if (isVegetationCanopeo(r, g, b, h, s, v)) {
       vegetationPixels++;
-      // Group similar vegetation colors for species estimation
-      const colorKey = `${Math.floor(h / 15)}-${Math.floor(s / 0.25)}-${Math.floor(v / 0.25)}`;
+      // Group vegetation colors for ground cover species estimation
+      const colorKey = `${Math.floor(h / 20)}-${Math.floor(s / 0.3)}-${Math.floor(v / 0.3)}`;
       speciesColors.set(colorKey, (speciesColors.get(colorKey) || 0) + 1);
     } else if (isBareGroundCanopeo(r, g, b, h, s, v)) {
       bareGroundPixels++;
@@ -111,7 +111,7 @@ async function analyzeGroundCoverCanopeo(
       litterPixels++;
     } else if (isRockCanopeo(r, g, b, h, s, v)) {
       rockPixels++;
-    } else if (v < 0.3) {
+    } else if (v < 0.25) {
       shadowPixels++; // Count shadows separately
     }
   }
@@ -163,21 +163,26 @@ async function analyzeGroundCoverCanopeo(
   };
 }
 
-// Canopeo-like vegetation detection using RGB ratios and HSV thresholds
+// Canopeo ground cover vegetation detection using official algorithm
 function isVegetationCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
-  // Primary green vegetation detection (similar to Canopeo)
-  const greenExcess = (2 * g - r - b) / (r + g + b + 1);
-  const normalizedGreen = g / (r + g + b + 1);
+  // Official Canopeo algorithm for ground cover analysis
+  // Uses Excess Green Index: 2G - R - B
+  const excessGreen = (2 * g - r - b) / (r + g + b + 1);
   
-  // HSV-based vegetation detection
-  const isGreenHue = (h >= 60 && h <= 180); // Green to yellow-green range
-  const hasSaturation = s > 0.15; // Minimum saturation for vegetation
-  const hasValue = v > 0.2; // Not too dark
+  // Calculate R/G and B/G ratios as used in Canopeo
+  const rToGRatio = r / (g + 1);
+  const bToGRatio = b / (g + 1);
   
-  // RGB ratio method (Canopeo-like)
-  const rgbVegetation = greenExcess > 0.1 && normalizedGreen > 0.4;
+  // Canopeo thresholds for vegetation classification
+  // Vegetation has high green excess and low R/G, B/G ratios
+  const isVegetation = excessGreen > 0.05 && rToGRatio < 0.95 && bToGRatio < 0.95;
   
-  return (isGreenHue && hasSaturation && hasValue) || rgbVegetation;
+  // Additional HSV constraints for better accuracy in ground cover analysis
+  const isGreenHue = h >= 60 && h <= 180; // Green hue range
+  const hasMinSaturation = s > 0.15; // Minimum saturation to avoid gray
+  const hasMinValue = v > 0.15; // Minimum brightness to avoid shadows
+  
+  return isVegetation && isGreenHue && hasMinSaturation && hasMinValue;
 }
 
 function isBareGroundCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {

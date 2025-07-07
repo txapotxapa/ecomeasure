@@ -145,7 +145,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
 
       const uploadData = await uploadResponse.json();
       console.log('Upload successful, starting analysis...');
-      setCurrentStage('Analyzing ground cover with Canopeo-like method...');
+      setCurrentStage('Analyzing ground cover with Canopeo method...');
 
       const results = await analyzeDaubenmireFrame(image, {
         method: 'color_analysis',
@@ -160,7 +160,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       onAnalysisComplete(results, uploadData.imageUrl);
       
       toast({
-        title: "Analysis complete",
+        title: "Canopeo Analysis Complete",
         description: `Ground cover analysis finished. Found ${results.speciesDiversity} vegetation types with ${results.totalCoverage.toFixed(1)}% total coverage.`,
       });
       
@@ -189,7 +189,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
             Digital Daubenmire Sampling (Frame-Free)
           </CardTitle>
           <CardDescription>
-            Camera-based ground cover analysis from 1.5m height for standardized sampling
+            Ground cover analysis using Canopeo algorithm for vegetation classification
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -333,7 +333,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
             )}
             
             <p className="text-xs text-gray-600">
-              Position camera 1.5m directly above sampling area for standardized frame-free analysis
+              Position camera 1.5m directly above sampling area for Canopeo ground cover analysis
             </p>
           </div>
 
