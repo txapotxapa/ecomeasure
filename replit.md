@@ -190,6 +190,13 @@ Changelog:
   - Batch processor supports concurrent processing (3 files at once) with progress tracking
   - Quick actions provide keyboard shortcuts and one-tap access to common field operations
   - All new features optimized for mobile use with proper touch targets and responsive design
+- July 07, 2025. Fixed Daubenmire tool with proper Canopeo ground cover algorithm:
+  - Replaced incorrect gap light analysis algorithm with official Canopeo ground cover method
+  - Implemented Excess Green Index calculation: (2G - R - B) / (R + G + B + 1)
+  - Added proper R/G and B/G ratio thresholds for vegetation detection (< 0.95)
+  - Updated all UI text to reflect ground cover analysis instead of light analysis
+  - Enhanced algorithm specifically for ground cover classification (vegetation, bare ground, litter, rock)
+  - Added comprehensive debugging and console logging for troubleshooting
 - July 07, 2025. Made tools fully independent of site creation:
   - Tools can now be used without creating a named site first
   - Added "Start Without Site" option that creates an "Untitled Location" placeholder

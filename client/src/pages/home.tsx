@@ -126,13 +126,13 @@ export default function Home() {
     {
       id: 'daubenmire',
       title: 'Daubenmire Frame',
-      description: 'Digital quadrat sampling for ground cover analysis from 1.5m height',
+      description: 'Canopeo ground cover analysis for vegetation classification',
       icon: Grid3X3,
       color: 'bg-purple-500',
       lightColor: 'bg-purple-50',
       darkColor: 'bg-purple-900/20',
       textColor: 'text-purple-600',
-      features: ['Ground cover analysis', 'Species identification', 'Frame-free sampling'],
+      features: ['Canopeo algorithm', 'Ground cover classification', 'Vegetation percentage'],
       route: '/tools?tool=daubenmire'
     }
   ];
@@ -306,7 +306,7 @@ export default function Home() {
                     <Grid3X3 className="h-5 w-5 text-primary" />
                     <div className="text-center">
                       <div className="font-medium text-sm">Ground Cover</div>
-                      <div className="text-xs text-muted-foreground">Digital quadrat</div>
+                      <div className="text-xs text-muted-foreground">Canopeo method</div>
                     </div>
                   </Button>
                 </div>

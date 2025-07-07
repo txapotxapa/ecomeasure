@@ -31,7 +31,7 @@ const tools = [
   {
     id: 'daubenmire' as ToolType,
     name: 'Ground Cover',
-    description: 'Digital quadrat sampling',
+    description: 'Canopeo ground cover analysis',
     icon: Grid3x3,
     iconColor: 'text-primary',
   },

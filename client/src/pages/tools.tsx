@@ -547,7 +547,7 @@ export default function Tools() {
                   <Grid3X3 className="h-8 w-8 text-amber-600" />
                   <div>
                     <h3 className="font-semibold">Ground Cover Analysis</h3>
-                    <p className="text-sm text-muted-foreground">Digital quadrat sampling</p>
+                    <p className="text-sm text-muted-foreground">Canopeo ground cover method</p>
                   </div>
                 </div>
               </div>
