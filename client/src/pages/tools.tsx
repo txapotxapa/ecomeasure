@@ -945,6 +945,7 @@ export default function Tools() {
           stage={currentStage}
           canCancel={true}
           onCancel={() => setIsProcessing(false)}
+          analysisType={selectedTool}
         />
       </div>
 

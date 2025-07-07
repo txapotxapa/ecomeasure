@@ -10,6 +10,7 @@ interface ProcessingModalProps {
   stage: string;
   canCancel?: boolean;
   onCancel?: () => void;
+  analysisType?: 'canopy' | 'horizontal_vegetation' | 'daubenmire';
 }
 
 export default function ProcessingModal({
@@ -19,6 +20,7 @@ export default function ProcessingModal({
   stage,
   canCancel = false,
   onCancel,
+  analysisType = 'canopy',
 }: ProcessingModalProps) {
   const estimatedTime = Math.max(0, Math.round((100 - progress) / 3)); // Rough estimation
 
@@ -65,7 +67,9 @@ export default function ProcessingModal({
           
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Analyzing canopy cover and light transmission patterns...
+              {analysisType === 'canopy' && 'Analyzing canopy cover and light transmission patterns...'}
+              {analysisType === 'horizontal_vegetation' && 'Analyzing vegetation density at multiple heights...'}
+              {analysisType === 'daubenmire' && 'Analyzing ground cover using Canopeo method...'}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               Please keep this window open during processing

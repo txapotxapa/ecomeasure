@@ -368,6 +368,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
         progress={progress}
         stage={currentStage}
         canCancel={false}
+        analysisType="daubenmire"
       />
     </div>
   );
