@@ -477,7 +477,69 @@ export default function Tools() {
           </Card>
         )}
 
-        {/* Combined Site and Tool Selection */}
+        {/* Tool Selection - Always Visible */}
+        <Card>
+          <CardHeader className="space-y-4">
+            <CardTitle className="flex items-center">
+              <Camera className="h-5 w-5 mr-2" />
+              Measurement Tools
+            </CardTitle>
+            <div className="grid gap-4">
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedTool === 'canopy' 
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setSelectedTool('canopy')}
+              >
+                <div className="flex items-center space-x-4">
+                  <TreePine className="h-8 w-8 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold">Canopy Cover Analysis</h3>
+                    <p className="text-sm text-muted-foreground">GLAMA method for gap light measurement</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedTool === 'horizontal_vegetation' 
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setSelectedTool('horizontal_vegetation')}
+              >
+                <div className="flex items-center space-x-4">
+                  <Layers className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <h3 className="font-semibold">Horizontal Vegetation</h3>
+                    <p className="text-sm text-muted-foreground">Multi-height density analysis</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedTool === 'daubenmire' 
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setSelectedTool('daubenmire')}
+              >
+                <div className="flex items-center space-x-4">
+                  <Grid3X3 className="h-8 w-8 text-amber-600" />
+                  <div>
+                    <h3 className="font-semibold">Ground Cover Analysis</h3>
+                    <p className="text-sm text-muted-foreground">Digital quadrat sampling</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Site Selection and Info */}
         {currentSite && (
           <Card>
             <CardHeader className="space-y-4">
@@ -531,66 +593,6 @@ export default function Tools() {
                   >
                     Clear
                   </Button>
-                </div>
-              </div>
-
-              {/* Quick Tool Selection */}
-              <div>
-                <CardTitle className="flex items-center mb-3">
-                  <Camera className="h-5 w-5 mr-2" />
-                  Quick Measurement
-                </CardTitle>
-                <div className="grid gap-4">
-                  <div 
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedTool === 'canopy' 
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setSelectedTool('canopy')}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <TreePine className="h-8 w-8 text-green-600" />
-                      <div>
-                        <h3 className="font-semibold">Canopy Cover Analysis</h3>
-                        <p className="text-sm text-muted-foreground">GLAMA method for gap light measurement</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedTool === 'horizontal_vegetation' 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setSelectedTool('horizontal_vegetation')}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Layers className="h-8 w-8 text-blue-600" />
-                      <div>
-                        <h3 className="font-semibold">Horizontal Vegetation</h3>
-                        <p className="text-sm text-muted-foreground">Multi-height density analysis</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedTool === 'daubenmire' 
-                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setSelectedTool('daubenmire')}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Grid3X3 className="h-8 w-8 text-amber-600" />
-                      <div>
-                        <h3 className="font-semibold">Ground Cover Analysis</h3>
-                        <p className="text-sm text-muted-foreground">Digital quadrat sampling</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </CardHeader>
