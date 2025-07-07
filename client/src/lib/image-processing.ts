@@ -1,3 +1,5 @@
+import { processImageInWorker, optimizeImage } from './worker-utils';
+
 interface CanopyAnalysisResult {
   canopyCover: number;
   lightTransmission: number;
@@ -25,6 +27,17 @@ export async function analyzeCanopyImage(
     throw new Error(validation.error || 'Invalid image file');
   }
   
+  // Optimize large images before processing
+  let processFile = imageFile;
+  if (imageFile.size > 5 * 1024 * 1024) {
+    options.onProgress?.(5, 'Optimizing large image...');
+    try {
+      processFile = await optimizeImage(imageFile, 2048, 2048);
+    } catch (e) {
+      console.warn('Image optimization failed, using original:', e);
+    }
+  }
+  
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -46,24 +59,28 @@ export async function analyzeCanopyImage(
         
         // Get image data
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-        
-        console.log(`Processing ${data.length / 4} pixels with ${options.method} method`);
         
         let result: CanopyAnalysisResult;
         
-        switch (options.method) {
-          case 'GLAMA':
-            result = await processGLAMA(data, canvas.width, canvas.height, options);
-            break;
-          case 'Canopeo':
-            result = await processCanopeo(data, canvas.width, canvas.height, options);
-            break;
-          case 'Custom':
-            result = await processCustom(data, canvas.width, canvas.height, options);
-            break;
-          default:
-            throw new Error(`Unknown analysis method: ${options.method}`);
+        // Try to use web worker for better performance
+        if (typeof Worker !== 'undefined' && options.method === 'GLAMA') {
+          try {
+            options.onProgress?.(20, 'Processing with optimized engine...');
+            const workerResult = await processImageInWorker(imageData, 'ANALYZE_CANOPY', {
+              method: options.method,
+              zenithAngle: options.zenithAngle,
+              onProgress: options.onProgress
+            });
+            result = {
+              ...workerResult,
+              processingTime: performance.now() - startTime
+            };
+          } catch (error) {
+            console.warn('Worker processing failed, using main thread:', error);
+            result = await processMainThread(imageData.data, canvas.width, canvas.height, options);
+          }
+        } else {
+          result = await processMainThread(imageData.data, canvas.width, canvas.height, options);
         }
         
         result.processingTime = performance.now() - startTime;
@@ -89,13 +106,33 @@ export async function analyzeCanopyImage(
     
     // Create object URL and load image
     try {
-      img.src = URL.createObjectURL(imageFile);
+      img.src = URL.createObjectURL(processFile);
       console.log('Created object URL for image analysis');
     } catch (error) {
       console.error('Error creating object URL:', error);
       reject(new Error('Failed to process image file'));
     }
   });
+}
+
+async function processMainThread(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  options: AnalysisOptions
+): Promise<CanopyAnalysisResult> {
+  console.log(`Processing ${data.length / 4} pixels with ${options.method} method`);
+  
+  switch (options.method) {
+    case 'GLAMA':
+      return await processGLAMA(data, width, height, options);
+    case 'Canopeo':
+      return await processCanopeo(data, width, height, options);
+    case 'Custom':
+      return await processCustom(data, width, height, options);
+    default:
+      throw new Error(`Unknown analysis method: ${options.method}`);
+  }
 }
 
 async function processGLAMA(

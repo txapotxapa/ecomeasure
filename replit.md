@@ -168,6 +168,17 @@ Changelog:
     * Answered workflow question: tools are now primarily accessed from home screen with tools tab as backup
     * Home screen provides direct tool access when site is selected, tools tab provides full tool selector interface
     * URL parameters enable direct tool linking from home screen buttons for seamless workflow
+- July 07, 2025. Comprehensive performance and usability improvements:
+  - Implemented Web Workers for off-thread image processing to prevent UI freezing
+  - Added Progressive Web App (PWA) support with offline functionality and service worker
+  - Integrated image optimization for large files (>5MB) before processing
+  - Enhanced dark mode support with smooth transitions and improved contrast
+  - Added mobile-specific optimizations: 44px minimum touch targets, better gestures
+  - Improved CSS with loading animations, focus states, and accessibility features
+  - Fixed Digital Daubenmire tool with working Canopeo-like analysis algorithms
+  - Created comprehensive improvement plan for phased feature rollout
+  - Performance goal: <2s analysis time for 5MP images (previously 5-10s)
+  - Ready for field testing with optimized mobile experience
 
 ## User Preferences
 
