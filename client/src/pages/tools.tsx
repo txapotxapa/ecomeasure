@@ -116,8 +116,19 @@ export default function Tools() {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log('Session created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
-      setLocation(`/analysis?id=${data.id}`);
+      
+      // Show success message and navigate
+      toast({
+        title: "Analysis Complete",
+        description: `Session ${data.id} created successfully. Viewing results...`,
+      });
+      
+      // Navigate to analysis page to view results
+      setTimeout(() => {
+        setLocation(`/analysis?id=${data.id}`);
+      }, 1000);
     },
     onError: (error) => {
       toast({
@@ -217,6 +228,11 @@ export default function Tools() {
       setCurrentAnalysisResults({
         ...sessionData,
         timestamp: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Analysis Complete",
+        description: `Canopy cover: ${results.canopyCover.toFixed(1)}%, Light transmission: ${results.lightTransmission.toFixed(1)}%`,
       });
       
       createSessionMutation.mutate(sessionData);
@@ -353,6 +369,11 @@ export default function Tools() {
     setCurrentAnalysisResults({
       ...sessionData,
       timestamp: new Date().toISOString(),
+    });
+    
+    toast({
+      title: "Daubenmire Analysis Complete", 
+      description: `Total coverage: ${results.totalCoverage.toFixed(1)}%, Species diversity: ${results.speciesDiversity}`,
     });
 
     createSessionMutation.mutate(sessionData);
@@ -633,25 +654,51 @@ export default function Tools() {
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Canopy Cover:</span>
-                          <span className="text-sm font-mono">
-                            {currentAnalysisResults.canopyCover?.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Light Transmission:</span>
-                          <span className="text-sm font-mono">
-                            {currentAnalysisResults.lightTransmission?.toFixed(1)}%
-                          </span>
-                        </div>
-                        {currentAnalysisResults.leafAreaIndex && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Leaf Area Index:</span>
-                            <span className="text-sm font-mono">
-                              {currentAnalysisResults.leafAreaIndex?.toFixed(2)}
-                            </span>
-                          </div>
+                        {currentAnalysisResults.toolType === 'canopy' && (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Canopy Cover:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.canopyCover?.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Light Transmission:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.lightTransmission?.toFixed(1)}%
+                              </span>
+                            </div>
+                            {currentAnalysisResults.leafAreaIndex && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Leaf Area Index:</span>
+                                <span className="text-sm font-mono">
+                                  {currentAnalysisResults.leafAreaIndex?.toFixed(2)}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {currentAnalysisResults.toolType === 'daubenmire' && (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Total Coverage:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.totalCoverage?.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Species Diversity:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.speciesDiversity}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Bare Ground:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.bareGroundPercentage?.toFixed(1)}%
+                              </span>
+                            </div>
+                          </>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -664,7 +711,7 @@ export default function Tools() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">Processing Time:</span>
                           <span className="text-sm font-mono">
-                            {currentAnalysisResults.processingTime?.toFixed(2)}s
+                            {(currentAnalysisResults.processingTime / 1000)?.toFixed(2)}s
                           </span>
                         </div>
                         {currentAnalysisResults.canopyHeight && (
@@ -674,6 +721,22 @@ export default function Tools() {
                               {currentAnalysisResults.canopyHeight}m
                             </span>
                           </div>
+                        )}
+                        {currentAnalysisResults.toolType === 'daubenmire' && (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Litter:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.litterPercentage?.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Shannon Index:</span>
+                              <span className="text-sm font-mono">
+                                {currentAnalysisResults.shannonIndex?.toFixed(2)}
+                              </span>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
