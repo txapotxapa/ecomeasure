@@ -28,6 +28,7 @@ import BottomNavigation from "@/components/bottom-navigation";
 import VoiceNotes from "@/components/voice-notes";
 import BatchProcessor from "@/components/batch-processor";
 import QuickActions from "@/components/quick-actions";
+import SiteSelector from "@/components/site-selector";
 import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
@@ -67,6 +68,7 @@ export default function Tools() {
   const [currentStage, setCurrentStage] = useState("");
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
   const [currentAnalysisResults, setCurrentAnalysisResults] = useState<any>(null);
+  const [showSiteCreator, setShowSiteCreator] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -172,8 +174,26 @@ export default function Tools() {
         throw new Error('Invalid analysis results received');
       }
 
+      // Get GPS location if available
+      let gpsData = { latitude: null, longitude: null };
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          });
+        });
+        gpsData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+      } catch (error) {
+        console.log('GPS not available, continuing without location');
+      }
+
       const sessionData = {
-        plotName: `Canopy Analysis ${new Date().toLocaleDateString()}`,
+        plotName: currentSite?.name || `Untitled Location ${new Date().toLocaleDateString()}`,
         imageUrl: selectedImage.url,
         toolType: 'canopy',
         analysisMethod: method,
@@ -184,6 +204,8 @@ export default function Tools() {
         leafAreaIndex: results.leafAreaIndex,
         pixelsAnalyzed: results.pixelsAnalyzed,
         processingTime: results.processingTime,
+        latitude: currentSite?.latitude || gpsData.latitude,
+        longitude: currentSite?.longitude || gpsData.longitude,
         isCompleted: true,
       };
 
@@ -196,6 +218,26 @@ export default function Tools() {
       });
       
       createSessionMutation.mutate(sessionData);
+      
+      // Show option to name site if untitled
+      if (currentSite?.name === "Untitled Location") {
+        setTimeout(() => {
+          toast({
+            title: "Analysis Complete",
+            description: "Would you like to name this location?",
+            action: (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowSiteCreator(true)}
+              >
+                Name Site
+              </Button>
+            ),
+            duration: 10000,
+          });
+        }, 1000);
+      }
     } catch (error) {
       console.error('Canopy analysis error:', error);
       toast({
@@ -208,56 +250,167 @@ export default function Tools() {
     }
   };
 
-  const handleHorizontalVegetationAnalysis = (results: HorizontalVegetationAnalysis) => {
+  const handleHorizontalVegetationAnalysis = async (results: HorizontalVegetationAnalysis) => {
+    // Get GPS location if available
+    let gpsData = { latitude: null, longitude: null };
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+      gpsData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+    } catch (error) {
+      console.log('GPS not available, continuing without location');
+    }
+
     const sessionData = {
-      plotName: `Horizontal Vegetation ${new Date().toLocaleDateString()}`,
+      plotName: currentSite?.name || `Untitled Location ${new Date().toLocaleDateString()}`,
       imageUrl: "", // Will be set by the tool
       toolType: 'horizontal_vegetation',
       analysisMethod: "Digital Robel Pole",
       pixelsAnalyzed: 0,
+      latitude: currentSite?.latitude || gpsData.latitude,
+      longitude: currentSite?.longitude || gpsData.longitude,
       horizontalVegetationData: results,
       isCompleted: true,
     };
 
     createSessionMutation.mutate(sessionData);
+    
+    // Show option to name site if untitled
+    if (currentSite?.name === "Untitled Location") {
+      setTimeout(() => {
+        toast({
+          title: "Analysis Complete",
+          description: "Would you like to name this location?",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSiteCreator(true)}
+            >
+              Name Site
+            </Button>
+          ),
+          duration: 10000,
+        });
+      }, 1000);
+    }
   };
 
-  const handleDaubenmireAnalysis = (results: DaubenmireResult) => {
+  const handleDaubenmireAnalysis = async (results: DaubenmireResult) => {
+    // Get GPS location if available
+    let gpsData = { latitude: null, longitude: null };
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+      gpsData = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+    } catch (error) {
+      console.log('GPS not available, continuing without location');
+    }
+
     const sessionData = {
-      plotName: `Daubenmire Frame ${new Date().toLocaleDateString()}`,
+      plotName: currentSite?.name || `Untitled Location ${new Date().toLocaleDateString()}`,
       imageUrl: "", // Will be set by the tool
       toolType: 'daubenmire',
       analysisMethod: "Frame-free Analysis",
       pixelsAnalyzed: 0,
+      latitude: currentSite?.latitude || gpsData.latitude,
+      longitude: currentSite?.longitude || gpsData.longitude,
       daubenmireData: results,
       isCompleted: true,
     };
 
     createSessionMutation.mutate(sessionData);
+    
+    // Show option to name site if untitled
+    if (currentSite?.name === "Untitled Location") {
+      setTimeout(() => {
+        toast({
+          title: "Analysis Complete",
+          description: "Would you like to name this location?",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSiteCreator(true)}
+            >
+              Name Site
+            </Button>
+          ),
+          duration: 10000,
+        });
+      }, 1000);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24 space-y-6">
-        {/* Streamlined Site Status */}
+        {/* Site Selection - Optional */}
         {!currentSite && (
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Target className="h-5 w-5 text-amber-600" />
-                  <div>
-                    <div className="font-medium text-amber-800">No site selected</div>
-                    <div className="text-xs text-amber-600">Create a site to start measuring</div>
-                  </div>
+              <div className="text-center space-y-4">
+                <h3 className="text-lg font-semibold">Ready to Measure</h3>
+                <p className="text-sm text-muted-foreground">
+                  Start measuring immediately or create a named site first
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    onClick={() => {
+                      // Create untitled site and proceed
+                      const untitledSite: SiteInfo = {
+                        name: "Untitled Location",
+                        latitude: 0,
+                        longitude: 0,
+                        createdAt: new Date(),
+                        sessionCounts: { canopy: 0, horizontal_vegetation: 0, daubenmire: 0 }
+                      };
+                      setCurrentSite(untitledSite);
+                    }}
+                    className="w-full"
+                    variant="default"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Start Without Site
+                  </Button>
+                  <Button 
+                    onClick={() => setShowSiteCreator(true)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Create Named Site
+                  </Button>
                 </div>
-                <Button 
-                  size="sm"
-                  onClick={() => setLocation('/')}
-                  className="bg-amber-600 hover:bg-amber-700"
-                >
-                  Create Site
-                </Button>
+                
+                {showSiteCreator && (
+                  <div className="mt-4">
+                    <SiteSelector 
+                      currentSite={currentSite}
+                      onSiteChange={(site) => {
+                        setCurrentSite(site);
+                        setShowSiteCreator(false);
+                        localStorage.setItem('current-research-site', JSON.stringify(site));
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -267,28 +420,57 @@ export default function Tools() {
         {currentSite && (
           <Card>
             <CardHeader className="space-y-4">
-              {/* Compact Site Info */}
-              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+              {showSiteCreator && currentSite.name === "Untitled Location" && (
+                <div className="mb-4">
+                  <SiteSelector 
+                    currentSite={null}
+                    onSiteChange={(site) => {
+                      setCurrentSite(site);
+                      setShowSiteCreator(false);
+                      localStorage.setItem('current-research-site', JSON.stringify(site));
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Current Location Info */}
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <Target className="h-5 w-5 text-green-600" />
+                  <Target className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium text-green-800">{currentSite.name}</div>
-                    <div className="text-xs text-green-600">
-                      {currentSite.latitude !== 0 || currentSite.longitude !== 0 
-                        ? `${currentSite.latitude.toFixed(4)}°, ${currentSite.longitude.toFixed(4)}°`
-                        : "No coordinates"
+                    <div className="font-medium">{currentSite.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {currentSite.name === "Untitled Location" 
+                        ? "GPS will be logged with each measurement"
+                        : (currentSite.latitude !== 0 || currentSite.longitude !== 0 
+                          ? `${currentSite.latitude.toFixed(4)}°, ${currentSite.longitude.toFixed(4)}°`
+                          : "No coordinates set")
                       }
                     </div>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setLocation('/')}
-                  className="border-green-300 text-green-700"
-                >
-                  Change
-                </Button>
+                <div className="flex gap-2">
+                  {currentSite.name === "Untitled Location" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowSiteCreator(true)}
+                    >
+                      Name Site
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setCurrentSite(null);
+                      setShowSiteCreator(false);
+                      localStorage.removeItem('current-research-site');
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
 
               {/* Quick Tool Selection */}

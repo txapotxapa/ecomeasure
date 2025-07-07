@@ -190,6 +190,15 @@ Changelog:
   - Batch processor supports concurrent processing (3 files at once) with progress tracking
   - Quick actions provide keyboard shortcuts and one-tap access to common field operations
   - All new features optimized for mobile use with proper touch targets and responsive design
+- July 07, 2025. Made tools fully independent of site creation:
+  - Tools can now be used without creating a named site first
+  - Added "Start Without Site" option that creates an "Untitled Location" placeholder
+  - GPS coordinates are automatically logged with each measurement when available
+  - After analysis completion, users are prompted to optionally name the location
+  - Site selector now appears inline when naming sites after measurements
+  - All three tools (canopy, horizontal vegetation, daubenmire) support untitled location workflow
+  - Database entries show "Untitled Location [date]" for unmanned measurements with GPS coordinates in separate columns
+  - Improved field workflow flexibility - researchers can measure first, organize later
 
 ## User Preferences
 
