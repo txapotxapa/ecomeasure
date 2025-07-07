@@ -220,7 +220,7 @@ export default function Tools() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-24 space-y-6">
         {/* Site Requirement Notice */}
         {!currentSite && (
           <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
@@ -332,29 +332,17 @@ export default function Tools() {
                 </p>
               </div>
 
-              {/* Analysis Buttons */}
+              {/* Analysis Button */}
               {selectedImage && (
                 <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <Button 
-                      onClick={() => handleCanopyAnalysis('GLAMA')}
-                      disabled={isProcessing || !currentSite}
-                      className="flex-1"
-                    >
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Analyze with GLAMA
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => handleCanopyAnalysis('Canopeo')}
-                      disabled={isProcessing || !currentSite}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Leaf className="h-4 w-4 mr-2" />
-                      Analyze with Canopeo
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={() => handleCanopyAnalysis('GLAMA')}
+                    disabled={isProcessing || !currentSite}
+                    className="w-full"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analyze with GLAMA
+                  </Button>
                   {!currentSite && (
                     <p className="text-xs text-amber-600 text-center">
                       Select a site to enable analysis

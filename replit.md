@@ -153,6 +153,9 @@ Changelog:
   - Added manual coordinate input option for site creation - users can now create sites with GPS or manual coordinates
   - Enhanced site creation with dual location options: GPS auto-capture or manual latitude/longitude entry
   - Added coordinate validation for manual entry with proper range checking and error messages
+  - Added checkbox option to create sites without coordinates for maximum flexibility
+  - Restricted canopy analysis to GLAMA method only for consistency with original research tool
+  - Fixed button positioning issue in canopy tool - GLAMA analysis button now properly positioned above bottom navigation
 
 ## User Preferences
 
