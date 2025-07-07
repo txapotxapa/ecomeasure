@@ -48,18 +48,18 @@ export default function LocationDisplay() {
   }, []);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border-b">
+    <div className="p-4 bg-card border-b border-border">
       <div className="flex items-center space-x-3 mb-2">
         <MapPin className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-gray-700">Current Location</span>
+        <span className="text-sm font-medium text-foreground">Current Location</span>
         <div className="flex items-center space-x-2 ml-auto">
           {isOnline ? (
-            <Signal className="h-4 w-4 text-green-500" />
+            <Signal className="h-4 w-4 text-success" />
           ) : (
-            <SignalLow className="h-4 w-4 text-red-500" />
+            <SignalLow className="h-4 w-4 text-destructive" />
           )}
           <span className={`text-xs px-2 py-1 rounded ${
-            isOnline ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            isOnline ? "bg-success/20 text-success" : "bg-destructive/20 text-destructive"
           }`}>
             {isOnline ? "Online" : "Offline"}
           </span>
@@ -67,9 +67,9 @@ export default function LocationDisplay() {
       </div>
       
       {error ? (
-        <div className="text-xs text-red-600 font-mono">{error}</div>
+        <div className="text-xs text-destructive coordinates">{error}</div>
       ) : location ? (
-        <div className="text-xs text-gray-600 font-mono space-y-1">
+        <div className="text-xs text-muted-foreground coordinates space-y-1">
           <div>Lat: {location.latitude.toFixed(6)}°</div>
           <div>Lng: {location.longitude.toFixed(6)}°</div>
           <div>Updated: {location.timestamp.toLocaleString()}</div>
@@ -78,7 +78,7 @@ export default function LocationDisplay() {
           )}
         </div>
       ) : (
-        <div className="text-xs text-gray-500 font-mono">Getting location...</div>
+        <div className="text-xs text-muted-foreground coordinates">Getting location...</div>
       )}
     </div>
   );

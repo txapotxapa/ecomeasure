@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -24,10 +25,16 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    // Set dark theme by default
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="max-w-md mx-auto bg-white min-h-screen shadow-xl">
+        <div className="max-w-md mx-auto bg-background min-h-screen shadow-xl">
           <Router />
         </div>
         <Toaster />

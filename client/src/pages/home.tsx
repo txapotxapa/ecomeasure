@@ -38,7 +38,7 @@ import { format } from "date-fns";
 import { AnalysisSession } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
 import SiteSelector from "@/components/site-selector";
-import { useTheme } from "next-themes";
+// Dark theme is now set by default in App.tsx
 
 interface SiteInfo {
   name: string;
@@ -55,7 +55,6 @@ interface SiteInfo {
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const { theme, setTheme } = useTheme();
   const [gpsEnabled, setGpsEnabled] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
   const [notifications, setNotifications] = useState(true);
@@ -278,7 +277,7 @@ export default function Home() {
             <CardContent>
               <div className="grid gap-3">
                 <Button
-                  className="h-16 justify-start space-x-4 bg-green-600 hover:bg-green-700"
+                  className="h-16 justify-start space-x-4 bg-primary hover:bg-primary/90"
                   onClick={() => setLocation('/tools?tool=canopy')}
                 >
                   <TreePine className="h-6 w-6" />
@@ -290,24 +289,24 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
-                    className="h-16 flex-col space-y-1"
+                    className="h-16 flex-col space-y-1 card-topo"
                     onClick={() => setLocation('/tools?tool=horizontal_vegetation')}
                   >
-                    <Layers className="h-5 w-5 text-blue-600" />
+                    <Layers className="h-5 w-5 text-primary" />
                     <div className="text-center">
                       <div className="font-medium text-sm">Horizontal Vegetation</div>
-                      <div className="text-xs text-gray-600">Multi-height photos</div>
+                      <div className="text-xs text-muted-foreground">Multi-height photos</div>
                     </div>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-16 flex-col space-y-1"
+                    className="h-16 flex-col space-y-1 card-topo"
                     onClick={() => setLocation('/tools?tool=daubenmire')}
                   >
-                    <Grid3X3 className="h-5 w-5 text-amber-600" />
+                    <Grid3X3 className="h-5 w-5 text-primary" />
                     <div className="text-center">
                       <div className="font-medium text-sm">Ground Cover</div>
-                      <div className="text-xs text-gray-600">Digital quadrat</div>
+                      <div className="text-xs text-muted-foreground">Digital quadrat</div>
                     </div>
                   </Button>
                 </div>
@@ -428,7 +427,7 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-green-600" />
+                <MapPin className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">GPS Location</p>
                   <p className="text-sm text-muted-foreground">Auto-capture coordinates</p>
@@ -441,7 +440,7 @@ export default function Home() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">Auto-save Results</p>
                   <p className="text-sm text-muted-foreground">Automatically save completed analyses</p>
@@ -454,7 +453,7 @@ export default function Home() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Bell className="h-5 w-5 text-purple-600" />
+                <Bell className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">Notifications</p>
                   <p className="text-sm text-muted-foreground">Analysis completion alerts</p>
@@ -467,22 +466,17 @@ export default function Home() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                {theme === 'dark' ? (
-                  <Moon className="h-5 w-5 text-gray-600" />
-                ) : (
-                  <Sun className="h-5 w-5 text-yellow-600" />
-                )}
+                <Moon className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">Theme</p>
                   <p className="text-sm text-muted-foreground">
-                    {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                    Gaia GPS Dark Mode
                   </p>
                 </div>
               </div>
-              <Switch 
-                checked={theme === 'dark'} 
-                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} 
-              />
+              <Badge variant="secondary" className="text-xs">
+                Default
+              </Badge>
             </div>
           </CardContent>
         </Card>

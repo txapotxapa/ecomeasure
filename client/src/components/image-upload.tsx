@@ -118,7 +118,7 @@ export default function ImageUpload({ onImageUploaded, currentImage }: ImageUplo
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             isDragging
               ? "border-primary bg-primary/10"
-              : "border-gray-300 bg-gray-50"
+              : "border-border bg-card"
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -142,8 +142,8 @@ export default function ImageUpload({ onImageUploaded, currentImage }: ImageUplo
             </div>
           ) : (
             <>
-              <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-sm text-gray-600 mb-4">
+              <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-sm text-muted-foreground mb-4">
                 {isDragging ? "Drop image here to upload" : "Drag and drop image here or click to capture"}
               </p>
               <div className="space-y-2">

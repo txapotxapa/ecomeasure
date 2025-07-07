@@ -19,21 +19,21 @@ const tools = [
     name: 'Canopy Cover',
     description: 'Gap light analysis using upward photos',
     icon: TreePine,
-    iconColor: 'text-green-600',
+    iconColor: 'text-primary',
   },
   {
     id: 'horizontal_vegetation' as ToolType,
     name: 'Horizontal Vegetation',
     description: 'Multi-height vegetation density',
     icon: Layers,
-    iconColor: 'text-blue-600',
+    iconColor: 'text-primary',
   },
   {
     id: 'daubenmire' as ToolType,
     name: 'Ground Cover',
     description: 'Digital quadrat sampling',
     icon: Grid3x3,
-    iconColor: 'text-amber-600',
+    iconColor: 'text-primary',
   },
 ];
 
@@ -47,22 +47,22 @@ export default function ToolSelector({ selectedTool, onToolSelect, className }: 
         return (
           <Card 
             key={tool.id}
-            className={`cursor-pointer transition-all duration-200 ${
+            className={`cursor-pointer transition-all duration-200 card-topo ${
               isSelected 
-                ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50' 
-                : 'hover:bg-gray-50'
+                ? 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-accent/20' 
+                : 'hover:bg-accent/10'
             }`}
             onClick={() => onToolSelect(tool.id)}
           >
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <IconComponent className={`h-5 w-5 ${tool.iconColor}`} />
+                <IconComponent className={`h-5 w-5 ${tool.iconColor} ${isSelected ? 'drop-shadow-lg' : ''}`} />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">{tool.name}</h3>
-                  <p className="text-xs text-gray-600 mt-1">{tool.description}</p>
+                  <h3 className="font-medium text-foreground truncate">{tool.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{tool.description}</p>
                 </div>
                 {isSelected && (
-                  <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                  <div className="h-2 w-2 bg-primary rounded-full flex-shrink-0 animate-pulse"></div>
                 )}
               </div>
             </CardContent>

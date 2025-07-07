@@ -13,7 +13,7 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 z-50">
+    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-50">
       <div className="flex justify-around py-2">
         {navItems.map((item) => {
           const isActive = location === item.path;
@@ -22,13 +22,13 @@ export default function BottomNavigation() {
               key={item.path}
               variant="ghost"
               size="sm"
-              className={`flex flex-col items-center p-2 h-auto ${
-                isActive ? "text-primary" : "text-gray-400"
+              className={`flex flex-col items-center p-2 h-auto transition-colors ${
+                isActive ? "text-primary bg-accent/20" : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => setLocation(item.path)}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-xs mt-1">{item.label}</span>
+              <item.icon className={`h-5 w-5 ${isActive ? 'drop-shadow-lg' : ''}`} />
+              <span className="text-xs mt-1 font-medium">{item.label}</span>
             </Button>
           );
         })}

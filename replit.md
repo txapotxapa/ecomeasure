@@ -199,6 +199,16 @@ Changelog:
   - All three tools (canopy, horizontal vegetation, daubenmire) support untitled location workflow
   - Database entries show "Untitled Location [date]" for unmanned measurements with GPS coordinates in separate columns
   - Improved field workflow flexibility - researchers can measure first, organize later
+- July 07, 2025. Implemented Gaia GPS-inspired dark theme:
+  - Set dark theme as default with deep black background (8% brightness)
+  - Applied muted green primary colors (HSL 142°) inspired by topographic maps
+  - Added subtle topographic pattern overlays to cards for visual depth
+  - Replaced all hardcoded colors with semantic color variables
+  - Enhanced GPS coordinate display with monospace font for better readability
+  - Updated bottom navigation with active state highlighting and smooth transitions
+  - Applied consistent dark theme styling across all components
+  - Added gradient backgrounds mimicking Gaia GPS's outdoor mapping aesthetic
+  - Improved contrast ratios for better visibility in outdoor conditions
 
 ## User Preferences
 
