@@ -218,15 +218,15 @@ Changelog:
   - Site names now persist across tool switches for consistent data organization
   - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
   - Improved field workflow with clearer visual instructions for proper setup
-- July 07, 2025. Restored dedicated photo upload interfaces per tool:
-  - Removed Quick Actions component from tools tab per user request to reduce interface clutter
-  - Restored individual tool components with their own dedicated photo upload interfaces
-  - Each tool (canopy, horizontal vegetation, daubenmire) has its own specialized upload interface
-  - Canopy tool: Simple single image upload with GLAMA analysis
-  - Horizontal Vegetation tool: Multi-directional photo upload for Cardinal directions
-  - Daubenmire tool: Single quadrat image upload for ground cover analysis
-  - Maintained tool-specific workflows while eliminating redundant quick actions
-  - Each tool optimized for its specific measurement requirements and image needs
+- July 07, 2025. Added comprehensive setup guides with visual diagrams:
+  - Created detailed setup guide for canopy cover analysis with side-view diagram showing proper 1.3m camera height
+  - Added comprehensive setup guide for ground cover analysis with visual quadrat sampling diagram
+  - Visual diagrams show proper camera positioning, height requirements, and sampling areas
+  - Enhanced canopy tool with hybrid photo upload supporting both single and batch processing
+  - Combined batch processing functionality directly into canopy tool photo upload card
+  - Setup guides include step-by-step instructions and accuracy specifications
+  - Visual diagrams use gradient backgrounds and illustrated elements for clear field guidance
+  - Maintained tool-specific workflows with improved visual instruction clarity
 
 ## User Preferences
 

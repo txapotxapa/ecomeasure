@@ -603,31 +603,99 @@ export default function Tools() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Accuracy Information */}
+              {/* Setup Guide with Visual Diagram */}
               <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
-                <h4 className="font-medium flex items-center mb-2 text-sm">
+                <h4 className="font-medium flex items-center mb-3 text-sm">
                   <Target className="w-4 h-4 mr-2" />
-                  Measurement Accuracy
+                  Canopy Cover Analysis Setup Guide
                 </h4>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <p>• GLAMA method accuracy: ±2-3% for canopy cover estimation</p>
-                  <p>• Camera height: 1.3m ± 10cm (standard breast height)</p>
+                
+                {/* Visual Diagram */}
+                <div className="mb-4 p-3 bg-background/50 rounded-lg border">
+                  <div className="text-center space-y-2">
+                    <div className="text-xs font-medium mb-2">Side View - Proper Camera Position</div>
+                    <div className="relative w-full h-24 bg-gradient-to-b from-sky-200 to-green-200 rounded-lg overflow-hidden">
+                      {/* Sky with canopy */}
+                      <div className="absolute top-0 left-0 w-full h-8 bg-gradient-to-b from-sky-300 to-sky-200">
+                        <div className="absolute top-4 left-2 w-8 h-6 bg-green-600 rounded-full opacity-80"></div>
+                        <div className="absolute top-2 left-12 w-12 h-8 bg-green-700 rounded-full opacity-70"></div>
+                        <div className="absolute top-6 left-24 w-6 h-4 bg-green-500 rounded-full opacity-60"></div>
+                      </div>
+                      {/* Ground level */}
+                      <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-green-300 to-green-200">
+                        {/* Person with camera */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                          <div className="w-2 h-8 bg-amber-600 rounded-full"></div>
+                          <div className="w-1 h-1 bg-gray-800 rounded-full mt-1 ml-0.5"></div>
+                          <div className="text-xs mt-1 text-center font-medium">1.3m</div>
+                        </div>
+                        {/* Height indicator */}
+                        <div className="absolute bottom-0 right-4 w-px h-12 bg-gray-600"></div>
+                        <div className="absolute bottom-12 right-3 text-xs">Camera Height</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="space-y-2 text-xs text-muted-foreground">
+                  <div className="font-medium text-foreground mb-1">Setup Instructions:</div>
+                  <p>• Hold camera at 1.3m height (standard breast height)</p>
+                  <p>• Point camera directly upward toward canopy</p>
+                  <p>• Ensure camera is level and perpendicular to ground</p>
+                  <p>• Take photo during overcast conditions for best results</p>
+                  <p>• Avoid direct sunlight to prevent glare and shadows</p>
+                  
+                  <div className="font-medium text-foreground mt-2 mb-1">Accuracy Specifications:</div>
+                  <p>• GLAMA method accuracy: ±2-3% for canopy cover</p>
                   <p>• GPS accuracy requirement: ±3m or better</p>
-                  <p>• Optimal conditions: Overcast sky or dawn/dusk lighting</p>
-                  <p>• Minimum 3 photos per point, select highest quality</p>
-                  <p>• LAI estimation accuracy: ±0.3 for deciduous, ±0.5 for coniferous</p>
+                  <p>• LAI estimation: ±0.3 deciduous, ±0.5 coniferous</p>
                 </div>
               </div>
 
               {/* GPS Accuracy Indicator */}
               <GPSAccuracyIndicator className="mb-2" />
 
-              {/* Canopy Photo Upload */}
-              <ImageUpload 
-                onImageUploaded={setSelectedImage} 
-                currentImage={selectedImage?.url}
-                allowBatch={false}
-              />
+              {/* Hybrid Photo Upload - Single and Batch */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Camera className="h-4 w-4 mr-2" />
+                    Photo Upload
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload 
+                    onImageUploaded={setSelectedImage} 
+                    onBatchUploaded={(images) => {
+                      if (images.length > 1) {
+                        toast({
+                          title: "Batch Processing Started",
+                          description: `Processing ${images.length} images...`,
+                        });
+                      } else {
+                        setSelectedImage(images[0]);
+                      }
+                    }}
+                    currentImage={selectedImage?.url}
+                    allowBatch={true}
+                  />
+                  
+                  {/* Integrated batch processor */}
+                  <div className="mt-4">
+                    <BatchProcessor
+                      toolType="canopy"
+                      onBatchComplete={(results) => {
+                        toast({
+                          title: "Batch Analysis Complete",
+                          description: `Successfully analyzed ${results.length} images`,
+                        });
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Optional Height Entry - Available before analysis */}
               {selectedImage && (

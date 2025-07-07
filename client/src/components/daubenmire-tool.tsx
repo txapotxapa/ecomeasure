@@ -195,38 +195,59 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
 
           <Separator />
 
-          {/* Camera Setup Information */}
+          {/* Setup Guide with Visual Diagram */}
           <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
-            <h4 className="font-medium flex items-center mb-2">
+            <h4 className="font-medium flex items-center mb-3 text-sm">
               <Target className="w-4 h-4 mr-2" />
-              Camera Setup Requirements
+              Ground Cover Analysis Setup Guide
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Camera Height:</span>
-                <p className="text-primary">1.5m ± 5cm</p>
-              </div>
-              <div>
-                <span className="font-medium">Orientation:</span>
-                <p className="text-primary">Directly downward (nadir)</p>
-              </div>
-              <div>
-                <span className="font-medium">Sampling Area:</span>
-                <p className="text-primary">1m² ± 0.1m²</p>
+            
+            {/* Visual Diagram */}
+            <div className="mb-4 p-3 bg-background/50 rounded-lg border">
+              <div className="text-center space-y-2">
+                <div className="text-xs font-medium mb-2">Side View - Proper Camera Position</div>
+                <div className="relative w-full h-24 bg-gradient-to-b from-sky-200 to-green-200 rounded-lg overflow-hidden">
+                  {/* Sky */}
+                  <div className="absolute top-0 left-0 w-full h-6 bg-gradient-to-b from-sky-300 to-sky-200"></div>
+                  {/* Ground level with quadrat area */}
+                  <div className="absolute bottom-0 left-0 w-full h-18 bg-gradient-to-t from-green-300 to-green-200">
+                    {/* Quadrat sampling area */}
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-dashed border-gray-700 bg-green-400/30">
+                      <div className="grid grid-cols-2 gap-px h-full">
+                        <div className="bg-green-600/40"></div>
+                        <div className="bg-amber-600/40"></div>
+                        <div className="bg-gray-600/40"></div>
+                        <div className="bg-green-500/40"></div>
+                      </div>
+                    </div>
+                    {/* Person with camera */}
+                    <div className="absolute bottom-2 left-8">
+                      <div className="w-2 h-12 bg-amber-600 rounded-full"></div>
+                      <div className="w-1 h-1 bg-gray-800 rounded-full mt-1 ml-0.5"></div>
+                      <div className="text-xs mt-1 text-center font-medium">1.5m</div>
+                    </div>
+                    {/* Height indicator */}
+                    <div className="absolute bottom-0 right-4 w-px h-16 bg-gray-600"></div>
+                    <div className="absolute bottom-16 right-3 text-xs">Camera Height</div>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Accuracy Information */}
-            <div className="mt-4 p-3 bg-muted/10 rounded-lg">
-              <h5 className="text-sm font-medium mb-2">Measurement Accuracy</h5>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p>• Camera height tolerance: ±5cm from 1.5m standard</p>
-                <p>• Coverage area accuracy: 1m² ± 0.1m² (field of view dependent)</p>
-                <p>• Species detection accuracy: 85-92% for common grassland species</p>
-                <p>• Ground cover classification: ±5% for vegetation, bare ground, litter</p>
-                <p>• Recommended: 5+ sampling points per 100m² for representative coverage</p>
-                <p>• Best results with diffuse lighting (overcast or shaded conditions)</p>
-              </div>
+
+            {/* Instructions */}
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <div className="font-medium text-foreground mb-1">Setup Instructions:</div>
+              <p>• Hold camera at 1.5m height above ground</p>
+              <p>• Point camera directly downward at sampling area</p>
+              <p>• Ensure camera is level and perpendicular to ground</p>
+              <p>• Frame covers approximately 1m² sampling area</p>
+              <p>• Take photo during overcast conditions for even lighting</p>
+              
+              <div className="font-medium text-foreground mt-2 mb-1">Analysis Specifications:</div>
+              <p>• Ground cover classification accuracy: ±5-7%</p>
+              <p>• Species identification with coverage percentages</p>
+              <p>• Bare ground, litter, and rock surface analysis</p>
+              <p>• Shannon diversity index calculation</p>
             </div>
           </div>
 
