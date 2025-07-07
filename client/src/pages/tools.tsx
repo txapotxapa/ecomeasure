@@ -131,9 +131,12 @@ export default function Tools() {
       }, 1000);
     },
     onError: (error) => {
+      console.error('Full error object:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error message:', errorMessage);
       toast({
         title: "Error creating session",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -223,12 +226,18 @@ export default function Tools() {
       };
 
       console.log('Creating session with data:', sessionData);
+      console.log('Session data keys:', Object.keys(sessionData));
+      console.log('ImageUrl value:', sessionData.imageUrl);
+      console.log('PixelsAnalyzed value:', sessionData.pixelsAnalyzed);
       
       // Store results for display in data sheet
-      setCurrentAnalysisResults({
+      const analysisResults = {
         ...sessionData,
         timestamp: new Date().toISOString(),
-      });
+      };
+      
+      console.log('Setting analysis results:', analysisResults);
+      setCurrentAnalysisResults(analysisResults);
       
       toast({
         title: "Analysis Complete",
@@ -642,8 +651,16 @@ export default function Tools() {
                 </Button>
               )}
 
+              {/* Debug: Show if we have results */}
+              {currentAnalysisResults && (
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 text-sm rounded">
+                  Debug: Results loaded (Tool: {currentAnalysisResults.toolType})
+                </div>
+              )}
+
               {/* Analysis Results Data Sheet */}
               {currentAnalysisResults && (
+                console.log('Rendering analysis results:', currentAnalysisResults) || true) && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-lg font-semibold">Analysis Results</Label>
