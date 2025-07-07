@@ -218,15 +218,15 @@ Changelog:
   - Site names now persist across tool switches for consistent data organization
   - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
   - Improved field workflow with clearer visual instructions for proper setup
-- July 07, 2025. Streamlined tools interface with unified photo upload:
+- July 07, 2025. Restored dedicated photo upload interfaces per tool:
   - Removed Quick Actions component from tools tab per user request to reduce interface clutter
-  - Created single unified photo upload location that handles both single and batch processing
-  - Enhanced ImageUpload component to support batch processing by default
-  - Users can upload single images for immediate analysis or multiple images for batch processing
-  - Simplified interface with one Photo Upload card containing integrated batch processing
-  - Clear messaging indicates single vs batch functionality in the same upload area
-  - Eliminated redundant upload interfaces - everything happens in one location
-  - Streamlined workflow: upload single image → analyze, or upload multiple → batch process
+  - Restored individual tool components with their own dedicated photo upload interfaces
+  - Each tool (canopy, horizontal vegetation, daubenmire) has its own specialized upload interface
+  - Canopy tool: Simple single image upload with GLAMA analysis
+  - Horizontal Vegetation tool: Multi-directional photo upload for Cardinal directions
+  - Daubenmire tool: Single quadrat image upload for ground cover analysis
+  - Maintained tool-specific workflows while eliminating redundant quick actions
+  - Each tool optimized for its specific measurement requirements and image needs
 
 ## User Preferences
 

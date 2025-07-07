@@ -21,16 +21,18 @@ import {
 import { useLocation } from "wouter";
 import type { ToolType } from "@/components/tool-selector";
 import ImageUpload from "@/components/image-upload";
-
+import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
+import DaubenmireTool from "@/components/daubenmire-tool";
 import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
-
 import BatchProcessor from "@/components/batch-processor";
 import SiteSelector from "@/components/site-selector";
 import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
+import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
+import type { DaubenmireResult } from "@/lib/daubenmire-frame";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -69,6 +71,8 @@ export default function Tools() {
   const [showSiteCreator, setShowSiteCreator] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+
 
   // Load current site from localStorage and check for tool parameter in URL
   useEffect(() => {
@@ -618,50 +622,12 @@ export default function Tools() {
               {/* GPS Accuracy Indicator */}
               <GPSAccuracyIndicator className="mb-2" />
 
-              {/* Unified Image Upload - handles both single and batch */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Photo Upload
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ImageUpload 
-                    onImageUploaded={setSelectedImage} 
-                    onBatchUploaded={(images) => {
-                      if (images.length > 1) {
-                        // Trigger batch processing directly
-                        toast({
-                          title: "Batch Processing Started",
-                          description: `Processing ${images.length} images...`,
-                        });
-                        // Auto-start batch processing
-                        // The BatchProcessor component will handle the processing
-                      } else {
-                        // Single image - set as selected image
-                        setSelectedImage(images[0]);
-                      }
-                    }}
-                    currentImage={selectedImage?.url}
-                    allowBatch={true}
-                  />
-                  
-                  {/* Integrated batch processor (hidden when not needed) */}
-                  <div className="mt-4">
-                    <BatchProcessor
-                      toolType={selectedTool}
-                      onBatchComplete={(results) => {
-                        toast({
-                          title: "Batch analysis complete",
-                          description: `Successfully analyzed ${results.length} images`,
-                        });
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Canopy Photo Upload */}
+              <ImageUpload 
+                onImageUploaded={setSelectedImage} 
+                currentImage={selectedImage?.url}
+                allowBatch={false}
+              />
 
               {/* Optional Height Entry - Available before analysis */}
               {selectedImage && (
@@ -855,64 +821,16 @@ export default function Tools() {
           </Card>
         )}
         
-        {selectedTool === 'horizontal_vegetation' && selectedImage && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Eye className="h-5 w-5 mr-2" />
-                Horizontal Vegetation Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                This tool will analyze your uploaded image for horizontal vegetation density using the Digital Robel Pole method.
-              </p>
-              <Button 
-                onClick={() => {
-                  // TODO: Implement horizontal vegetation analysis
-                  toast({
-                    title: "Analysis Complete",
-                    description: "Horizontal vegetation analysis coming soon",
-                  });
-                }}
-                className="w-full"
-                size="lg"
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analyze Horizontal Vegetation
-              </Button>
-            </CardContent>
-          </Card>
+        {selectedTool === 'horizontal_vegetation' && (
+          <HorizontalVegetationTool 
+            onAnalysisComplete={handleHorizontalVegetationAnalysis}
+          />
         )}
         
-        {selectedTool === 'daubenmire' && selectedImage && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Grid3X3 className="h-5 w-5 mr-2" />
-                Daubenmire Frame Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                This tool will analyze your uploaded quadrat image for ground cover composition using digital Daubenmire sampling.
-              </p>
-              <Button 
-                onClick={() => {
-                  // TODO: Implement daubenmire analysis
-                  toast({
-                    title: "Analysis Complete",
-                    description: "Daubenmire frame analysis coming soon",
-                  });
-                }}
-                className="w-full"
-                size="lg"
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analyze Ground Cover
-              </Button>
-            </CardContent>
-          </Card>
+        {selectedTool === 'daubenmire' && (
+          <DaubenmireTool 
+            onAnalysisComplete={handleDaubenmireAnalysis}
+          />
         )}
 
 
