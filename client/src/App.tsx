@@ -10,6 +10,7 @@ import Tools from "@/pages/tools";
 import Analysis from "@/pages/analysis";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
+import AccuracyReference from "@/pages/accuracy-reference";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/analysis" component={Analysis} />
       <Route path="/history" component={History} />
       <Route path="/settings" component={Settings} />
+      <Route path="/accuracy-reference" component={AccuracyReference} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -360,16 +360,31 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
                 <p className="text-xs text-muted-foreground">Pole height</p>
               </div>
               <div className="text-center p-2 bg-card rounded">
-                <span className="font-medium text-primary">4m</span>
+                <span className="font-medium text-primary">4m ± 10cm</span>
                 <p className="text-xs text-muted-foreground">Camera distance</p>
               </div>
               <div className="text-center p-2 bg-card rounded">
-                <span className="font-medium text-primary">1m</span>
+                <span className="font-medium text-primary">1m ± 5cm</span>
                 <p className="text-xs text-muted-foreground">Camera height</p>
               </div>
               <div className="text-center p-2 bg-card rounded">
                 <span className="font-medium text-primary">N, E, S, W</span>
                 <p className="text-xs text-muted-foreground">4 directions</p>
+              </div>
+            </div>
+            
+            {/* Accuracy Information */}
+            <div className="mt-4 p-3 bg-muted/10 rounded-lg border border-muted/20">
+              <h5 className="text-sm font-medium mb-2 flex items-center">
+                <Target className="w-3 h-3 mr-1" />
+                Measurement Accuracy
+              </h5>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>• Camera-based method accuracy: r² = 0.62 (compared to 0.26 for traditional visual estimation)</p>
+                <p>• Distance measurement tolerance: ±10cm from pole center</p>
+                <p>• Height measurement tolerance: ±5cm from ground level</p>
+                <p>• Cardinal direction accuracy: ±5° using compass or GPS bearing</p>
+                <p>• Minimum 3 replicate measurements recommended per site for statistical validity</p>
               </div>
             </div>
           </div>

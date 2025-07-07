@@ -17,7 +17,8 @@ import {
   Camera,
   BarChart3,
   FileText,
-  Smartphone
+  Smartphone,
+  Target
 } from "lucide-react";
 
 import BottomNavigation from "@/components/bottom-navigation";
@@ -284,6 +285,29 @@ export default function Settings() {
                 </Button>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Accuracy Reference */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Target className="h-5 w-5" />
+              <span>Measurement Accuracy Guide</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              View detailed accuracy specifications for all measurement tools
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/accuracy-reference'}
+              className="w-full"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              View Accuracy Reference
+            </Button>
           </CardContent>
         </Card>
 

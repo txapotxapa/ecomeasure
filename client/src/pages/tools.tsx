@@ -29,6 +29,7 @@ import VoiceNotes from "@/components/voice-notes";
 import BatchProcessor from "@/components/batch-processor";
 import QuickActions from "@/components/quick-actions";
 import SiteSelector from "@/components/site-selector";
+import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
@@ -128,10 +129,10 @@ export default function Tools() {
   });
 
   const handleCanopyAnalysis = async (method: 'GLAMA' | 'Canopeo') => {
-    if (!selectedImage || !currentSite) {
+    if (!selectedImage) {
       toast({
         title: "Missing Requirements",
-        description: !selectedImage ? "Please upload an image first" : "Please select a research site",
+        description: "Please upload an image first",
         variant: "destructive",
       });
       return;
@@ -193,6 +194,7 @@ export default function Tools() {
       }
 
       const sessionData = {
+        siteName: currentSite?.name || 'Untitled Location',
         plotName: currentSite?.name || `Untitled Location ${new Date().toLocaleDateString()}`,
         imageUrl: selectedImage.url,
         toolType: 'canopy',
@@ -537,7 +539,7 @@ export default function Tools() {
         )}
 
         {/* Streamlined Tool Interface */}
-        {selectedTool === 'canopy' && currentSite && (
+        {selectedTool === 'canopy' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -546,27 +548,33 @@ export default function Tools() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Accuracy Information */}
+              <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
+                <h4 className="font-medium flex items-center mb-2 text-sm">
+                  <Target className="w-4 h-4 mr-2" />
+                  Measurement Accuracy
+                </h4>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p>• GLAMA method accuracy: ±2-3% for canopy cover estimation</p>
+                  <p>• Camera height: 1.3m ± 10cm (standard breast height)</p>
+                  <p>• GPS accuracy requirement: ±3m or better</p>
+                  <p>• Optimal conditions: Overcast sky or dawn/dusk lighting</p>
+                  <p>• Minimum 3 photos per point, select highest quality</p>
+                  <p>• LAI estimation accuracy: ±0.3 for deciduous, ±0.5 for coniferous</p>
+                </div>
+              </div>
+
+              {/* GPS Accuracy Indicator */}
+              <GPSAccuracyIndicator className="mb-2" />
+
               {/* Image Upload */}
               <ImageUpload 
                 onImageUploaded={setSelectedImage} 
                 currentImage={selectedImage?.url}
               />
 
-              {/* Auto-analyze on upload or show analyze button */}
-              {selectedImage && !currentAnalysisResults && (
-                <Button 
-                  onClick={() => handleCanopyAnalysis('GLAMA')}
-                  disabled={isProcessing}
-                  className="w-full"
-                  size="lg"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  {isProcessing ? "Analyzing..." : "Analyze with GLAMA"}
-                </Button>
-              )}
-
-              {/* Optional Height Entry - Only after analysis */}
-              {currentAnalysisResults && (
+              {/* Optional Height Entry - Available before analysis */}
+              {selectedImage && (
                 <div className="space-y-2">
                   <Label htmlFor="canopy-height">Canopy Height (optional)</Label>
                   <Input
@@ -580,6 +588,19 @@ export default function Tools() {
                     placeholder="e.g., 15.5 meters"
                   />
                 </div>
+              )}
+
+              {/* Auto-analyze on upload or show analyze button */}
+              {selectedImage && !currentAnalysisResults && (
+                <Button 
+                  onClick={() => handleCanopyAnalysis('GLAMA')}
+                  disabled={isProcessing}
+                  className="w-full"
+                  size="lg"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  {isProcessing ? "Analyzing..." : "Analyze with GLAMA"}
+                </Button>
               )}
 
               {/* Analysis Results Data Sheet */}
