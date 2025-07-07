@@ -68,6 +68,13 @@ export default function Tools() {
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
   const [currentAnalysisResults, setCurrentAnalysisResults] = useState<any>(null);
   const [showSiteCreator, setShowSiteCreator] = useState(false);
+  const [currentGPS, setCurrentGPS] = useState<{
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+    accuracy?: number;
+    altitudeAccuracy?: number;
+  } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -111,6 +118,15 @@ export default function Tools() {
         sessionData.longitude = currentSite.longitude;
         sessionData.altitude = currentSite.altitude;
         sessionData.sitePhotoUrl = currentSite.photoUrl;
+      }
+      
+      // Add real-time GPS data including altitude if available
+      if (currentGPS) {
+        sessionData.latitude = currentGPS.latitude;
+        sessionData.longitude = currentGPS.longitude;
+        if (currentGPS.altitude !== null && currentGPS.altitude !== undefined) {
+          sessionData.altitude = currentGPS.altitude;
+        }
       }
       
       const response = await apiRequest("/api/analysis-sessions", {
@@ -660,7 +676,20 @@ export default function Tools() {
               </div>
 
               {/* GPS Accuracy Indicator */}
-              <GPSAccuracyIndicator className="mb-2" />
+              <GPSAccuracyIndicator 
+                className="mb-2" 
+                onAccuracyUpdate={(gpsData) => {
+                  if (gpsData.latitude && gpsData.longitude) {
+                    setCurrentGPS({
+                      latitude: gpsData.latitude,
+                      longitude: gpsData.longitude,
+                      altitude: gpsData.altitude || undefined,
+                      accuracy: gpsData.accuracy || undefined,
+                      altitudeAccuracy: gpsData.altitudeAccuracy || undefined
+                    });
+                  }
+                }} 
+              />
 
               {/* Single Unified Photo Upload */}
               <ImageUpload 
@@ -817,9 +846,17 @@ export default function Tools() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                        <span>Site: {currentSite?.name}</span>
+                        <span>Site: {currentSite?.name || currentAnalysisResults.siteName || 'Untitled Location'}</span>
                         <span>Method: {currentAnalysisResults.analysisMethod}</span>
                       </div>
+                      {(currentGPS?.altitude || currentSite?.altitude) && (
+                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                          <span>Altitude: {(currentGPS?.altitude || currentSite?.altitude)?.toFixed(1)}m</span>
+                          <span>
+                            GPS: {currentGPS?.latitude?.toFixed(6)}, {currentGPS?.longitude?.toFixed(6)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="mt-3 flex gap-2">
                       <Button 

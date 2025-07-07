@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { analyzeDaubenmireFrame, type DaubenmireResult } from "@/lib/daubenmire-frame";
 import ProcessingModal from "./processing-modal";
+import GPSAccuracyIndicator from "./gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
 
 interface DaubenmireToolProps {
@@ -252,6 +253,9 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
           </div>
 
           <Separator />
+
+          {/* GPS Accuracy Indicator */}
+          <GPSAccuracyIndicator className="mb-4" />
 
           {/* Photo Upload Section */}
           <div className="space-y-4">

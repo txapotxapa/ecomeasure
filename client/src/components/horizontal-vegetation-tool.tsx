@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { analyzeHorizontalVegetation, type RobelPoleOptions, type HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
 import ProcessingModal from "./processing-modal";
+import GPSAccuracyIndicator from "./gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
 
 interface DirectionPhoto {
@@ -238,6 +239,9 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* GPS Accuracy Indicator */}
+          <GPSAccuracyIndicator className="mb-4" />
+          
           {/* Site Information */}
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

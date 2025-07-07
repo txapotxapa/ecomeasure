@@ -4,6 +4,8 @@ import { MapPin, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface GPSAccuracy {
+  latitude: number | null;
+  longitude: number | null;
   accuracy: number | null;
   altitude: number | null;
   altitudeAccuracy: number | null;
@@ -17,6 +19,8 @@ interface GPSAccuracyIndicatorProps {
 
 export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GPSAccuracyIndicatorProps) {
   const [gpsAccuracy, setGpsAccuracy] = useState<GPSAccuracy>({
+    latitude: null,
+    longitude: null,
     accuracy: null,
     altitude: null,
     altitudeAccuracy: null,
@@ -46,6 +50,8 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
         }
 
         const newAccuracy = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
           accuracy,
           altitude,
           altitudeAccuracy,
@@ -106,7 +112,7 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Badge 
           variant="outline" 
           className={cn("text-xs", getStatusColor())}
@@ -119,10 +125,21 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
           </span>
         </Badge>
         
+        {/* Altimeter Badge */}
         {gpsAccuracy.altitude !== null && (
-          <Badge variant="outline" className="text-xs">
-            Alt: {gpsAccuracy.altitude.toFixed(1)}m
-            {gpsAccuracy.altitudeAccuracy && ` ±${gpsAccuracy.altitudeAccuracy.toFixed(1)}m`}
+          <Badge 
+            variant="outline" 
+            className={cn("text-xs", getStatusColor())}
+          >
+            <MapPin className="h-3 w-3 mr-1" />
+            <span>
+              Alt: {gpsAccuracy.altitude.toFixed(1)}m
+              {gpsAccuracy.altitudeAccuracy && (
+                <span className="text-xs opacity-75">
+                  {` ±${gpsAccuracy.altitudeAccuracy.toFixed(1)}m`}
+                </span>
+              )}
+            </span>
           </Badge>
         )}
       </div>
