@@ -15,16 +15,20 @@ import {
   TreePine,
   Eye,
   Grid3X3,
-  Clock
+  Clock,
+  Camera,
+  Upload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentLocation } from "@/lib/gps";
+import ImageUpload from "@/components/image-upload";
 
 interface SiteInfo {
   name: string;
   latitude: number;
   longitude: number;
   altitude?: number;
+  photoUrl?: string; // Site documentation photo
   createdAt: Date;
   sessionCounts: {
     canopy: number;
@@ -48,6 +52,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     longitude: number;
     altitude?: number;
   } | null>(null);
+  const [newSitePhoto, setNewSitePhoto] = useState<{ url: string; file: File } | null>(null);
   const { toast } = useToast();
 
   // Load sites from localStorage
@@ -120,6 +125,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
       latitude: newSiteLocation.latitude,
       longitude: newSiteLocation.longitude,
       altitude: newSiteLocation.altitude,
+      photoUrl: newSitePhoto?.url,
       createdAt: new Date(),
       sessionCounts: {
         canopy: 0,
@@ -135,6 +141,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     // Reset form
     setNewSiteName("");
     setNewSiteLocation(null);
+    setNewSitePhoto(null);
     setShowNewSiteDialog(false);
 
     toast({
@@ -223,7 +230,23 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                   )}
                 </div>
 
-                <Button onClick={createNewSite} className="w-full">
+                {/* Site Photo Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="site-photo">Site Documentation Photo (Optional)</Label>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Add a photo to document the site characteristics for future reference
+                  </div>
+                  <ImageUpload 
+                    onImageUploaded={setNewSitePhoto} 
+                    currentImage={newSitePhoto?.url}
+                  />
+                </div>
+
+                <Button 
+                  onClick={createNewSite} 
+                  className="w-full"
+                  disabled={!newSiteName.trim() || !newSiteLocation}
+                >
                   Create Site
                 </Button>
               </div>

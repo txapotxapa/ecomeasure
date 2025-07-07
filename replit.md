@@ -141,6 +141,14 @@ Changelog:
 - Implemented site-based workflow system with site selector component for naming and organizing measurements by location
 - Updated navigation structure with dedicated tools page and mobile-optimized bottom navigation
 - Modified header to display current site information (name, coordinates, altitude) instead of statistics to support field workflow
+- July 07, 2025. Major workflow improvements based on user feedback:
+  - Site naming is now the first action in workflow with GPS auto-capture and optional photo documentation
+  - Added canopy height measurement as optional data collection point alongside canopy cover analysis
+  - Completely redesigned tools page with proper spacing, mobile-responsive layout, and streamlined workflow
+  - Reduced clicks to photo input stage - site selection flows directly to measurement tools
+  - Enhanced database schema to support site photo documentation and canopy height measurements
+  - Improved field research workflow: site creation → consecutive tool usage → comprehensive vegetation profiling
+  - Site-based data organization enables succession level assessment through combined metrics
 
 ## User Preferences
 

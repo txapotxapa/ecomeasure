@@ -1,27 +1,44 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { TreePine, Camera, BarChart3, MapPin, Leaf, Eye, Grid3X3 } from "lucide-react";
+import { 
+  TreePine, 
+  Eye, 
+  Grid3X3, 
+  Camera,
+  Target,
+  MapPin,
+  Mountain,
+  AlertTriangle,
+  Ruler,
+  BarChart3,
+  Leaf
+} from "lucide-react";
+import { useLocation } from "wouter";
+import ToolSelector from "@/components/tool-selector";
+import type { ToolType } from "@/components/tool-selector";
 import ImageUpload from "@/components/image-upload";
-import LocationDisplay from "@/components/location-display";
-import ProcessingModal from "@/components/processing-modal";
-import ToolSelector, { ToolType } from "@/components/tool-selector";
 import HorizontalVegetationTool from "@/components/horizontal-vegetation-tool";
 import DaubenmireTool from "@/components/daubenmire-tool";
+import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
-import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
+
+import { analyzeCanopyImage } from "@/lib/image-processing";
+import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
+import type { DaubenmireResult } from "@/lib/daubenmire-frame";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLocation } from "wouter";
 
 interface SiteInfo {
   name: string;
   latitude: number;
   longitude: number;
   altitude?: number;
+  photoUrl?: string;
   createdAt: Date;
   sessionCounts: {
     canopy: number;
@@ -34,6 +51,7 @@ export default function Tools() {
   const [, setLocation] = useLocation();
   const [selectedTool, setSelectedTool] = useState<ToolType>('canopy');
   const [selectedImage, setSelectedImage] = useState<{ url: string; file: File } | null>(null);
+  const [canopyHeight, setCanopyHeight] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStage, setCurrentStage] = useState("");
@@ -73,6 +91,7 @@ export default function Tools() {
         sessionData.latitude = currentSite.latitude;
         sessionData.longitude = currentSite.longitude;
         sessionData.altitude = currentSite.altitude;
+        sessionData.sitePhotoUrl = currentSite.photoUrl;
       }
       
       return await apiRequest("/api/analysis-sessions", {
@@ -87,29 +106,15 @@ export default function Tools() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to save analysis session",
+        title: "Error creating session",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
     },
   });
 
-  const handleImageUpload = (imageData: { url: string; file: File }) => {
-    setSelectedImage(imageData);
-  };
-
-  const handleCanopyAnalysis = async () => {
-    if (!selectedImage) return;
-
-    const validation = validateImage(selectedImage.file);
-    if (!validation.isValid) {
-      toast({
-        title: "Invalid Image",
-        description: validation.error,
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleCanopyAnalysis = async (method: 'GLAMA' | 'Canopeo') => {
+    if (!selectedImage || !currentSite) return;
 
     setIsProcessing(true);
     setProgress(0);
@@ -117,7 +122,7 @@ export default function Tools() {
 
     try {
       const results = await analyzeCanopyImage(selectedImage.file, {
-        method: "GLAMA",
+        method: method,
         zenithAngle: 90,
         onProgress: (progress, stage) => {
           setProgress(progress);
@@ -129,9 +134,10 @@ export default function Tools() {
         plotName: `Canopy Analysis ${new Date().toLocaleDateString()}`,
         imageUrl: selectedImage.url,
         toolType: 'canopy',
-        analysisMethod: "GLAMA",
+        analysisMethod: method,
         zenithAngle: 90,
         canopyCover: results.canopyCover,
+        canopyHeight: canopyHeight ? parseFloat(canopyHeight) : null,
         lightTransmission: results.lightTransmission,
         leafAreaIndex: results.leafAreaIndex,
         pixelsAnalyzed: results.pixelsAnalyzed,
@@ -151,15 +157,13 @@ export default function Tools() {
     }
   };
 
-  const handleHorizontalVegetationAnalysis = async (results: any) => {
+  const handleHorizontalVegetationAnalysis = (results: HorizontalVegetationAnalysis) => {
     const sessionData = {
       plotName: `Horizontal Vegetation ${new Date().toLocaleDateString()}`,
-      imageUrl: '', // Multiple images, we'll use first one's URL
+      imageUrl: "", // Will be set by the tool
       toolType: 'horizontal_vegetation',
-      analysisMethod: 'Multi-height analysis',
-      canopyCover: results.averageCover,
-      pixelsAnalyzed: results.measurements.reduce((sum: number, m: any) => sum + m.pixelsAnalyzed, 0),
-      processingTime: results.measurements.reduce((sum: number, m: any) => sum + m.processingTime, 0),
+      analysisMethod: "Digital Robel Pole",
+      pixelsAnalyzed: 0,
       horizontalVegetationData: results,
       isCompleted: true,
     };
@@ -167,15 +171,13 @@ export default function Tools() {
     createSessionMutation.mutate(sessionData);
   };
 
-  const handleDaubenmireAnalysis = async (results: any) => {
+  const handleDaubenmireAnalysis = (results: DaubenmireResult) => {
     const sessionData = {
       plotName: `Daubenmire Frame ${new Date().toLocaleDateString()}`,
-      imageUrl: '', // Will be set when image is uploaded
+      imageUrl: "", // Will be set by the tool
       toolType: 'daubenmire',
-      analysisMethod: 'Quadrat sampling',
-      canopyCover: results.totalCoverage,
-      pixelsAnalyzed: results.cells.reduce((sum: number, cell: any) => sum + (cell.width * cell.height), 0),
-      processingTime: results.processingTime,
+      analysisMethod: "Frame-free Analysis",
+      pixelsAnalyzed: 0,
       daubenmireData: results,
       isCompleted: true,
     };
@@ -183,116 +185,173 @@ export default function Tools() {
     createSessionMutation.mutate(sessionData);
   };
 
-  const renderToolInterface = () => {
-    switch (selectedTool) {
-      case 'canopy':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <TreePine className="w-5 h-5 mr-2" />
-                Canopy Analysis
-              </CardTitle>
-              <CardDescription>
-                Analyze forest canopy cover and light transmission using camera images
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <Camera className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm">Camera Required</span>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Site Requirement Notice */}
+        {!currentSite && (
+          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">Site Required</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    Please create or select a research site from the Home page before starting measurements. 
+                    This ensures all data is properly organized and logged to the correct location.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-3 border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
+                    onClick={() => setLocation('/')}
+                  >
+                    Go to Home Page
+                  </Button>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-green-600" />
-                  <span className="text-sm">GPS Optional</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <BarChart3 className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm">Real-time Analysis</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">1. Capture Image</h3>
-                <ImageUpload onImageUploaded={handleImageUpload} currentImage={selectedImage?.url} />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">2. Location (Optional)</h3>
-                <LocationDisplay />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="font-medium">3. Analyze</h3>
-                <Button 
-                  onClick={handleCanopyAnalysis}
-                  disabled={!selectedImage || isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Leaf className="w-4 h-4 mr-2" />
-                      Analyze Canopy
-                    </>
-                  )}
-                </Button>
               </div>
             </CardContent>
           </Card>
-        );
-      
-      case 'horizontal_vegetation':
-        return <HorizontalVegetationTool onAnalysisComplete={handleHorizontalVegetationAnalysis} />;
-      
-      case 'daubenmire':
-        return <DaubenmireTool onAnalysisComplete={handleDaubenmireAnalysis} />;
-      
-      default:
-        return null;
-    }
-  };
+        )}
 
-  return (
-    <div className="pb-20">
-      {/* Header */}
-      <div className="analysis-gradient text-white p-4">
-        <div className="flex items-center space-x-3">
-          <Camera className="h-6 w-6" />
-          <div>
-            <h1 className="text-lg font-semibold">Measurement Tools</h1>
-            <p className="text-xs opacity-80">
-              Choose your analysis method
-            </p>
-          </div>
-        </div>
-      </div>
+        {/* Current Site Display */}
+        {currentSite && (
+          <Card className="border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
+            <CardContent className="pt-6">
+              <div className="flex items-start space-x-3">
+                <Target className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-green-800 dark:text-green-200 truncate">
+                    Active Site: {currentSite.name}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-green-700 dark:text-green-300">
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{currentSite.latitude.toFixed(6)}°, {currentSite.longitude.toFixed(6)}°</span>
+                    </div>
+                    {currentSite.altitude && (
+                      <div className="flex items-center space-x-1">
+                        <Mountain className="h-3 w-3 flex-shrink-0" />
+                        <span>{currentSite.altitude.toFixed(0)}m</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      <div className="p-4 space-y-6">
-        <ToolSelector
-          selectedTool={selectedTool}
-          onToolSelect={setSelectedTool}
-        />
+        {/* Tool Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Camera className="h-5 w-5 mr-2" />
+              Choose Measurement Tool
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ToolSelector 
+              selectedTool={selectedTool} 
+              onToolSelect={setSelectedTool}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Tool-specific Interface */}
+        {selectedTool === 'canopy' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TreePine className="h-5 w-5 mr-2" />
+                Canopy Cover Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label>Upload Canopy Photo</Label>
+                <ImageUpload 
+                  onImageUploaded={setSelectedImage} 
+                  currentImage={selectedImage?.url}
+                />
+              </div>
+
+              {/* Optional Canopy Height */}
+              <div className="space-y-2">
+                <Label htmlFor="canopy-height">Canopy Height (meters) - Optional</Label>
+                <div className="flex items-center space-x-2">
+                  <Ruler className="h-4 w-4 text-gray-500" />
+                  <Input
+                    id="canopy-height"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={canopyHeight}
+                    onChange={(e) => setCanopyHeight(e.target.value)}
+                    placeholder="e.g., 15.5"
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-gray-600">
+                  Measure from ground to highest vegetation point for complete site characterization
+                </p>
+              </div>
+
+              {/* Analysis Buttons */}
+              {selectedImage && (
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => handleCanopyAnalysis('GLAMA')}
+                      disabled={isProcessing || !currentSite}
+                      className="flex-1"
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Analyze with GLAMA
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => handleCanopyAnalysis('Canopeo')}
+                      disabled={isProcessing || !currentSite}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      <Leaf className="h-4 w-4 mr-2" />
+                      Analyze with Canopeo
+                    </Button>
+                  </div>
+                  {!currentSite && (
+                    <p className="text-xs text-amber-600 text-center">
+                      Select a site to enable analysis
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
         
-        {renderToolInterface()}
+        {selectedTool === 'horizontal_vegetation' && (
+          <HorizontalVegetationTool 
+            onAnalysisComplete={handleHorizontalVegetationAnalysis}
+          />
+        )}
+        
+        {selectedTool === 'daubenmire' && (
+          <DaubenmireTool 
+            onAnalysisComplete={handleDaubenmireAnalysis}
+          />
+        )}
 
         <ProcessingModal
           isOpen={isProcessing}
-          onClose={() => {}}
+          onClose={() => setIsProcessing(false)}
           progress={progress}
           stage={currentStage}
-          canCancel={false}
+          canCancel={true}
+          onCancel={() => setIsProcessing(false)}
         />
       </div>
 

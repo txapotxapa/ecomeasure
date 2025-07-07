@@ -11,12 +11,14 @@ export const analysisSession = pgTable("analysis_sessions", {
   altitude: real("altitude"), // Elevation in meters
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   imageUrl: text("image_url").notNull(),
+  sitePhotoUrl: text("site_photo_url"), // Site documentation photo
   toolType: text("tool_type").notNull().default("canopy"), // 'canopy', 'horizontal_vegetation', 'daubenmire'
   analysisMethod: text("analysis_method").notNull().default("GLAMA"),
   zenithAngle: real("zenith_angle").default(90),
   
   // Common results
   canopyCover: real("canopy_cover"),
+  canopyHeight: real("canopy_height"), // Optional canopy height measurement in meters
   lightTransmission: real("light_transmission"),
   leafAreaIndex: real("leaf_area_index"),
   pixelsAnalyzed: integer("pixels_analyzed").notNull(),
