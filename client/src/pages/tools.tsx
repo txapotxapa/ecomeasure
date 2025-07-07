@@ -119,16 +119,14 @@ export default function Tools() {
       console.log('Session created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
       
-      // Show success message and navigate
+      // Show success message - don't navigate immediately
       toast({
         title: "Analysis Complete",
-        description: `Session ${data.id} created successfully. Viewing results...`,
+        description: `Session ${data.id} saved to history. Results shown below.`,
       });
       
-      // Navigate to analysis page to view results
-      setTimeout(() => {
-        setLocation(`/analysis?id=${data.id}`);
-      }, 1000);
+      // Don't navigate immediately - let user see results first
+      console.log('Results should be visible in the UI now');
     },
     onError: (error) => {
       console.error('Full error object:', error);
@@ -237,7 +235,15 @@ export default function Tools() {
       };
       
       console.log('Setting analysis results:', analysisResults);
+      
+      // Ensure we set the results BEFORE calling the mutation
       setCurrentAnalysisResults(analysisResults);
+      
+      // Give UI time to update
+      setTimeout(() => {
+        console.log('Results should now be visible in UI');
+        console.log('Current analysis results state:', analysisResults);
+      }, 100);
       
       toast({
         title: "Analysis Complete",
@@ -658,6 +664,31 @@ export default function Tools() {
                 </div>
               )}
 
+              {/* Debug: Test button to set dummy results */}
+              {!currentAnalysisResults && (
+                <Button 
+                  onClick={() => {
+                    console.log('Setting test results...');
+                    setCurrentAnalysisResults({
+                      toolType: 'canopy',
+                      canopyCover: 75.0,
+                      lightTransmission: 25.0,
+                      leafAreaIndex: 1.5,
+                      pixelsAnalyzed: 1000000,
+                      processingTime: 500,
+                      analysisMethod: 'GLAMA',
+                      timestamp: new Date().toISOString(),
+                      siteName: 'Test Site'
+                    });
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  Test Results Display
+                </Button>
+              )}
+
               {/* Analysis Results Data Sheet */}
               {currentAnalysisResults && (
                 console.log('Rendering analysis results:', currentAnalysisResults) || true) && (
@@ -762,6 +793,24 @@ export default function Tools() {
                         <span>Site: {currentSite?.name}</span>
                         <span>Method: {currentAnalysisResults.analysisMethod}</span>
                       </div>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Button 
+                        onClick={() => setLocation('/analysis')}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        View Full Analysis
+                      </Button>
+                      <Button 
+                        onClick={() => setLocation('/history')}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        View History
+                      </Button>
                     </div>
                   </div>
                 </div>
