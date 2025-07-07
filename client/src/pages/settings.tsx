@@ -284,6 +284,18 @@ export default function Settings() {
                   <span>Clear All Data</span>
                 </Button>
               </div>
+              
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    View live spreadsheet and export data from the{' '}
+                    <a href="#" onClick={(e) => { e.preventDefault(); window.location.href = '/history'; }} className="font-medium underline">
+                      History tab
+                    </a>
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

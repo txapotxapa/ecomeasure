@@ -33,6 +33,7 @@ export default function History() {
   const [selectedSessions, setSelectedSessions] = useState<number[]>([]);
   const [showGoogleSheetsDialog, setShowGoogleSheetsDialog] = useState(false);
   const [showCurrentData, setShowCurrentData] = useState(true);
+  const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('spreadsheet');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -187,7 +188,24 @@ export default function History() {
                 <Filter className="h-5 w-5" />
                 <span>Filter & Search</span>
               </span>
-              <div className="flex space-x-2">
+              <div className="flex items-center space-x-2">
+                <div className="flex gap-1">
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                  >
+                    Cards
+                  </Button>
+                  <Button
+                    variant={viewMode === 'spreadsheet' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('spreadsheet')}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-1" />
+                    Spreadsheet
+                  </Button>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -339,6 +357,69 @@ export default function History() {
                     : "Start by creating your first analysis session"
                   }
                 </p>
+              </div>
+            ) : viewMode === 'spreadsheet' ? (
+              // Spreadsheet View
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2 text-xs font-medium">Date/Time</th>
+                      <th className="text-left p-2 text-xs font-medium">Site</th>
+                      <th className="text-left p-2 text-xs font-medium">Tool</th>
+                      <th className="text-left p-2 text-xs font-medium">Canopy %</th>
+                      <th className="text-left p-2 text-xs font-medium">Light %</th>
+                      <th className="text-left p-2 text-xs font-medium">LAI</th>
+                      <th className="text-left p-2 text-xs font-medium">Height (m)</th>
+                      <th className="text-left p-2 text-xs font-medium">GPS</th>
+                      <th className="text-left p-2 text-xs font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSessions.map((session) => (
+                      <tr key={session.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td className="p-2 text-xs">{format(new Date(session.timestamp), "MM/dd HH:mm")}</td>
+                        <td className="p-2 text-xs">{session.siteName || session.plotName}</td>
+                        <td className="p-2 text-xs">
+                          <Badge variant="outline" className="text-xs">
+                            {session.toolType === 'canopy' && 'Canopy'}
+                            {session.toolType === 'horizontal_vegetation' && 'Horizontal'}
+                            {session.toolType === 'daubenmire' && 'Daubenmire'}
+                          </Badge>
+                        </td>
+                        <td className="p-2 text-xs font-mono">{session.canopyCover?.toFixed(1) || '-'}</td>
+                        <td className="p-2 text-xs font-mono">{session.lightTransmission?.toFixed(1) || '-'}</td>
+                        <td className="p-2 text-xs font-mono">{session.leafAreaIndex?.toFixed(2) || '-'}</td>
+                        <td className="p-2 text-xs font-mono">{session.canopyHeight || '-'}</td>
+                        <td className="p-2 text-xs font-mono">
+                          {session.latitude && session.longitude ? (
+                            <span className="text-xs">
+                              {session.latitude.toFixed(4)}, {session.longitude.toFixed(4)}
+                            </span>
+                          ) : '-'}
+                        </td>
+                        <td className="p-2 text-xs">
+                          <div className="flex gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleExportSession(session)}
+                            >
+                              <Download className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleDeleteSession(session.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <div className="space-y-3">

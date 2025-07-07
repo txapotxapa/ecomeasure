@@ -218,15 +218,16 @@ Changelog:
   - Site names now persist across tool switches for consistent data organization
   - Visual guide shows pole with 10cm bands, camera positions, and measurement distances
   - Improved field workflow with clearer visual instructions for proper setup
-- July 07, 2025. Streamlined tools interface with unified photo upload:
-  - Created detailed setup guide for canopy cover analysis with side-view diagram showing proper 1.3m camera height
-  - Added comprehensive setup guide for ground cover analysis with visual quadrat sampling diagram
-  - Visual diagrams show proper camera positioning, height requirements, and sampling areas
-  - Implemented single unified photo upload interface that handles both single and multiple images
-  - Removed separate batch processor and quick actions components for cleaner interface
-  - Added automatic scroll to top when tools tab is clicked or tool is changed
-  - Setup guides include step-by-step instructions and accuracy specifications
-  - Visual diagrams use gradient backgrounds and illustrated elements for clear field guidance
+- July 07, 2025. Enhanced data management and live spreadsheet functionality:
+  - Re-added Daubenmire and Horizontal Vegetation tools to tools page
+  - Implemented live spreadsheet view in history tab with toggle between cards and spreadsheet modes
+  - Added comprehensive data table showing all session data with sortable columns
+  - Enhanced export functionality accessible from both history and settings pages
+  - Spreadsheet view includes: date/time, site, tool type, measurements, GPS coordinates, and actions
+  - Added per-row export and delete functionality in spreadsheet view
+  - Created single unified photo upload for canopy tool handling both single and multiple images
+  - Added automatic scroll to top when tools tab is clicked or tool changes
+  - Setup guides with visual diagrams for proper camera positioning and measurement procedures
 
 ## User Preferences
 
