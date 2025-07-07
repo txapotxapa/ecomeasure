@@ -78,12 +78,15 @@ async function analyzeGroundCoverCanopeo(
   const { data, width, height } = imageData;
   const totalPixels = width * height;
   
+  console.log(`Processing image: ${width}x${height} pixels (${totalPixels} total)`);
+  
   // Classification counters
   let vegetationPixels = 0;
   let bareGroundPixels = 0;
   let litterPixels = 0;
   let rockPixels = 0;
   let shadowPixels = 0;
+  let unclassifiedPixels = 0;
   
   // Species color groups for ground cover analysis
   const speciesColors = new Map<string, number>();
@@ -113,27 +116,53 @@ async function analyzeGroundCoverCanopeo(
       rockPixels++;
     } else if (v < 0.25) {
       shadowPixels++; // Count shadows separately
+    } else {
+      unclassifiedPixels++;
     }
   }
+  
+  console.log('Pixel classification results:');
+  console.log(`Vegetation: ${vegetationPixels} (${(vegetationPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Bare Ground: ${bareGroundPixels} (${(bareGroundPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Litter: ${litterPixels} (${(litterPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Rock: ${rockPixels} (${(rockPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Shadow: ${shadowPixels} (${(shadowPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Unclassified: ${unclassifiedPixels} (${(unclassifiedPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Species colors found: ${speciesColors.size}`);
   
   options.onProgress?.(70, 'Calculating coverage statistics');
   
   // Calculate percentages (excluding shadows from total)
   const classifiedPixels = vegetationPixels + bareGroundPixels + litterPixels + rockPixels;
+  console.log(`Classified pixels: ${classifiedPixels} out of ${totalPixels}`);
+  
+  if (classifiedPixels === 0) {
+    console.error('No pixels were classified! Check classification thresholds.');
+    throw new Error('Image analysis failed: No recognizable ground cover detected');
+  }
+  
   const vegetationPercentage = (vegetationPixels / classifiedPixels) * 100;
   const bareGroundPercentage = (bareGroundPixels / classifiedPixels) * 100;
   const litterPercentage = (litterPixels / classifiedPixels) * 100;
   const rockPercentage = (rockPixels / classifiedPixels) * 100;
+  
+  console.log('Final percentages:');
+  console.log(`Vegetation: ${vegetationPercentage.toFixed(1)}%`);
+  console.log(`Bare Ground: ${bareGroundPercentage.toFixed(1)}%`);
+  console.log(`Litter: ${litterPercentage.toFixed(1)}%`);
+  console.log(`Rock: ${rockPercentage.toFixed(1)}%`);
   
   // Identify dominant vegetation types
   const sortedSpecies = Array.from(speciesColors.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([key, count]) => {
-      const percentage = (count / vegetationPixels) * 100;
+      const percentage = vegetationPixels > 0 ? (count / vegetationPixels) * 100 : 0;
       return mapColorToSpeciesName(key, percentage);
     })
     .filter(species => species !== null) as string[];
+    
+  console.log(`Dominant species: ${sortedSpecies.join(', ')}`);
   
   options.onProgress?.(90, 'Calculating biodiversity indices');
   
@@ -167,34 +196,46 @@ async function analyzeGroundCoverCanopeo(
 function isVegetationCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
   // Official Canopeo algorithm for ground cover analysis
   // Uses Excess Green Index: 2G - R - B
-  const excessGreen = (2 * g - r - b) / (r + g + b + 1);
+  const sum = r + g + b;
+  if (sum === 0) return false; // Avoid division by zero
+  
+  const excessGreen = (2 * g - r - b) / sum;
   
   // Calculate R/G and B/G ratios as used in Canopeo
-  const rToGRatio = r / (g + 1);
-  const bToGRatio = b / (g + 1);
+  const rToGRatio = g > 0 ? r / g : 999; // High value if g=0
+  const bToGRatio = g > 0 ? b / g : 999; // High value if g=0
   
-  // Canopeo thresholds for vegetation classification
+  // Relaxed Canopeo thresholds for vegetation classification
   // Vegetation has high green excess and low R/G, B/G ratios
-  const isVegetation = excessGreen > 0.05 && rToGRatio < 0.95 && bToGRatio < 0.95;
+  const isVegetation = excessGreen > 0.03 && rToGRatio < 1.0 && bToGRatio < 1.0;
   
-  // Additional HSV constraints for better accuracy in ground cover analysis
-  const isGreenHue = h >= 60 && h <= 180; // Green hue range
-  const hasMinSaturation = s > 0.15; // Minimum saturation to avoid gray
-  const hasMinValue = v > 0.15; // Minimum brightness to avoid shadows
+  // More lenient HSV constraints for better ground cover detection
+  const isGreenish = (h >= 45 && h <= 200) || s > 0.3; // Broader green range or high saturation
+  const hasMinValue = v > 0.1; // Minimum brightness to avoid deep shadows
   
-  return isVegetation && isGreenHue && hasMinSaturation && hasMinValue;
+  const result = isVegetation && isGreenish && hasMinValue;
+  
+  // Debug first few pixels
+  if (Math.random() < 0.0001) { // Log ~0.01% of pixels for debugging
+    console.log(`Pixel RGB(${r},${g},${b}) HSV(${h.toFixed(0)},${s.toFixed(2)},${v.toFixed(2)}) -> vegetation: ${result} (EG: ${excessGreen.toFixed(3)}, R/G: ${rToGRatio.toFixed(2)}, B/G: ${bToGRatio.toFixed(2)})`);
+  }
+  
+  return result;
 }
 
 function isBareGroundCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
-  // Brown/tan colors with low saturation
-  const isBrownish = (h >= 15 && h <= 45) || (h >= 0 && h <= 15);
-  const lowSaturation = s < 0.4;
-  const mediumBrightness = v > 0.2 && v < 0.8;
+  // Brown/tan colors with low saturation - more permissive
+  const isBrownish = (h >= 10 && h <= 50) || (h >= 350 && h <= 360);
+  const lowSaturation = s < 0.5;
+  const mediumBrightness = v > 0.15 && v < 0.85;
   
-  // Gray colors (very low saturation)
-  const isGrayish = s < 0.15 && v > 0.3 && v < 0.7;
+  // Gray colors (very low saturation) - more permissive
+  const isGrayish = s < 0.2 && v > 0.2 && v < 0.8;
   
-  return (isBrownish && lowSaturation && mediumBrightness) || isGrayish;
+  // Light sandy colors
+  const isSandy = s < 0.3 && v > 0.5 && (h >= 30 && h <= 60);
+  
+  return (isBrownish && lowSaturation && mediumBrightness) || isGrayish || isSandy;
 }
 
 function isLitterCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
