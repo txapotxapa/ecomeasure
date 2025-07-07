@@ -49,7 +49,14 @@ interface SiteInfo {
 
 export default function Tools() {
   const [, setLocation] = useLocation();
-  const [selectedTool, setSelectedTool] = useState<ToolType>('canopy');
+  // Get tool from URL parameter or default to canopy
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlTool = urlParams.get('tool') as ToolType;
+  const [selectedTool, setSelectedTool] = useState<ToolType>(
+    urlTool && ['canopy', 'horizontal_vegetation', 'daubenmire'].includes(urlTool) 
+      ? urlTool 
+      : 'canopy'
+  );
   const [selectedImage, setSelectedImage] = useState<{ url: string; file: File } | null>(null);
   const [canopyHeight, setCanopyHeight] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);

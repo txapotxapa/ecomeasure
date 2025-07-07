@@ -262,44 +262,95 @@ export default function Home() {
           onSiteChange={handleSiteChange}
         />
 
-        {/* Measurement Tools */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Camera className="h-5 w-5 mr-2" />
-              Measurement Tools
-            </CardTitle>
-            <CardDescription>
-              Choose your ecological measurement method
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {tools.map((tool) => (
-              <div
-                key={tool.id}
-                className="border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleToolSelect(tool.route)}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className={`p-3 rounded-lg ${tool.lightColor} dark:${tool.darkColor}`}>
-                    <tool.icon className={`h-6 w-6 ${tool.textColor}`} />
+        {/* Quick Measurement Tools - Home Screen Access */}
+        {currentSite ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Camera className="h-5 w-5 mr-2" />
+                Start Measurement
+              </CardTitle>
+              <CardDescription>
+                Direct access to measurement tools
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                <Button
+                  className="h-16 justify-start space-x-4 bg-green-600 hover:bg-green-700"
+                  onClick={() => setLocation('/tools?tool=canopy')}
+                >
+                  <TreePine className="h-6 w-6" />
+                  <div className="text-left">
+                    <div className="font-medium">Canopy Cover Analysis</div>
+                    <div className="text-xs opacity-90">Upload photo → instant GLAMA results</div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">{tool.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{tool.description}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {tool.features.map((feature, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
+                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-16 flex-col space-y-1"
+                    onClick={() => setLocation('/tools?tool=horizontal_vegetation')}
+                  >
+                    <Layers className="h-5 w-5 text-blue-600" />
+                    <div className="text-center">
+                      <div className="font-medium text-sm">Horizontal Vegetation</div>
+                      <div className="text-xs text-gray-600">Multi-height photos</div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-16 flex-col space-y-1"
+                    onClick={() => setLocation('/tools?tool=daubenmire')}
+                  >
+                    <Grid3X3 className="h-5 w-5 text-amber-600" />
+                    <div className="text-center">
+                      <div className="font-medium text-sm">Ground Cover</div>
+                      <div className="text-xs text-gray-600">Digital quadrat</div>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Camera className="h-5 w-5 mr-2" />
+                Measurement Tools
+              </CardTitle>
+              <CardDescription>
+                Create a site first to enable measurements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {tools.map((tool) => (
+                <div
+                  key={tool.id}
+                  className="border rounded-lg p-4 opacity-50"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-3 rounded-lg ${tool.lightColor} dark:${tool.darkColor}`}>
+                      <tool.icon className={`h-6 w-6 ${tool.textColor}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">{tool.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{tool.description}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {tool.features.map((feature, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Activity */}
         <Card>

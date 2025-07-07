@@ -165,6 +165,9 @@ Changelog:
     * Condensed history page controls - removed excessive filter options and verbose displays
     * Made workflow more intuitive: site creation → tool selection → photo upload → instant analysis
     * Reduced clicks and cognitive load for field research use
+    * Answered workflow question: tools are now primarily accessed from home screen with tools tab as backup
+    * Home screen provides direct tool access when site is selected, tools tab provides full tool selector interface
+    * URL parameters enable direct tool linking from home screen buttons for seamless workflow
 
 ## User Preferences
 
