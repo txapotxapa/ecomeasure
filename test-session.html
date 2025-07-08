@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Test</title>
+</head>
+<body>
+    <button onclick="createTestSession()">Create Test Session</button>
+    <button onclick="checkSessions()">Check Sessions</button>
+    <div id="result"></div>
+
+    <script>
+        async function createTestSession() {
+            const sessionData = {
+                siteName: "Frontend Test Site",
+                plotName: "Frontend Test Plot",
+                imageUrl: "/frontend-test.jpg",
+                toolType: "canopy",
+                analysisMethod: "GLAMA",
+                canopyCover: 80.5,
+                lightTransmission: 19.5,
+                leafAreaIndex: 1.3,
+                pixelsAnalyzed: 600000,
+                processingTime: 2.0,
+                isCompleted: true
+            };
+
+            try {
+                const response = await fetch('/api/analysis-sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = `Session created: ${JSON.stringify(result)}`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        async function checkSessions() {
+            try {
+                const response = await fetch('/api/analysis-sessions');
+                const sessions = await response.json();
+                document.getElementById('result').innerHTML = `Sessions: ${JSON.stringify(sessions, null, 2)}`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
