@@ -111,6 +111,8 @@ export default function Tools() {
 
   const createSessionMutation = useMutation({
     mutationFn: async (sessionData: any) => {
+      console.log('🔄 Starting session creation with data:', sessionData);
+      
       // Add current site information to session data
       if (currentSite) {
         sessionData.siteName = currentSite.name;
@@ -118,6 +120,7 @@ export default function Tools() {
         sessionData.longitude = currentSite.longitude;
         sessionData.altitude = currentSite.altitude;
         sessionData.sitePhotoUrl = currentSite.photoUrl;
+        console.log('📍 Added site data:', { siteName: sessionData.siteName, lat: sessionData.latitude, lon: sessionData.longitude });
       }
       
       // Add real-time GPS data including altitude if available
@@ -127,17 +130,23 @@ export default function Tools() {
         if (currentGPS.altitude !== null && currentGPS.altitude !== undefined) {
           sessionData.altitude = currentGPS.altitude;
         }
+        console.log('🛰️ Added GPS data:', { lat: sessionData.latitude, lon: sessionData.longitude, alt: sessionData.altitude });
       }
+      
+      console.log('📤 Sending request to API with final data:', sessionData);
       
       const response = await apiRequest("/api/analysis-sessions", {
         method: "POST",
         body: JSON.stringify(sessionData),
         headers: { "Content-Type": "application/json" },
       });
-      return await response.json();
+      
+      const result = await response.json();
+      console.log('📥 API response:', result);
+      return result;
     },
     onSuccess: (data) => {
-      console.log('Session created successfully:', data);
+      console.log('✅ Session created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
       
       // Show success message - don't navigate immediately
@@ -244,10 +253,11 @@ export default function Tools() {
         isCompleted: true,
       };
 
-      console.log('Creating session with data:', sessionData);
+      console.log('🔥 CANOPY ANALYSIS: Creating session with data:', sessionData);
       console.log('Session data keys:', Object.keys(sessionData));
       console.log('ImageUrl value:', sessionData.imageUrl);
       console.log('PixelsAnalyzed value:', sessionData.pixelsAnalyzed);
+      console.log('About to call createSessionMutation.mutate...');
       
       // Store results for display in data sheet
       const analysisResults = {
@@ -271,6 +281,7 @@ export default function Tools() {
         description: `Canopy cover: ${results.canopyCover.toFixed(1)}%, Light transmission: ${results.lightTransmission.toFixed(1)}%`,
       });
       
+      console.log('🚀 CALLING createSessionMutation.mutate for CANOPY analysis');
       createSessionMutation.mutate(sessionData);
       
       // Show option to name site if untitled
@@ -399,7 +410,7 @@ export default function Tools() {
       isCompleted: true,
     };
 
-    console.log('Creating Daubenmire session with data:', sessionData);
+    console.log('🌱 DAUBENMIRE ANALYSIS: Creating session with data:', sessionData);
     
     // Store results for display in data sheet
     setCurrentAnalysisResults({
@@ -412,6 +423,7 @@ export default function Tools() {
       description: `Total coverage: ${results.totalCoverage.toFixed(1)}%, Species diversity: ${results.speciesDiversity}`,
     });
 
+    console.log('🚀 CALLING createSessionMutation.mutate for DAUBENMIRE analysis');
     createSessionMutation.mutate(sessionData);
     
     // Show option to name site if untitled
