@@ -1194,7 +1194,7 @@ export default function Tools() {
                       measurements: [currentAnalysisResults],
                     }}
                     analysisResult={currentAnalysisResults}
-                    imageData={selectedImage.url}
+                    imageData={selectedImage?.url || ""}
                   />
                 </div>
               )}

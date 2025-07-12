@@ -119,19 +119,21 @@ export class MobileExportService {
     filename: string
   ): Promise<string> {
     try {
-      // Remove data URL prefix
-      const base64Data = stampedImageData.split(',')[1];
+      // Remove data URL prefix if present
+      const base64Data = stampedImageData.includes(',') 
+        ? stampedImageData.split(',')[1] 
+        : stampedImageData;
       
       const result = await Filesystem.writeFile({
         path: `EcoMeasure/${filename}`,
         data: base64Data,
-        directory: Directory.ExternalStorage, // This maps to Pictures on Android
+        directory: Directory.Documents, // Use Documents for broader compatibility
       });
 
       return result.uri;
     } catch (error) {
       console.error('Error saving stamped photo:', error);
-      throw new Error('Failed to save photo to Pictures folder');
+      throw new Error('Failed to save photo to device storage');
     }
   }
 
@@ -179,28 +181,38 @@ export class MobileExportService {
   // Share stamped photo
   async shareStampedPhoto(photoUri: string, title: string): Promise<void> {
     try {
-      await Share.share({
-        title: `${title} - EcoMeasure Analysis`,
-        text: 'Vegetation analysis results from EcoMeasure',
-        url: photoUri,
-      });
+      if (typeof Share !== 'undefined') {
+        await Share.share({
+          title: `${title} - EcoMeasure Analysis`,
+          text: 'Vegetation analysis results from EcoMeasure',
+          url: photoUri,
+        });
+      } else {
+        console.log('Share plugin not available, photo saved to:', photoUri);
+      }
     } catch (error) {
       console.error('Error sharing photo:', error);
-      throw new Error('Failed to share photo');
+      // Don't throw error, just log it
+      console.log('Photo saved but sharing failed');
     }
   }
 
   // Share data export
   async shareDataExport(fileUri: string, title: string): Promise<void> {
     try {
-      await Share.share({
-        title: `${title} - Data Export`,
-        text: 'Analysis data export from EcoMeasure',
-        url: fileUri,
-      });
+      if (typeof Share !== 'undefined') {
+        await Share.share({
+          title: `${title} - Data Export`,
+          text: 'Analysis data export from EcoMeasure',
+          url: fileUri,
+        });
+      } else {
+        console.log('Share plugin not available, export saved to:', fileUri);
+      }
     } catch (error) {
       console.error('Error sharing export:', error);
-      throw new Error('Failed to share data export');
+      // Don't throw error, just log it
+      console.log('Export saved but sharing failed');
     }
   }
 
