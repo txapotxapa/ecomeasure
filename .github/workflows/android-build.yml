@@ -38,11 +38,19 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: List android directory
+        run: ls -la android/
+
       - name: Build APK
         run: |
           cd android
           chmod +x ./gradlew
           ./gradlew assembleRelease
+
+      - name: List build outputs
+        run: |
+          find android -name "*.apk" -type f || echo "No APK files found"
+          ls -la android/app/build/outputs/ || echo "outputs directory not found"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
