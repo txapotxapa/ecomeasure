@@ -38,11 +38,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Copy Android config files
+      - name: Copy and update Android config files
         run: |
           if [ -f "android-config/AndroidManifest.xml" ]; then
             mkdir -p android/app/src/main
-            cp android-config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+            # Update version in manifest
+            sed "s/android:versionCode=\"1\"/android:versionCode=\"$VERSION_CODE\"/" android-config/AndroidManifest.xml > android/app/src/main/AndroidManifest.xml
+            sed -i "s/android:versionName=\"1.0.0\"/android:versionName=\"$VERSION\"/" android/app/src/main/AndroidManifest.xml
           fi
           if [ -f "android-config/file_paths.xml" ]; then
             mkdir -p android/app/src/main/res/xml
@@ -52,12 +54,44 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate consistent debug keystore
+      - name: Auto-increment version
+        run: |
+          # Get current version info
+          VERSION=$(cat version.json | grep '"version"' | cut -d'"' -f4)
+          VERSION_CODE=$(cat version.json | grep '"versionCode"' | cut -d':' -f2 | tr -d ' ,')
+          BUILD_NUMBER=$(cat version.json | grep '"buildNumber"' | cut -d':' -f2 | tr -d ' ,}')
+          
+          # Increment build number
+          NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          NEW_VERSION_CODE=$((VERSION_CODE + 1))
+          
+          echo "Current version: $VERSION ($VERSION_CODE)"
+          echo "New version: $VERSION ($NEW_VERSION_CODE) build $NEW_BUILD_NUMBER"
+          
+          # Update version.json
+          cat > version.json << EOF
+          {
+            "version": "$VERSION",
+            "versionCode": $NEW_VERSION_CODE,
+            "buildNumber": $NEW_BUILD_NUMBER
+          }
+          EOF
+          
+          # Export for later steps
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_CODE=$NEW_VERSION_CODE" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=$NEW_BUILD_NUMBER" >> $GITHUB_ENV
+
+      - name: Generate persistent debug keystore
         run: |
           mkdir -p android/app
-          # Always use the same keystore for consistency
-          echo "Generate keystore with fixed seed for consistency"
-          keytool -genkey -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=EcoMeasure Debug,O=EcoMeasure,C=US"
+          # Use consistent keystore parameters for all builds
+          keytool -genkey -v -keystore android/app/debug.keystore \
+            -storepass ecomeasure123 \
+            -alias ecomeasuredebug \
+            -keypass ecomeasure123 \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=EcoMeasure Debug,O=EcoMeasure,L=Field,ST=Research,C=US"
 
       - name: List android directory
         run: ls -la android/
@@ -69,10 +103,11 @@ jobs:
           ./gradlew clean
           ./gradlew assembleDebug --stacktrace --info
           
-      - name: Rename APK for clarity
+      - name: Rename APK with version
         run: |
           if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
-            cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/EcoMeasure-v1.0.0.apk
+            cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/EcoMeasure-v$VERSION-build$BUILD_NUMBER.apk
+            echo "APK created: EcoMeasure-v$VERSION-build$BUILD_NUMBER.apk"
           fi
 
       - name: List build outputs
@@ -83,5 +118,13 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EcoMeasure-APK
-          path: android/app/build/outputs/apk/debug/*.apk 
+          name: EcoMeasure-APK-v${{ env.VERSION }}-build${{ env.BUILD_NUMBER }}
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add version.json
+          git commit -m "Auto-increment version to v$VERSION build $BUILD_NUMBER [skip ci]" || echo "No changes to commit"
+          git push origin main || echo "Nothing to push" 
