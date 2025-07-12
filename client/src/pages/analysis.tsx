@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,19 +11,34 @@ import AnalysisResults from "@/components/analysis-results";
 import DataVisualization from "@/components/data-visualization";
 import { exportSessionToCSV, shareResults } from "@/lib/export";
 import { useToast } from "@/hooks/use-toast";
+import LocalStorageService from "@/lib/local-storage";
 
 export default function Analysis() {
   const [selectedSession, setSelectedSession] = useState<AnalysisSession | null>(null);
   const { toast } = useToast();
 
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ['/api/analysis-sessions'],
-    queryFn: async () => {
-      const response = await fetch('/api/analysis-sessions');
-      if (!response.ok) throw new Error('Failed to fetch sessions');
-      return response.json() as Promise<AnalysisSession[]>;
-    },
-  });
+  const [sessions, setSessions] = useState<AnalysisSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      try {
+        const storedSessions = await LocalStorageService.getPreference<AnalysisSession[]>('sessions', []);
+        setSessions(storedSessions);
+      } catch (error) {
+        console.error('Failed to load sessions:', error);
+        toast({
+          title: "Error loading sessions",
+          description: "Could not load analysis sessions from local storage",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSessions();
+  }, [toast]);
 
   // Handle URL parameters to show specific session
   useEffect(() => {

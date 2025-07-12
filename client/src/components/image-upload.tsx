@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Camera, Upload, X, ImageIcon } from "lucide-react";
+import { Camera, Upload, X, ImageIcon, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 interface ImageUploadProps {
   onImageUploaded: (imageData: { url: string; file: File }) => void;
   onBatchUploaded?: (images: Array<{ url: string; file: File }>) => void;
   currentImage?: string;
   allowBatch?: boolean;
+  onAnalyze?: () => void;
 }
 
-export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentImage, allowBatch = true }: ImageUploadProps) {
+export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentImage, allowBatch = true, onAnalyze }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [capturedFile, setCapturedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const dataURLtoFile = (dataurl: string, filename: string): File => {
@@ -28,21 +32,24 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
     return new File([u8arr], filename, { type: mime });
   };
 
-  const uploadImageToServer = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-    
-    const response = await fetch('/api/upload-image', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      throw new Error('Upload failed');
+  const saveImageLocally = async (dataUrl: string): Promise<string> => {
+    try {
+      // Generate unique filename
+      const filename = `image_${Date.now()}.jpg`;
+      
+      // Save image to local filesystem
+      const result = await Filesystem.writeFile({
+        path: `images/${filename}`,
+        data: dataUrl,
+        directory: Directory.Data,
+      });
+      
+      // Return the local file URI
+      return result.uri;
+    } catch (error) {
+      console.error('Failed to save image locally:', error);
+      throw new Error('Failed to save image locally');
     }
-    
-    const result = await response.json();
-    return result.imageUrl;
   };
 
   const handleImageCapture = async (source: CameraSource) => {
@@ -63,20 +70,16 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
       });
 
       if (image.dataUrl) {
-        // Convert to File object
+        // Convert to File object for compatibility
         const file = dataURLtoFile(image.dataUrl, `photo_${Date.now()}.jpg`);
         
-        // Upload to server
-        const url = await uploadImageToServer(file);
-        
-        onImageUploaded({
-          url: url,
-          file: file,
-        });
+        // Show preview for verification
+        setPreviewImage(image.dataUrl);
+        setCapturedFile(file);
         
         toast({
-          title: "Image captured successfully",
-          description: "Ready for analysis.",
+          title: "Image captured",
+          description: "Please verify the image quality before analyzing.",
         });
       }
       
@@ -91,27 +94,111 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
     }
   };
 
+  const handleVerifyAndSave = async () => {
+    if (!previewImage || !capturedFile) return;
+    
+    try {
+      setIsUploading(true);
+      
+      // Save locally
+      const localUrl = await saveImageLocally(previewImage);
+      
+      onImageUploaded({
+        url: localUrl,
+        file: capturedFile,
+      });
+      
+      // Clear preview
+      setPreviewImage(null);
+      setCapturedFile(null);
+      
+      toast({
+        title: "Image confirmed",
+        description: "Ready for analysis!",
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Save failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRetake = () => {
+    setPreviewImage(null);
+    setCapturedFile(null);
+  };
+
   return (
     <Card className="w-full">
       <CardContent className="p-4">
         <div className="text-center space-y-4">
-          {currentImage ? (
+          {previewImage ? (
+            // Preview verification state
+            <div className="space-y-4">
+              <img
+                src={previewImage}
+                alt="Preview image"
+                className="max-w-full max-h-64 mx-auto rounded-lg object-cover border-2 border-dashed border-blue-300"
+              />
+              <p className="text-sm text-muted-foreground">
+                Please verify the image quality. Is this suitable for vegetation analysis?
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleRetake}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Retake
+                </Button>
+                <Button
+                  onClick={handleVerifyAndSave}
+                  disabled={isUploading}
+                  className="flex-1"
+                >
+                  {isUploading ? "Saving..." : "✓ Confirm"}
+                </Button>
+              </div>
+            </div>
+          ) : currentImage ? (
+            // Final confirmed image state
             <div className="space-y-4">
               <img
                 src={currentImage}
-                alt="Uploaded image"
+                alt="Confirmed image"
                 className="max-w-full max-h-48 mx-auto rounded-lg object-cover"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onImageUploaded({ url: "", file: new File([], "") })}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Remove Image
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onImageUploaded({ url: "", file: new File([], "") })}
+                  className="flex-1"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove Image
+                </Button>
+                {onAnalyze && (
+                  <Button
+                    onClick={onAnalyze}
+                    className="flex-1"
+                    size="sm"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analyze
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
+            // Initial capture state
             <>
               <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
@@ -124,7 +211,7 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
                   className="w-full"
                 >
                   <Camera className="h-4 w-4 mr-2" />
-                  {isUploading ? "Processing..." : "Take Photo"}
+                  {isUploading ? "Opening Camera..." : "Take Photo"}
                 </Button>
                 <Button
                   variant="outline"
