@@ -27,7 +27,7 @@ jobs:
         run: npm run build
 
       - name: Add Android platform
-        run: npx cap add android || true
+        run: npx cap add android
 
       - name: Sync web assets
         run: npx cap sync android
@@ -41,6 +41,7 @@ jobs:
       - name: Build APK
         run: |
           cd android
+          chmod +x ./gradlew
           ./gradlew assembleRelease
 
       - name: Upload APK artifact
