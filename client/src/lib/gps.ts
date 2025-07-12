@@ -1,3 +1,5 @@
+import { Geolocation } from '@capacitor/geolocation';
+
 interface GeolocationPosition {
   coords: {
     latitude: number;
@@ -17,96 +19,93 @@ interface GeolocationError {
 }
 
 export async function getCurrentLocation(): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser'));
-      return;
+  try {
+    // Request permissions first
+    const permissions = await Geolocation.requestPermissions();
+    
+    if (permissions.location !== 'granted') {
+      throw new Error('Location permission denied');
     }
 
-    const options: PositionOptions = {
+    const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
       timeout: 10000,
       maximumAge: 60000, // Cache for 1 minute
-    };
+    });
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          coords: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            altitude: position.coords.altitude || undefined,
-            altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-            heading: position.coords.heading || undefined,
-            speed: position.coords.speed || undefined,
-          },
-          timestamp: position.timestamp,
-        });
+    return {
+      coords: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude || undefined,
+        altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+        heading: position.coords.heading || undefined,
+        speed: position.coords.speed || undefined,
       },
-      (error) => {
-        let errorMessage = 'Unknown location error';
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
-            break;
-        }
-        
-        reject(new Error(errorMessage));
-      },
-      options
-    );
-  });
+      timestamp: position.timestamp,
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to get current location');
+  }
 }
 
 export async function watchLocation(
   onLocationUpdate: (position: GeolocationPosition) => void,
   onError: (error: GeolocationError) => void
-): Promise<number> {
-  if (!navigator.geolocation) {
-    throw new Error('Geolocation is not supported by this browser');
+): Promise<string> {
+  try {
+    // Request permissions first
+    const permissions = await Geolocation.requestPermissions();
+    
+    if (permissions.location !== 'granted') {
+      throw new Error('Location permission denied');
+    }
+
+    const watchId = await Geolocation.watchPosition(
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000, // Cache for 30 seconds
+      },
+      (position, err) => {
+        if (err) {
+          onError({
+            code: 1,
+            message: err.message,
+          });
+          return;
+        }
+
+        if (position) {
+          onLocationUpdate({
+            coords: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              altitude: position.coords.altitude || undefined,
+              altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+              heading: position.coords.heading || undefined,
+              speed: position.coords.speed || undefined,
+            },
+            timestamp: position.timestamp,
+          });
+        }
+      }
+    );
+
+    return watchId;
+  } catch (error: any) {
+    onError({
+      code: 1,
+      message: error.message || 'Failed to watch location',
+    });
+    throw error;
   }
-
-  const options: PositionOptions = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 30000, // Cache for 30 seconds
-  };
-
-  return navigator.geolocation.watchPosition(
-    (position) => {
-      onLocationUpdate({
-        coords: {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude || undefined,
-          altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-          heading: position.coords.heading || undefined,
-          speed: position.coords.speed || undefined,
-        },
-        timestamp: position.timestamp,
-      });
-    },
-    (error) => {
-      onError({
-        code: error.code,
-        message: error.message,
-      });
-    },
-    options
-  );
 }
 
-export function clearLocationWatch(watchId: number): void {
-  navigator.geolocation.clearWatch(watchId);
+export async function clearLocationWatch(watchId: string): Promise<void> {
+  await Geolocation.clearWatch({ id: watchId });
 }
 
 export function formatCoordinates(lat: number, lng: number): string {
