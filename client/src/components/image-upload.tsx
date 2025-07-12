@@ -37,18 +37,22 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
       // Generate unique filename
       const filename = `image_${Date.now()}.jpg`;
       
+      // Remove data URL prefix if present
+      const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+      
       // Save image to local filesystem
       const result = await Filesystem.writeFile({
         path: `images/${filename}`,
-        data: dataUrl,
+        data: base64Data,
         directory: Directory.Data,
       });
       
-      // Return the local file URI
-      return result.uri;
+      // Return the local file URI or fallback to data URL
+      return result.uri || dataUrl;
     } catch (error) {
       console.error('Failed to save image locally:', error);
-      throw new Error('Failed to save image locally');
+      // Return the original data URL as fallback
+      return dataUrl;
     }
   };
 

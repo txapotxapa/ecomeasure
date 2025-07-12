@@ -38,8 +38,19 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Copy Android config files
+        run: |
+          if [ -f "android-config/AndroidManifest.xml" ]; then
+            mkdir -p android/app/src/main
+            cp android-config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          fi
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Generate debug keystore
         run: |
+          mkdir -p android/app
           keytool -genkey -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
       - name: List android directory
@@ -49,7 +60,8 @@ jobs:
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug
+          ./gradlew clean
+          ./gradlew assembleDebug --stacktrace
 
       - name: List build outputs
         run: |
