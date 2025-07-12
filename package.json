@@ -20,6 +20,7 @@
     "@capacitor/filesystem": "^5.2.2",
     "@capacitor/geolocation": "^5.0.8",
     "@capacitor/preferences": "^5.0.8",
+    "@capacitor/share": "^5.0.8",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",

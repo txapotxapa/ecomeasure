@@ -33,6 +33,7 @@ import SiteSelector from "@/components/site-selector";
 import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
 import ProtocolSelector from "@/components/protocol-selector";
 import ProtocolProgress from "@/components/protocol-progress";
+import ExportManager from "@/components/export-manager";
 import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
@@ -994,6 +995,7 @@ export default function Tools() {
               {!currentAnalysisResults && (
                 <ImageUpload 
                   onImageUploaded={setSelectedImage} 
+                  onAnalyze={() => handleCanopyAnalysis('GLAMA')}
                   onBatchUploaded={(images) => {
                     if (images.length > 1) {
                       // Process multiple images for batch analysis
@@ -1178,6 +1180,22 @@ export default function Tools() {
                       </Button>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Export Manager - Show after analysis is complete */}
+              {currentAnalysisResults && selectedImage && (
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <ExportManager
+                    sessions={[]} // You can pass stored sessions here
+                    currentSession={{
+                      id: Date.now(),
+                      name: `Analysis ${new Date().toLocaleDateString()}`,
+                      measurements: [currentAnalysisResults],
+                    }}
+                    analysisResult={currentAnalysisResults}
+                    imageData={selectedImage.url}
+                  />
                 </div>
               )}
 
