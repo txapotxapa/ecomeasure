@@ -145,68 +145,63 @@ class GoogleSheetsService {
     const row: string[] = new Array(headers.length).fill('');
     
     // Basic session info
-    const date = new Date(session.createdAt);
+    const date = new Date(session.timestamp);
     row[headers.indexOf('Date')] = date.toLocaleDateString();
     row[headers.indexOf('Time')] = date.toLocaleTimeString();
     row[headers.indexOf('Site Name')] = session.siteName || '';
     row[headers.indexOf('Tool Type')] = session.toolType || '';
     
-    // GPS data
-    if (session.gpsCoordinates) {
-      row[headers.indexOf('GPS Latitude')] = session.gpsCoordinates.latitude?.toString() || '';
-      row[headers.indexOf('GPS Longitude')] = session.gpsCoordinates.longitude?.toString() || '';
-      row[headers.indexOf('GPS Accuracy')] = session.gpsCoordinates.accuracy?.toString() || '';
+    // GPS data - stored directly on session
+    row[headers.indexOf('GPS Latitude')] = session.latitude?.toString() || '';
+    row[headers.indexOf('GPS Longitude')] = session.longitude?.toString() || '';
+    row[headers.indexOf('GPS Accuracy')] = ''; // Not currently stored
+    
+    // Analysis method and common fields
+    row[headers.indexOf('Analysis Method')] = session.analysisMethod || '';
+    row[headers.indexOf('Pixels Analyzed')] = session.pixelsAnalyzed?.toString() || '';
+    row[headers.indexOf('Processing Time (s)')] = session.processingTime?.toString() || '';
+    
+    // Canopy analysis results - stored directly on session
+    if (session.toolType === 'canopy') {
+      row[headers.indexOf('Canopy Cover %')] = session.canopyCover?.toString() || '';
+      row[headers.indexOf('Light Transmission %')] = session.lightTransmission?.toString() || '';
+      row[headers.indexOf('Leaf Area Index')] = session.leafAreaIndex?.toString() || '';
     }
-
-    // Tool-specific results
-    if (session.results) {
-      const results = session.results as any;
+    
+    // Horizontal vegetation results - from horizontalVegetationData JSON field
+    if (session.toolType === 'horizontal_vegetation' && session.horizontalVegetationData) {
+      const hvData = session.horizontalVegetationData as any;
+      row[headers.indexOf('Avg Obstruction Height (cm)')] = hvData.averageObstructionHeight?.toString() || '';
+      row[headers.indexOf('Vegetation Density Index')] = hvData.vegetationDensityIndex?.toString() || '';
+      row[headers.indexOf('Vegetation Profile')] = hvData.vegetationProfile || '';
+      row[headers.indexOf('Uniformity Index')] = hvData.uniformityIndex?.toString() || '';
       
-      // Canopy analysis results
-      if (session.toolType === 'canopy') {
-        row[headers.indexOf('Canopy Cover %')] = results.canopyCover?.toString() || '';
-        row[headers.indexOf('Light Transmission %')] = results.lightTransmission?.toString() || '';
-        row[headers.indexOf('Leaf Area Index')] = results.leafAreaIndex?.toString() || '';
-        row[headers.indexOf('Pixels Analyzed')] = results.pixelsAnalyzed?.toString() || '';
-        row[headers.indexOf('Analysis Method')] = results.method || '';
-      }
-      
-      // Horizontal vegetation results
-      if (session.toolType === 'horizontal_vegetation') {
-        row[headers.indexOf('Avg Obstruction Height (cm)')] = results.averageObstructionHeight?.toString() || '';
-        row[headers.indexOf('Vegetation Density Index')] = results.vegetationDensityIndex?.toString() || '';
-        row[headers.indexOf('Vegetation Profile')] = results.vegetationProfile || '';
-        row[headers.indexOf('Uniformity Index')] = results.uniformityIndex?.toString() || '';
+      // Individual direction measurements
+      if (hvData.measurements) {
+        const measurements = hvData.measurements;
+        const north = measurements.find((m: any) => m.direction === 'North');
+        const east = measurements.find((m: any) => m.direction === 'East');
+        const south = measurements.find((m: any) => m.direction === 'South');
+        const west = measurements.find((m: any) => m.direction === 'West');
         
-        // Individual direction measurements
-        if (results.measurements) {
-          const measurements = results.measurements;
-          const north = measurements.find((m: any) => m.direction === 'North');
-          const east = measurements.find((m: any) => m.direction === 'East');
-          const south = measurements.find((m: any) => m.direction === 'South');
-          const west = measurements.find((m: any) => m.direction === 'West');
-          
-          row[headers.indexOf('North Reading (cm)')] = north?.obstructionHeight?.toString() || '';
-          row[headers.indexOf('East Reading (cm)')] = east?.obstructionHeight?.toString() || '';
-          row[headers.indexOf('South Reading (cm)')] = south?.obstructionHeight?.toString() || '';
-          row[headers.indexOf('West Reading (cm)')] = west?.obstructionHeight?.toString() || '';
-        }
+        row[headers.indexOf('North Reading (cm)')] = north?.obstructionHeight?.toString() || '';
+        row[headers.indexOf('East Reading (cm)')] = east?.obstructionHeight?.toString() || '';
+        row[headers.indexOf('South Reading (cm)')] = south?.obstructionHeight?.toString() || '';
+        row[headers.indexOf('West Reading (cm)')] = west?.obstructionHeight?.toString() || '';
       }
-      
-      // Daubenmire results
-      if (session.toolType === 'daubenmire') {
-        row[headers.indexOf('Total Coverage %')] = results.totalCoverage?.toString() || '';
-        row[headers.indexOf('Species Diversity')] = results.speciesDiversity?.toString() || '';
-        row[headers.indexOf('Dominant Species')] = Array.isArray(results.dominantSpecies) ? results.dominantSpecies.join(', ') : results.dominantSpecies || '';
-        row[headers.indexOf('Bare Ground %')] = results.bareGroundPercentage?.toString() || '';
-        row[headers.indexOf('Litter %')] = results.litterPercentage?.toString() || '';
-        row[headers.indexOf('Rock %')] = results.rockPercentage?.toString() || '';
-        row[headers.indexOf('Shannon Index')] = results.shannonIndex?.toString() || '';
-        row[headers.indexOf('Evenness Index')] = results.evennessIndex?.toString() || '';
-      }
-      
-      // Common fields
-      row[headers.indexOf('Processing Time (s)')] = results.processingTime?.toString() || '';
+    }
+    
+    // Daubenmire results - stored directly on session
+    if (session.toolType === 'daubenmire') {
+      row[headers.indexOf('Total Coverage %')] = session.totalCoverage?.toString() || '';
+      row[headers.indexOf('Species Diversity')] = session.speciesDiversity?.toString() || '';
+      row[headers.indexOf('Dominant Species')] = Array.isArray(session.dominantSpecies) ? 
+        session.dominantSpecies.join(', ') : '';
+      row[headers.indexOf('Bare Ground %')] = session.bareGroundPercentage?.toString() || '';
+      row[headers.indexOf('Litter %')] = session.litterPercentage?.toString() || '';
+      row[headers.indexOf('Rock %')] = session.rockPercentage?.toString() || '';
+      row[headers.indexOf('Shannon Index')] = session.shannonIndex?.toString() || '';
+      row[headers.indexOf('Evenness Index')] = session.evennessIndex?.toString() || '';
     }
     
     row[headers.indexOf('Notes')] = session.notes || '';
@@ -220,7 +215,7 @@ class GoogleSheetsService {
       
       await drive.permissions.create({
         fileId: spreadsheetId,
-        resource: {
+        requestBody: {
           role: role,
           type: 'user',
           emailAddress: email,

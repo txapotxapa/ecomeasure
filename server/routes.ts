@@ -153,10 +153,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessions = await storage.getAllAnalysisSessions();
       
       if (format === 'csv') {
-        const csvHeader = 'ID,Plot Name,Latitude,Longitude,Timestamp,Analysis Method,Zenith Angle,Canopy Cover (%),Light Transmission (%),Leaf Area Index,Pixels Analyzed,Processing Time (ms),Notes\n';
-        const csvRows = sessions.map(session => 
-          `${session.id},"${session.plotName}",${session.latitude || ''},${session.longitude || ''},${session.timestamp.toISOString()},"${session.analysisMethod}",${session.zenithAngle},${session.canopyCover},${session.lightTransmission},${session.leafAreaIndex || ''},${session.pixelsAnalyzed},${session.processingTime || ''},"${session.notes || ''}"`
-        ).join('\n');
+        const csvHeader = 'ID,Plot Name,Site Name,Tool Type,Latitude,Longitude,Timestamp,Analysis Method,Zenith Angle,Canopy Cover (%),Light Transmission (%),Leaf Area Index,Pixels Analyzed,Processing Time (ms),Total Coverage (%),Species Diversity,Bare Ground (%),Litter (%),Rock (%),Shannon Index,Evenness Index,Dominant Species,Notes\n';
+        const csvRows = sessions.map(session => {
+          const dominantSpeciesStr = Array.isArray(session.dominantSpecies) ? 
+            session.dominantSpecies.join('; ') : (session.dominantSpecies || '');
+          
+          return `${session.id},"${session.plotName}","${session.siteName || ''}","${session.toolType || 'canopy'}",${session.latitude || ''},${session.longitude || ''},${session.timestamp.toISOString()},"${session.analysisMethod}",${session.zenithAngle || 90},${session.canopyCover || ''},${session.lightTransmission || ''},${session.leafAreaIndex || ''},${session.pixelsAnalyzed},${session.processingTime || ''},${session.totalCoverage || ''},${session.speciesDiversity || ''},${session.bareGroundPercentage || ''},${session.litterPercentage || ''},${session.rockPercentage || ''},${session.shannonIndex || ''},${session.evennessIndex || ''},"${dominantSpeciesStr}","${session.notes || ''}"`;
+        }).join('\n');
         
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="canopy_analysis_${new Date().toISOString().split('T')[0]}.csv"`);

@@ -11,7 +11,8 @@ import {
   Grid3x3, 
   BarChart3, 
   Target, 
-  Trash2
+  Trash2,
+  ArrowDown
 } from "lucide-react";
 import { analyzeDaubenmireFrame, type DaubenmireResult } from "@/lib/daubenmire-frame";
 import ProcessingModal from "./processing-modal";
@@ -145,7 +146,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
 
       const uploadData = await uploadResponse.json();
       console.log('Upload successful, starting analysis...');
-      setCurrentStage('Analyzing ground cover with Canopeo method...');
+              setCurrentStage('Analyzing ground cover with advanced method...');
 
       const results = await analyzeDaubenmireFrame(image, {
         method: 'color_analysis',
@@ -160,10 +161,13 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       onAnalysisComplete(results, uploadData.imageUrl);
       
       toast({
-        title: "Canopeo Analysis Complete",
+                  title: "Ground Cover Analysis Complete",
         description: `Ground cover analysis finished. Found ${results.speciesDiversity} vegetation types with ${results.totalCoverage.toFixed(1)}% total coverage.`,
       });
-      
+
+      // Reset image so user can perform another analysis easily
+      removeImage();
+ 
     } catch (error) {
       console.error('Daubenmire analysis error:', error);
       toast({
@@ -189,7 +193,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
             Digital Daubenmire Sampling (Frame-Free)
           </CardTitle>
           <CardDescription>
-            Ground cover analysis using Canopeo algorithm for vegetation classification
+            Ground cover analysis using advanced algorithm for vegetation classification
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -211,36 +215,17 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
               Ground Cover Analysis Setup Guide
             </h4>
             
-            {/* Visual Diagram */}
-            <div className="mb-4 p-3 bg-background/50 rounded-lg border">
-              <div className="text-center space-y-2">
-                <div className="text-xs font-medium mb-2">Side View - Proper Camera Position</div>
-                <div className="relative w-full h-24 bg-gradient-to-b from-sky-200 to-green-200 rounded-lg overflow-hidden">
-                  {/* Sky */}
-                  <div className="absolute top-0 left-0 w-full h-6 bg-gradient-to-b from-sky-300 to-sky-200"></div>
-                  {/* Ground level with quadrat area */}
-                  <div className="absolute bottom-0 left-0 w-full h-18 bg-gradient-to-t from-green-300 to-green-200">
-                    {/* Quadrat sampling area */}
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-8 border-2 border-dashed border-gray-700 bg-green-400/30">
-                      <div className="grid grid-cols-2 gap-px h-full">
-                        <div className="bg-green-600/40"></div>
-                        <div className="bg-amber-600/40"></div>
-                        <div className="bg-gray-600/40"></div>
-                        <div className="bg-green-500/40"></div>
-                      </div>
-                    </div>
-                    {/* Person with camera */}
-                    <div className="absolute bottom-2 left-8">
-                      <div className="w-2 h-12 bg-amber-600 rounded-full"></div>
-                      <div className="w-1 h-1 bg-gray-800 rounded-full mt-1 ml-0.5"></div>
-                      <div className="text-xs mt-1 text-center font-medium">1.5m</div>
-                    </div>
-                    {/* Height indicator */}
-                    <div className="absolute bottom-0 right-4 w-px h-16 bg-gray-600"></div>
-                    <div className="absolute bottom-16 right-3 text-xs">Camera Height</div>
-                  </div>
-                </div>
+            {/* Improved Top-Down Schematic */}
+            <div className="mb-4 space-y-2 text-center">
+              <div className="relative w-full h-40 rounded-lg overflow-hidden bg-gradient-to-b from-sky-300/60 to-green-600/60 border">
+                {/* Camera */}
+                <Camera className="absolute top-2 left-1/2 -translate-x-1/2 text-primary h-6 w-6" />
+                {/* Down arrow */}
+                <ArrowDown className="absolute top-8 left-1/2 -translate-x-1/2 text-muted-foreground h-6 w-6" />
+                {/* Quadrat */}
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 w-16 h-16 border-4 border-dashed border-primary/70 bg-green-200/20" />
               </div>
+              <p className="text-xs text-muted-foreground">Position camera 1.5 m above ground, centered over 1 m² quadrat.</p>
             </div>
 
             {/* Instructions */}
@@ -289,11 +274,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
               </div>
             ) : (
               <div 
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  isDragging
-                    ? "border-primary bg-primary/10"
-                    : "border-gray-300 bg-gray-50"
-                }`}
+                className={`upload-box p-8 ${isDragging ? 'drag-active' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -333,7 +314,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
             )}
             
             <p className="text-xs text-gray-600">
-              Position camera 1.5m directly above sampling area for Canopeo ground cover analysis
+              Position camera 1.5m directly above sampling area for ground cover analysis
             </p>
           </div>
 

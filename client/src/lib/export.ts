@@ -1,11 +1,14 @@
 import { AnalysisSession } from "@shared/schema";
 
+// Lazy-loaded SheetJS instance (typed as any to avoid needing @types/xlsx)
+type XLSXType = any;
+
 export async function exportToCSV(sessions: AnalysisSession[]): Promise<void> {
   const csvContent = generateCSVContent(sessions);
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const filename = `canopy_analysis_${new Date().toISOString().split('T')[0]}.csv`;
   
-  downloadFile(blob, filename);
+  await shareOrDownload(blob, filename);
 }
 
 export async function exportSessionToCSV(session: AnalysisSession): Promise<void> {
@@ -13,7 +16,7 @@ export async function exportSessionToCSV(session: AnalysisSession): Promise<void
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const filename = `canopy_analysis_${session.plotName}_${new Date().toISOString().split('T')[0]}.csv`;
   
-  downloadFile(blob, filename);
+  await shareOrDownload(blob, filename);
 }
 
 export async function exportToPDF(sessions: AnalysisSession[]): Promise<void> {
@@ -29,10 +32,96 @@ export async function exportToPDF(sessions: AnalysisSession[]): Promise<void> {
   }
 }
 
+// NEW: Export to Excel workbook with each tool type on its own worksheet
+export async function exportToExcel(sessions: AnalysisSession[]): Promise<void> {
+  // @ts-ignore – dynamic import returns the full XLSX namespace
+  const XLSX: XLSXType = await import(/* webpackChunkName: "xlsx" */ "xlsx");
+
+  // Group sessions by toolType (e.g., canopy, daubenmire, horizontal_vegetation)
+  const groups: Record<string, AnalysisSession[]> = {};
+  sessions.forEach((s) => {
+    const key = s.toolType || 'unknown';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(s);
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  Object.entries(groups).forEach(([toolType, list]) => {
+    const headers = [
+      'Measurement_ID',
+      'Plot Name',
+      'Site Name',
+      'Latitude',
+      'Longitude',
+      'Timestamp',
+      'Analysis Method',
+      'Zenith Angle (°)',
+      'Canopy Cover (%)',
+      'Light Transmission (%)',
+      'Leaf Area Index',
+      'Total Coverage (%)',
+      'Species Diversity',
+      'Bare Ground (%)',
+      'Litter (%)',
+      'Rock (%)',
+      'Shannon Index',
+      'Evenness Index',
+      'Dominant Species',
+      'Notes',
+    ];
+
+    const rows = list.map((session) => {
+      const dominantSpeciesStr = Array.isArray(session.dominantSpecies)
+        ? session.dominantSpecies.join('; ')
+        : session.dominantSpecies || '';
+
+      return [
+        session.id,
+        session.plotName,
+        session.siteName || '',
+        session.latitude || '',
+        session.longitude || '',
+        (session.timestamp instanceof Date ? session.timestamp : new Date(session.timestamp)).toISOString(),
+        session.analysisMethod,
+        session.zenithAngle || 90,
+        session.canopyCover?.toFixed(2) || '',
+        session.lightTransmission?.toFixed(2) || '',
+        session.leafAreaIndex?.toFixed(2) || '',
+        session.totalCoverage?.toFixed(2) || '',
+        session.speciesDiversity || '',
+        session.bareGroundPercentage?.toFixed(2) || '',
+        session.litterPercentage?.toFixed(2) || '',
+        session.rockPercentage?.toFixed(2) || '',
+        session.shannonIndex?.toFixed(3) || '',
+        session.evennessIndex?.toFixed(3) || '',
+        dominantSpeciesStr,
+        session.notes || '',
+      ];
+    });
+
+    const sheetData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, toolType);
+  });
+
+  const wbBlob = workbookToBlob(XLSX, wb);
+  const filename = `eco_measurements_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  await shareOrDownload(wbBlob, filename);
+}
+
+// @ts-ignore – use any for WorkBook type
+function workbookToBlob(XLSX: XLSXType, wb: any): Blob {
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
 function generateCSVContent(sessions: AnalysisSession[]): string {
   const headers = [
-    'ID',
+    'Measurement_ID',
     'Plot Name',
+    'Site Name',
+    'Tool Type',
     'Latitude',
     'Longitude',
     'Timestamp',
@@ -41,26 +130,45 @@ function generateCSVContent(sessions: AnalysisSession[]): string {
     'Canopy Cover (%)',
     'Light Transmission (%)',
     'Leaf Area Index',
-    'Pixels Analyzed',
-    'Processing Time (ms)',
+    'Total Coverage (%)',
+    'Species Diversity',
+    'Bare Ground (%)',
+    'Litter (%)',
+    'Rock (%)',
+    'Shannon Index',
+    'Evenness Index',
+    'Dominant Species',
     'Notes'
   ];
   
-  const rows = sessions.map(session => [
-    session.id,
-    `"${session.plotName}"`,
-    session.latitude || '',
-    session.longitude || '',
-    session.timestamp.toISOString(),
-    `"${session.analysisMethod}"`,
-    session.zenithAngle,
-    session.canopyCover.toFixed(2),
-    session.lightTransmission.toFixed(2),
-    session.leafAreaIndex?.toFixed(2) || '',
-    session.pixelsAnalyzed,
-    session.processingTime?.toFixed(0) || '',
-    `"${session.notes || ''}"`
-  ]);
+  const rows = sessions.map(session => {
+    const dominantSpeciesStr = Array.isArray(session.dominantSpecies) ? 
+      session.dominantSpecies.join('; ') : (session.dominantSpecies || '');
+    
+    return [
+      session.id,
+      `"${session.plotName}"`,
+      `"${session.siteName || ''}"`,
+      `"${session.toolType || 'canopy'}"`,
+      session.latitude || '',
+      session.longitude || '',
+      (session.timestamp instanceof Date ? session.timestamp : new Date(session.timestamp)).toISOString(),
+      `"${session.analysisMethod}"`,
+      session.zenithAngle || 90,
+      session.canopyCover?.toFixed(2) || '',
+      session.lightTransmission?.toFixed(2) || '',
+      session.leafAreaIndex?.toFixed(2) || '',
+      session.totalCoverage?.toFixed(2) || '',
+      session.speciesDiversity || '',
+      session.bareGroundPercentage?.toFixed(2) || '',
+      session.litterPercentage?.toFixed(2) || '',
+      session.rockPercentage?.toFixed(2) || '',
+      session.shannonIndex?.toFixed(3) || '',
+      session.evennessIndex?.toFixed(3) || '',
+      `"${dominantSpeciesStr}"`,
+      `"${session.notes || ''}"`
+    ];
+  });
   
   return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
 }
@@ -68,8 +176,8 @@ function generateCSVContent(sessions: AnalysisSession[]): string {
 function generateHTMLReport(sessions: AnalysisSession[]): string {
   const reportDate = new Date().toLocaleDateString();
   const totalSessions = sessions.length;
-  const avgCanopyCover = sessions.reduce((sum, s) => sum + s.canopyCover, 0) / totalSessions;
-  const avgLightTransmission = sessions.reduce((sum, s) => sum + s.lightTransmission, 0) / totalSessions;
+  const avgCanopyCover = sessions.reduce((sum, s) => sum + (s.canopyCover || 0), 0) / totalSessions;
+  const avgLightTransmission = sessions.reduce((sum, s) => sum + (s.lightTransmission || 0), 0) / totalSessions;
   
   return `
     <!DOCTYPE html>
@@ -134,8 +242,8 @@ function generateHTMLReport(sessions: AnalysisSession[]): string {
                             `${session.latitude.toFixed(6)}, ${session.longitude.toFixed(6)}` : 
                             'N/A'}</td>
                         <td>${session.analysisMethod}</td>
-                        <td>${session.canopyCover.toFixed(2)}</td>
-                        <td>${session.lightTransmission.toFixed(2)}</td>
+                        <td>${session.canopyCover?.toFixed(2) || 'N/A'}</td>
+                        <td>${session.lightTransmission?.toFixed(2) || 'N/A'}</td>
                         <td>${session.leafAreaIndex?.toFixed(2) || 'N/A'}</td>
                     </tr>
                 `).join('')}
@@ -144,7 +252,7 @@ function generateHTMLReport(sessions: AnalysisSession[]): string {
         
         <div style="margin-top: 30px; font-size: 12px; color: #666;">
             <p><strong>Note:</strong> This report was generated by EcoCanopy - Gap Light Analysis Mobile Application.</p>
-            <p>Analysis methods: GLAMA (Gap Light Analysis Mobile Application), Canopeo (Green canopy cover analysis), Custom (User-defined threshold).</p>
+            <p>Analysis methods: Standard (Proprietary canopy analysis), Advanced (Proprietary vegetation analysis), Custom (User-defined threshold).</p>
         </div>
     </body>
     </html>
@@ -153,19 +261,37 @@ function generateHTMLReport(sessions: AnalysisSession[]): string {
 
 function downloadFile(blob: Blob, filename: string): void {
   const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+  const isIOS = /iP(ad|hone|od)/.test(navigator.userAgent);
+
+  if (isIOS) {
+    // iOS Safari blocks programmatic downloads; trigger a new tab instead
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const a = document.createElement('a');
+      a.href = reader.result as string;
+      a.target = '_blank';
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    reader.readAsDataURL(blob);
+  } else {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 }
 
 export async function shareResults(session: AnalysisSession): Promise<void> {
   const shareData = {
-    title: `Canopy Analysis - ${session.plotName}`,
-    text: `Canopy Cover: ${session.canopyCover.toFixed(1)}%, Light Transmission: ${session.lightTransmission.toFixed(1)}%`,
+    title: `Analysis - ${session.plotName}`,
+    text: `Canopy Cover: ${session.canopyCover?.toFixed(1) || 'N/A'}%, Light Transmission: ${session.lightTransmission?.toFixed(1) || 'N/A'}%`,
     url: window.location.href,
   };
   
@@ -195,4 +321,22 @@ async function copyToClipboard(text: string): Promise<void> {
     document.body.removeChild(textArea);
     alert('Results copied to clipboard!');
   }
+}
+
+async function shareOrDownload(blob: Blob, filename: string): Promise<void> {
+  // Mobile-friendly: use Web Share API if supported with files
+  // Safari iOS 15+ / Chrome Android support sharing files
+  // Fallback to anchor download
+  const file = new File([blob], filename, { type: blob.type });
+  // @ts-ignore
+  if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
+    try {
+      // @ts-ignore
+      await navigator.share({ files: [file], title: filename, text: 'Analysis results CSV' });
+      return;
+    } catch (e) {
+      // If user cancels share, fall back
+    }
+  }
+  downloadFile(blob, filename);
 }

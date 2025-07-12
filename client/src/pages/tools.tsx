@@ -16,7 +16,11 @@ import {
   Ruler,
   BarChart3,
   Leaf,
-  Layers
+  Layers,
+  FileText,
+  CheckCircle,
+  Clock,
+  Navigation2
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { ToolType } from "@/components/tool-selector";
@@ -27,11 +31,14 @@ import ProcessingModal from "@/components/processing-modal";
 import BottomNavigation from "@/components/bottom-navigation";
 import SiteSelector from "@/components/site-selector";
 import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
+import ProtocolSelector from "@/components/protocol-selector";
+import ProtocolProgress from "@/components/protocol-progress";
 import { useToast } from "@/hooks/use-toast";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
 import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
 import type { DaubenmireResult } from "@/lib/daubenmire-frame";
+import type { ProtocolTemplate } from "@/database/types";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -75,6 +82,18 @@ export default function Tools() {
     accuracy?: number;
     altitudeAccuracy?: number;
   } | null>(null);
+  
+  // Protocol state
+  const [selectedProtocol, setSelectedProtocol] = useState<ProtocolTemplate | null>(null);
+  const [protocolProgress, setProtocolProgress] = useState<{
+    currentPointIndex: number;
+    completedPoints: number[];
+    completedMeasurements: { [key: string]: boolean };
+    startTime: Date;
+    issues: any[];
+  } | null>(null);
+  const [showProtocolSelector, setShowProtocolSelector] = useState(false);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -101,13 +120,166 @@ export default function Tools() {
       }
     }
 
-    // Check for tool parameter in URL
+    // Check for protocol parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
+    const protocolParam = urlParams.get('protocol');
+    if (protocolParam) {
+      // Create preset protocol based on URL parameter
+      let presetProtocol: ProtocolTemplate | null = null;
+      
+      switch (protocolParam) {
+        case 'forest_inventory':
+          presetProtocol = {
+            id: 'forest_inventory',
+            name: 'Forest Inventory',
+            description: 'Comprehensive forest canopy and vegetation assessment',
+            category: 'forest' as any,
+            ecosystem_type: 'forest' as any,
+            difficulty_level: 'intermediate' as any,
+            estimated_duration: 45,
+            sampling_design: {
+              pattern: 'systematic' as any,
+              total_points: 25,
+              point_spacing: 10,
+              transect_length: null,
+              plot_size: null,
+              buffer_distance: 5,
+              randomization: false
+            },
+            tools: {
+              canopy_enabled: true,
+              horizontal_enabled: true,
+              ground_enabled: true,
+              canopy_config: {},
+              horizontal_config: {},
+              ground_config: {}
+            }
+          };
+          break;
+        case 'grassland_assessment':
+          presetProtocol = {
+            id: 'grassland_assessment',
+            name: 'Grassland Assessment',
+            description: 'Point-intercept method for grassland vegetation analysis',
+            category: 'grassland' as any,
+            ecosystem_type: 'grassland' as any,
+            difficulty_level: 'beginner' as any,
+            estimated_duration: 25,
+            sampling_design: {
+              pattern: 'point_intercept' as any,
+              total_points: 50,
+              point_spacing: 5,
+              transect_length: null,
+              plot_size: null,
+              buffer_distance: 2,
+              randomization: false
+            },
+            tools: {
+              canopy_enabled: false,
+              horizontal_enabled: true,
+              ground_enabled: true,
+              canopy_config: {},
+              horizontal_config: {},
+              ground_config: {}
+            }
+          };
+          break;
+        case 'riparian_survey':
+          presetProtocol = {
+            id: 'riparian_survey',
+            name: 'Riparian Survey',
+            description: 'Transect-based riparian zone vegetation assessment',
+            category: 'riparian' as any,
+            ecosystem_type: 'riparian' as any,
+            difficulty_level: 'advanced' as any,
+            estimated_duration: 60,
+            sampling_design: {
+              pattern: 'transect' as any,
+              total_points: 15,
+              point_spacing: 20,
+              transect_length: 300,
+              plot_size: null,
+              buffer_distance: 10,
+              randomization: false
+            },
+            tools: {
+              canopy_enabled: true,
+              horizontal_enabled: true,
+              ground_enabled: true,
+              canopy_config: {},
+              horizontal_config: {},
+              ground_config: {}
+            }
+          };
+          break;
+      }
+
+      if (presetProtocol) {
+        handleProtocolSelect(presetProtocol);
+      }
+    }
+
+    // Check for tool parameter in URL
     const toolParam = urlParams.get('tool') as ToolType;
     if (toolParam && ['canopy', 'horizontal_vegetation', 'daubenmire'].includes(toolParam)) {
       setSelectedTool(toolParam);
     }
   }, []);
+
+  // Protocol handling functions
+  const handleProtocolSelect = (protocol: ProtocolTemplate) => {
+    setSelectedProtocol(protocol);
+    setShowProtocolSelector(false);
+    
+    // Initialize protocol progress
+    setProtocolProgress({
+      currentPointIndex: 0,
+      completedPoints: [],
+      completedMeasurements: {},
+      startTime: new Date(),
+      issues: []
+    });
+    
+    // Set tool based on protocol's first required tool
+    const firstTool = protocol.tools?.canopy_enabled ? 'canopy' : 
+                     protocol.tools?.horizontal_enabled ? 'horizontal_vegetation' : 
+                     protocol.tools?.ground_enabled ? 'daubenmire' : 'canopy';
+    setSelectedTool(firstTool);
+    
+    toast({
+      title: "Protocol Selected",
+      description: `Following ${protocol.name} protocol with ${protocol.sampling_design?.total_points || 0} points`,
+    });
+  };
+
+  const handleProtocolProgress = (pointIndex: number, toolType: ToolType, completed: boolean) => {
+    if (!protocolProgress) return;
+    
+    const newProgress = { ...protocolProgress };
+    const measurementKey = `${pointIndex}-${toolType}`;
+    
+    if (completed) {
+      newProgress.completedMeasurements[measurementKey] = true;
+      if (!newProgress.completedPoints.includes(pointIndex)) {
+        // Check if all required measurements for this point are complete
+        const protocol = selectedProtocol;
+        if (protocol) {
+          const requiredMeasurements = [];
+          if (protocol.tools?.canopy_enabled) requiredMeasurements.push(`${pointIndex}-canopy`);
+          if (protocol.tools?.horizontal_enabled) requiredMeasurements.push(`${pointIndex}-horizontal_vegetation`);
+          if (protocol.tools?.ground_enabled) requiredMeasurements.push(`${pointIndex}-daubenmire`);
+          
+          const allComplete = requiredMeasurements.every(key => newProgress.completedMeasurements[key]);
+          if (allComplete) {
+            newProgress.completedPoints.push(pointIndex);
+            newProgress.currentPointIndex = Math.min(pointIndex + 1, (protocol.sampling_design?.total_points || 1) - 1);
+          }
+        }
+      }
+    }
+    
+    setProtocolProgress(newProgress);
+  };
 
   const createSessionMutation = useMutation({
     mutationFn: async (sessionData: any) => {
@@ -133,6 +305,14 @@ export default function Tools() {
         console.log('🛰️ Added GPS data:', { lat: sessionData.latitude, lon: sessionData.longitude, alt: sessionData.altitude });
       }
       
+      // Add protocol information to session data
+      if (selectedProtocol) {
+        sessionData.protocolId = selectedProtocol.id;
+        sessionData.protocolName = selectedProtocol.name;
+        sessionData.protocolProgress = protocolProgress;
+        console.log('📋 Added protocol data:', { protocolId: sessionData.protocolId, protocolName: sessionData.protocolName });
+      }
+      
       console.log('📤 Sending request to API with final data:', sessionData);
       
       const response = await apiRequest("/api/analysis-sessions", {
@@ -148,6 +328,11 @@ export default function Tools() {
     onSuccess: (data) => {
       console.log('✅ Session created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
+      
+      // Update protocol progress
+      if (selectedProtocol && protocolProgress) {
+        handleProtocolProgress(protocolProgress.currentPointIndex, selectedTool, true);
+      }
       
       // Show success message - don't navigate immediately
       toast({
@@ -218,7 +403,7 @@ export default function Tools() {
       }
 
       // Get GPS location if available
-      let gpsData = { latitude: null, longitude: null };
+      let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -280,7 +465,11 @@ export default function Tools() {
         title: "Analysis Complete",
         description: `Canopy cover: ${results.canopyCover.toFixed(1)}%, Light transmission: ${results.lightTransmission.toFixed(1)}%`,
       });
-      
+
+      // Reset photo for next measurement
+      setSelectedImage(null);
+      setCanopyHeight("");
+ 
       console.log('🚀 CALLING createSessionMutation.mutate for CANOPY analysis');
       createSessionMutation.mutate(sessionData);
       
@@ -317,7 +506,7 @@ export default function Tools() {
 
   const handleHorizontalVegetationAnalysis = async (results: HorizontalVegetationAnalysis) => {
     // Get GPS location if available
-    let gpsData = { latitude: null, longitude: null };
+    let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -348,6 +537,9 @@ export default function Tools() {
 
     createSessionMutation.mutate(sessionData);
     
+    // Reset image selections to allow repeat measurements
+    setSelectedImage(null);
+
     // Show option to name site if untitled
     if (currentSite?.name === "Untitled Location") {
       setTimeout(() => {
@@ -371,7 +563,7 @@ export default function Tools() {
 
   const handleDaubenmireAnalysis = async (results: DaubenmireResult, imageUrl?: string) => {
     // Get GPS location if available
-    let gpsData = { latitude: null, longitude: null };
+    let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -425,7 +617,10 @@ export default function Tools() {
 
     console.log('🚀 CALLING createSessionMutation.mutate for DAUBENMIRE analysis');
     createSessionMutation.mutate(sessionData);
-    
+
+    // Reset any selected images for repeat measurements
+    setSelectedImage(null);
+
     // Show option to name site if untitled
     if (currentSite?.name === "Untitled Location") {
       setTimeout(() => {
@@ -448,8 +643,51 @@ export default function Tools() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-2xl mx-auto px-4 py-6 pb-24 space-y-6">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24 space-y-6">
+        {/* Protocol Selection disabled per user request */}
+
+        {/* Protocol Progress */}
+        {selectedProtocol && protocolProgress && (
+          <Card className="border-2 border-green-500">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                  {selectedProtocol.name}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {protocolProgress.completedPoints.length} / {selectedProtocol.sampling_design?.total_points || 0}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedProtocol(null);
+                      setProtocolProgress(null);
+                      setShowProtocolSelector(false);
+                      toast({
+                        title: "Protocol Cleared",
+                        description: "You can now measure without protocol restrictions",
+                      });
+                    }}
+                  >
+                    Clear Protocol
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProtocolProgress 
+                protocol={selectedProtocol}
+                progress={protocolProgress}
+                currentGPS={currentGPS}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Site Selection - Optional */}
         {!currentSite && (
           <Card>
@@ -508,58 +746,107 @@ export default function Tools() {
         {/* Tool Selection - Always Visible */}
         <Card className="border-2 border-blue-500">
           <CardHeader className="space-y-4">
-            <CardTitle className="flex items-center">
-              <Camera className="h-5 w-5 mr-2" />
-              Choose Your Measurement Tool
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Camera className="h-5 w-5 mr-2" />
+                Choose Your Measurement Tool
+              </div>
+              {selectedProtocol && (
+                <Badge variant="outline" className="text-xs">
+                  Protocol: {selectedProtocol.name}
+                </Badge>
+              )}
             </CardTitle>
             <div className="grid gap-4">
               <div 
-                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-lg border-2 transition-all ${
                   selectedTool === 'canopy' 
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-green-500 bg-green-50 dark:bg-green-800/40 dark:text-foreground' 
+                    : (!selectedProtocol || selectedProtocol.tools?.canopy_enabled)
+                      ? 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      : 'border-gray-100 bg-gray-50 dark:bg-gray-800 opacity-50 cursor-not-allowed'
                 }`}
-                onClick={() => setSelectedTool('canopy')}
+                onClick={() => {
+                  if (!selectedProtocol || selectedProtocol.tools?.canopy_enabled) {
+                    setSelectedTool('canopy');
+                  }
+                }}
               >
                 <div className="flex items-center space-x-4">
-                  <TreePine className="h-8 w-8 text-green-600" />
-                  <div>
-                    <h3 className="font-semibold">Canopy Cover Analysis</h3>
-                    <p className="text-sm text-muted-foreground">GLAMA method for gap light measurement</p>
+                  <TreePine className={`h-8 w-8 ${(!selectedProtocol || selectedProtocol.tools?.canopy_enabled) ? 'text-green-600' : 'text-gray-400'}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">Canopy Cover Analysis</h3>
+                      {selectedProtocol && !selectedProtocol.tools?.canopy_enabled && (
+                        <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                      )}
+                      {selectedProtocol && selectedProtocol.tools?.canopy_enabled && (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700">Required</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Standard method for gap light measurement</p>
                   </div>
                 </div>
               </div>
               
               <div 
-                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-lg border-2 transition-all ${
                   selectedTool === 'horizontal_vegetation' 
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    : (!selectedProtocol || selectedProtocol.tools?.horizontal_enabled)
+                      ? 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      : 'border-gray-100 bg-gray-50 dark:bg-gray-800 opacity-50 cursor-not-allowed'
                 }`}
-                onClick={() => setSelectedTool('horizontal_vegetation')}
+                onClick={() => {
+                  if (!selectedProtocol || selectedProtocol.tools?.horizontal_enabled) {
+                    setSelectedTool('horizontal_vegetation');
+                  }
+                }}
               >
                 <div className="flex items-center space-x-4">
-                  <Layers className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <h3 className="font-semibold">Horizontal Vegetation</h3>
+                  <Layers className={`h-8 w-8 ${(!selectedProtocol || selectedProtocol.tools?.horizontal_enabled) ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">Horizontal Vegetation</h3>
+                      {selectedProtocol && !selectedProtocol.tools?.horizontal_enabled && (
+                        <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                      )}
+                      {selectedProtocol && selectedProtocol.tools?.horizontal_enabled && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">Required</Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">Multi-height density analysis</p>
                   </div>
                 </div>
               </div>
               
               <div 
-                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`p-4 rounded-lg border-2 transition-all ${
                   selectedTool === 'daubenmire' 
                     ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    : (!selectedProtocol || selectedProtocol.tools?.ground_enabled)
+                      ? 'border-gray-200 hover:border-gray-300 cursor-pointer'
+                      : 'border-gray-100 bg-gray-50 dark:bg-gray-800 opacity-50 cursor-not-allowed'
                 }`}
-                onClick={() => setSelectedTool('daubenmire')}
+                onClick={() => {
+                  if (!selectedProtocol || selectedProtocol.tools?.ground_enabled) {
+                    setSelectedTool('daubenmire');
+                  }
+                }}
               >
                 <div className="flex items-center space-x-4">
-                  <Grid3X3 className="h-8 w-8 text-amber-600" />
-                  <div>
-                    <h3 className="font-semibold">Ground Cover Analysis</h3>
-                    <p className="text-sm text-muted-foreground">Canopeo ground cover method</p>
+                  <Grid3X3 className={`h-8 w-8 ${(!selectedProtocol || selectedProtocol.tools?.ground_enabled) ? 'text-amber-600' : 'text-gray-400'}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">Ground Cover Analysis</h3>
+                      {selectedProtocol && !selectedProtocol.tools?.ground_enabled && (
+                        <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                      )}
+                      {selectedProtocol && selectedProtocol.tools?.ground_enabled && (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700">Required</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Advanced ground cover method</p>
                   </div>
                 </div>
               </div>
@@ -681,7 +968,7 @@ export default function Tools() {
                   <p>• Avoid direct sunlight to prevent glare and shadows</p>
                   
                   <div className="font-medium text-foreground mt-2 mb-1">Accuracy Specifications:</div>
-                  <p>• GLAMA method accuracy: ±2-3% for canopy cover</p>
+                  <p>• Standard method accuracy: ±2-3% for canopy cover</p>
                   <p>• GPS accuracy requirement: ±3m or better</p>
                   <p>• LAI estimation: ±0.3 deciduous, ±0.5 coniferous</p>
                 </div>

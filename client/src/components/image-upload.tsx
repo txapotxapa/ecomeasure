@@ -159,11 +159,7 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
     <Card className="w-full">
       <CardContent className="p-4">
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-            isDragging
-              ? "border-primary bg-primary/10"
-              : "border-border bg-card"
-          }`}
+          className={`upload-box ${isDragging ? 'drag-active' : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}

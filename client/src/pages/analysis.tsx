@@ -144,7 +144,7 @@ export default function Analysis() {
           <BarChart3 className="h-6 w-6" />
           <div>
             <h1 className="text-lg font-semibold">Analysis Dashboard</h1>
-            <p className="text-xs opacity-80">Ecological Measurement Statistics</p>
+            <p className="text-xs opacity-80">EcoMeasure Analytics</p>
           </div>
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function Analysis() {
                 {sessions.map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:bg-accent/20 cursor-pointer transition-colors"
                     onClick={() => setSelectedSession(session)}
                   >
                     <div className="flex items-center space-x-4">

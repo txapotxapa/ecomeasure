@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { 
   History as HistoryIcon, 
   Search, 
@@ -19,6 +21,9 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AnalysisSession } from "@shared/schema";
 import { format } from "date-fns";
+import SessionCard from "@/components/session-card";
+import { useRef, useCallback } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import BottomNavigation from "@/components/bottom-navigation";
 import GoogleSheetsExport from "@/components/google-sheets-export";
@@ -29,14 +34,18 @@ import { apiRequest } from "@/lib/queryClient";
 export default function History() {
   const [searchTerm, setSearchTerm] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
+  const [toolTypeFilter, setToolTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [selectedSessions, setSelectedSessions] = useState<number[]>([]);
   const [showGoogleSheetsDialog, setShowGoogleSheetsDialog] = useState(false);
   const [showCurrentData, setShowCurrentData] = useState(true);
-  const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('spreadsheet');
-  
+  const [viewMode, setViewMode] = useState<'cards' | 'spreadsheet'>('cards');
+  const [itemsToShow, setItemsToShow] = useState(20);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['/api/analysis-sessions'],
@@ -49,7 +58,9 @@ export default function History() {
 
   const deleteSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      const response = await apiRequest('DELETE', `/api/analysis-sessions/${sessionId}`);
+      const response = await apiRequest(`/api/analysis-sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -74,7 +85,8 @@ export default function History() {
       const matchesSearch = session.plotName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            session.notes?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesMethod = methodFilter === "all" || session.analysisMethod === methodFilter;
-      return matchesSearch && matchesMethod;
+      const matchesTool   = toolTypeFilter === "all" || session.toolType === toolTypeFilter;
+      return matchesSearch && matchesMethod && matchesTool;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -164,6 +176,24 @@ export default function History() {
     return 'text-red-600';
   };
 
+  const columnSet = (toolTypeFilter === 'canopy') ? ['Canopy %','Light %','LAI','Height (m)'] :
+                    (toolTypeFilter === 'daubenmire') ? ['Total %','Diversity','Bare %','Litter %'] :
+                    (toolTypeFilter === 'horizontal_vegetation') ? ['Status','--','--','--'] : ['Metric1','Metric2','Metric3','Metric4'];
+
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const target = entries[0];
+    if (target.isIntersecting) {
+      setItemsToShow(prev => Math.min(prev + 20, filteredSessions.length));
+    }
+  }, [filteredSessions.length]);
+
+  useEffect(() => {
+    const option = { root: null, rootMargin: "20px", threshold: 0 };
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
   return (
     <div className="pb-20">
       {/* Header */}
@@ -215,27 +245,7 @@ export default function History() {
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
                 </Button>
-                <Dialog open={showGoogleSheetsDialog} onOpenChange={setShowGoogleSheetsDialog}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={filteredSessions.length === 0}
-                    >
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Google Sheets
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Export to Google Sheets</DialogTitle>
-                    </DialogHeader>
-                    <GoogleSheetsExport 
-                      sessions={filteredSessions} 
-                      selectedSessionIds={selectedSessions.length > 0 ? selectedSessions : undefined} 
-                    />
-                  </DialogContent>
-                </Dialog>
+                {/* Google Sheets export temporarily disabled */}
               </div>
             </CardTitle>
           </CardHeader>
@@ -263,9 +273,24 @@ export default function History() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Methods</SelectItem>
-                    <SelectItem value="GLAMA">GLAMA</SelectItem>
-                    <SelectItem value="Canopeo">Canopeo</SelectItem>
+                    <SelectItem value="GLAMA">Standard Analysis</SelectItem>
+                    <SelectItem value="Canopeo">Advanced Analysis</SelectItem>
                     <SelectItem value="Custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="tool-type">Tool Type</Label>
+                <Select value={toolTypeFilter} onValueChange={setToolTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All tools" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tools</SelectItem>
+                    <SelectItem value="canopy">Canopy</SelectItem>
+                    <SelectItem value="horizontal_vegetation">Horizontal</SelectItem>
+                    <SelectItem value="daubenmire">Daubenmire</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -362,190 +387,16 @@ export default function History() {
                   }
                 </p>
               </div>
-            ) : viewMode === 'spreadsheet' ? (
-              // Spreadsheet View
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2 text-xs font-medium">Date/Time</th>
-                      <th className="text-left p-2 text-xs font-medium">Site</th>
-                      <th className="text-left p-2 text-xs font-medium">Tool</th>
-                      <th className="text-left p-2 text-xs font-medium">Canopy %</th>
-                      <th className="text-left p-2 text-xs font-medium">Light %</th>
-                      <th className="text-left p-2 text-xs font-medium">LAI</th>
-                      <th className="text-left p-2 text-xs font-medium">Height (m)</th>
-                      <th className="text-left p-2 text-xs font-medium">GPS</th>
-                      <th className="text-left p-2 text-xs font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSessions.map((session) => (
-                      <tr key={session.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td className="p-2 text-xs">{format(new Date(session.timestamp), "MM/dd HH:mm")}</td>
-                        <td className="p-2 text-xs">{session.siteName || session.plotName}</td>
-                        <td className="p-2 text-xs">
-                          <Badge variant="outline" className="text-xs">
-                            {session.toolType === 'canopy' && 'Canopy'}
-                            {session.toolType === 'horizontal_vegetation' && 'Horizontal'}
-                            {session.toolType === 'daubenmire' && 'Daubenmire'}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-xs font-mono">{session.canopyCover?.toFixed(1) || '-'}</td>
-                        <td className="p-2 text-xs font-mono">{session.lightTransmission?.toFixed(1) || '-'}</td>
-                        <td className="p-2 text-xs font-mono">{session.leafAreaIndex?.toFixed(2) || '-'}</td>
-                        <td className="p-2 text-xs font-mono">{session.canopyHeight || '-'}</td>
-                        <td className="p-2 text-xs font-mono">
-                          {session.latitude && session.longitude ? (
-                            <span className="text-xs">
-                              {session.latitude.toFixed(4)}, {session.longitude.toFixed(4)}
-                            </span>
-                          ) : '-'}
-                        </td>
-                        <td className="p-2 text-xs">
-                          <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleExportSession(session)}
-                            >
-                              <Download className="h-3 w-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleDeleteSession(session.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`p-4 rounded-lg border transition-colors ${
-                      selectedSessions.includes(session.id)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedSessions.includes(session.id)}
-                          onChange={() => handleSelectSession(session.id)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="font-semibold text-gray-800">{session.plotName}</h3>
-                            <Badge className={getMethodColor(session.analysisMethod)}>
-                              {session.analysisMethod}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-600">
-                                {format(new Date(session.timestamp), 'PPp')}
-                              </span>
-                            </div>
-                            
-                            {session.latitude && session.longitude && (
-                              <div className="flex items-center space-x-2">
-                                <MapPin className="h-4 w-4 text-gray-400" />
-                                <span className="text-gray-600 font-mono">
-                                  {session.latitude.toFixed(4)}, {session.longitude.toFixed(4)}
-                                </span>
-                              </div>
-                            )}
-                            
-                            <div className="flex items-center space-x-2">
-                              <BarChart3 className="h-4 w-4 text-gray-400" />
-                              <span className="text-gray-600">
-                                {session.pixelsAnalyzed.toLocaleString()} pixels
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {session.notes && (
-                            <p className="text-sm text-gray-600 mt-2 italic">
-                              "{session.notes}"
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          {session.toolType === 'canopy' && (
-                            <>
-                              <div className={`text-lg font-bold ${getCanopyCoverColor(session.canopyCover || 0)}`}>
-                                {session.canopyCover?.toFixed(1)}%
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {session.lightTransmission?.toFixed(1)}% light
-                              </div>
-                            </>
-                          )}
-                          {session.toolType === 'daubenmire' && (
-                            <>
-                              <div className="text-lg font-bold text-purple-600">
-                                {session.totalCoverage?.toFixed(1)}%
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                ground cover
-                              </div>
-                            </>
-                          )}
-                          {session.toolType === 'horizontal_vegetation' && (
-                            <>
-                              <div className="text-lg font-bold text-blue-600">
-                                Complete
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                vegetation analysis
-                              </div>
-                            </>
-                          )}
-                          {session.leafAreaIndex && (
-                            <div className="text-xs text-gray-500">
-                              LAI: {session.leafAreaIndex.toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col space-y-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleExportSession(session)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteSession(session.id)}
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            ) : viewMode === 'cards' && (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredSessions.slice(0, itemsToShow).map(session => (
+                  <SessionCard key={session.id} session={session} onClick={() => setLocation(`/analysis?id=${session.id}`)} />
                 ))}
+                {itemsToShow < filteredSessions.length && (
+                  <div ref={loaderRef} className="space-y-2">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded" />)}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

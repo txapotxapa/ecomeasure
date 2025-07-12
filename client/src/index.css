@@ -1,29 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Gaia GPS Dark Theme - Default */
-  --background: hsl(0, 0%, 8%);
-  --foreground: hsl(120, 20%, 95%);
-  --muted: hsl(0, 0%, 15%);
-  --muted-foreground: hsl(120, 10%, 70%);
+  /* Gaia GPS Dark Theme - Updated Nature Palette */
+  --background: hsl(120 10% 5%);
+  --foreground: hsl(120 15% 95%);
+  --muted: hsl(34 24% 44%); /* Soft earth tone */
+  --muted-foreground: hsl(0 0% 85%);
   --popover: hsl(0, 0%, 12%);
   --popover-foreground: hsl(120, 20%, 95%);
-  --card: hsl(0, 0%, 12%);
-  --card-foreground: hsl(120, 20%, 95%);
+  --card: hsl(120 10% 10% / 0.6); /* Semi-transparent for glassmorphism */
+  --card-foreground: hsl(0 0% 97%);
   --border: hsl(0, 0%, 20%);
   --input: hsl(0, 0%, 20%);
-  --primary: hsl(142, 40%, 40%);
-  --primary-foreground: hsl(0, 0%, 98%);
-  --secondary: hsl(142, 30%, 25%);
-  --secondary-foreground: hsl(120, 20%, 95%);
-  --accent: hsl(142, 50%, 30%);
-  --accent-foreground: hsl(0, 0%, 98%);
+  --primary: hsl(120 61% 34%);   /* Forest green #228B22 */
+  --primary-foreground: 0 0% 98%;
+  --secondary: hsl(120 69% 18%); /* Deep forest #0F4F0F */
+  --secondary-foreground: 120 20% 95%;
+  --accent: hsl(197 71% 73%);    /* Sky blue #87CEEB */
+  --accent-foreground: 222 47% 11%;
   --destructive: hsl(0, 60%, 40%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(142, 40%, 40%);
-  --radius: 0.5rem;
+  --ring: var(--primary);
+  --radius: 0.75rem; /* More rounded corners */
+  /* Consistent spacing scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  /* Shadow scale */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
   --success: hsl(142, 60%, 45%);
   --success-foreground: hsl(0, 0%, 100%);
   --warning: hsl(36, 70%, 45%);
@@ -33,32 +45,27 @@
 }
 
 .light {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(222, 84%, 5%);
-  --muted: hsl(142, 20%, 94%);
-  --muted-foreground: hsl(142, 20%, 40%);
+  --background: hsl(120 25% 97%);
+  --foreground: hsl(120 20% 8%);
+  --muted: hsl(34 24% 88%);
+  --muted-foreground: hsl(34 24% 28%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(222, 84%, 5%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(222, 84%, 5%);
-  --border: hsl(142, 20%, 88%);
-  --input: hsl(142, 20%, 88%);
-  --primary: hsl(142, 45%, 35%);
+  --popover-foreground: hsl(120 20% 8%);
+  --card: hsl(0 0% 100% / 0.65);
+  --card-foreground: hsl(120 20% 8%);
+  --border: hsl(120 20% 88%);
+  --input: hsl(120 20% 88%);
+  --primary: hsl(120 61% 34%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(142, 30%, 90%);
+  --secondary: hsl(120 69% 18%);
   --secondary-foreground: hsl(222, 47%, 11%);
-  --accent: hsl(142, 40%, 85%);
+  --accent: hsl(197 71% 73%);
   --accent-foreground: hsl(222, 47%, 11%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(142, 45%, 35%);
-  --radius: 0.5rem;
-  --success: hsl(142, 60%, 45%);
-  --success-foreground: hsl(0, 0%, 100%);
-  --warning: hsl(36, 100%, 50%);
-  --warning-foreground: hsl(0, 0%, 100%);
-  --error: hsl(4, 90%, 58%);
-  --error-foreground: hsl(0, 0%, 100%);
+  --ring: var(--primary);
+  --radius: 0.75rem;
+  /* Spacing & shadows inherit from root */
 }
 
 @layer base {
@@ -69,7 +76,36 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  body.dark {
+    background-color: #000;
+    background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23333'/%3E%3C/svg%3E");
+    background-size: 4px 4px;
+  }
 }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Fade & slide-up on scroll */
+@layer utilities {
+  .scroll-fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  .scroll-fade-up.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Text shadow utility */
+.text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 @layer utilities {
   /* Gaia GPS-inspired styling */
@@ -139,10 +175,17 @@
     background: linear-gradient(135deg, hsl(142, 30%, 40%) 0%, hsl(142, 25%, 30%) 100%);
   }
   
+  /* EcoMeasure brand gradient */
   .analysis-gradient {
-    background: linear-gradient(135deg, hsl(27, 100%, 50%) 0%, hsl(27, 90%, 45%) 100%);
+    background: linear-gradient(135deg, #10B981 0%, #064E3B 100%);
   }
-  
+
+  /* Glass-morphism card utility */
+  .glass-card {
+    @apply backdrop-blur-lg border border-white/10 shadow-[var(--shadow)];
+    background: var(--card);
+  }
+
   /* Dark mode enhancements */
   .dark .research-gradient {
     background: linear-gradient(135deg, #047857 0%, #059669 100%);
@@ -150,11 +193,11 @@
   
   .dark .tool-card {
     @apply bg-card backdrop-blur-sm;
-    border-color: hsl(var(--border) / 0.5);
+    border-color: var(--border);
   }
   
   .dark .tool-card:hover {
-    border-color: hsl(var(--primary) / 0.5);
+    border-color: var(--primary);
   }
   
   /* Better mobile touch targets */
@@ -180,9 +223,9 @@
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted) / 0.8) 50%,
-      hsl(var(--muted)) 100%
+      var(--muted) 0%,
+      color-mix(in srgb, var(--muted) 80%, transparent) 50%,
+      var(--muted) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
@@ -192,7 +235,21 @@
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
   }
+
+  /* Higher contrast overrides - dark theme only */
+  .dark .text-muted-foreground {
+    color: #e5e7eb !important; /* Tailwind gray-200 */
+  }
+
+  .dark input::placeholder, .dark textarea::placeholder {
+    color: #cbd5e1 !important; /* gray-300 */
+  }
   
+  /* Override generic gray utility classes in dark mode */
+  .dark .text-gray-400, .dark .text-gray-500, .dark .text-gray-600, .dark .text-gray-700, .dark .text-gray-800, .dark .text-gray-900 {
+    color: #e5e7eb !important; /* gray-200 */
+  }
+
   /* Smooth theme transitions */
   body,
   .bg-background,
@@ -202,4 +259,94 @@
   .border {
     @apply transition-colors duration-200;
   }
+
+  /* Standardized photo upload container */
+  .upload-box {
+    @apply border-2 border-dashed rounded-lg p-6 text-center transition-colors bg-card border-border;
+  }
+  .upload-box.drag-active {
+    @apply border-primary;
+    background-color: hsl(var(--primary) / 0.1);
+  }
+
+  /* Gradient border utility for cards */
+  .gradient-border {
+    position: relative;
+    z-index: 0;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px; /* border width */
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+    -webkit-mask: /* create hollow center */
+      linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    z-index: -1;
+  }
+
+  /* Neon glow text / border */
+  .neon {
+    color: var(--accent);
+    text-shadow: 0 0 4px var(--accent), 0 0 10px var(--accent);
+  }
+
+  @keyframes hue-rotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  .gradient-border.animate {
+    animation: hue-rotate 6s linear infinite;
+  }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+  .scroll-fade-up.animate {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  /* Smooth theme transition */
+  .theme-transition * {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+  }
+
+  /* Neon focus ring */
+  .focus-neon:focus-visible {
+    outline: 2px solid var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* 3D hover effect for touchable cards */
+  .card-3d {
+    @apply transition-transform duration-200 ease-out will-change-transform shadow-[var(--shadow)];
+  }
+  .card-3d:hover {
+    transform: translateY(-4px) rotateX(3deg) rotateY(-3deg) scale(1.02);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Parallax layer utility */
+  .parallax {
+    perspective: 1200px;
+  }
+  .parallax-layer {
+    transform-style: preserve-3d;
+  }
 }
+
+/* Added for EcoMeasureLogo animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-spin-reverse { animation: spin-reverse 15s linear infinite; }

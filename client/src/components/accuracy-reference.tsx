@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Target, TreePine, Layers, Grid3x3 } from "lucide-react";
+import { Target, TreePine, Layers, Grid3x3, MapPin } from "lucide-react";
 
 export default function AccuracyReference() {
   return (
@@ -19,7 +19,7 @@ export default function AccuracyReference() {
         <div className="space-y-3">
           <h3 className="font-medium flex items-center gap-2">
             <TreePine className="h-4 w-4" />
-            Canopy Cover Analysis (GLAMA Method)
+                          Canopy Cover Analysis (Standard Method)
           </h3>
           <div className="ml-6 space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-4">

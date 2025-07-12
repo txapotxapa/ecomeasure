@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { 
@@ -11,7 +10,6 @@ import {
   Camera, 
   BarChart3, 
   MapPin, 
-  Leaf, 
   History, 
   Settings, 
   TrendingUp,
@@ -31,13 +29,19 @@ import {
   Info,
   Mountain,
   Navigation,
-  Layers
+  Layers,
+  CheckCircle,
+  Users,
+  Compass
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { AnalysisSession } from "@shared/schema";
 import BottomNavigation from "@/components/bottom-navigation";
 import SiteSelector from "@/components/site-selector";
+import { useTheme } from "@/hooks/use-theme";
+import GPSAccuracyIndicator from "@/components/gps-accuracy-indicator";
+import EcoMeasureLogo from "@/components/eco-measure-logo";
 // Dark theme is now set by default in App.tsx
 
 interface SiteInfo {
@@ -57,7 +61,8 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [gpsEnabled, setGpsEnabled] = useState(true);
   const [autoSave, setAutoSave] = useState(true);
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
 
   // Fetch recent sessions for dashboard
@@ -71,10 +76,6 @@ export default function Home() {
     : sessions;
 
   const recentSessions = siteSessionsFilter.slice(0, 3);
-
-  const formatCoordinates = (lat: number, lng: number) => {
-    return `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`;
-  };
 
   // Save current site to localStorage when it changes
   const handleSiteChange = (site: SiteInfo) => {
@@ -108,7 +109,7 @@ export default function Home() {
       lightColor: 'bg-green-50',
       darkColor: 'bg-green-900/20',
       textColor: 'text-green-600',
-      features: ['Gap light measurement', 'GLAMA/Canopeo methods', 'LAI calculation'],
+              features: ['Gap light measurement', 'Advanced algorithms', 'LAI calculation'],
       route: '/tools?tool=canopy'
     },
     {
@@ -126,13 +127,13 @@ export default function Home() {
     {
       id: 'daubenmire',
       title: 'Daubenmire Frame',
-      description: 'Canopeo ground cover analysis for vegetation classification',
+              description: 'Advanced ground cover analysis for vegetation classification',
       icon: Grid3X3,
       color: 'bg-purple-500',
       lightColor: 'bg-purple-50',
       darkColor: 'bg-purple-900/20',
       textColor: 'text-purple-600',
-      features: ['Canopeo algorithm', 'Ground cover classification', 'Vegetation percentage'],
+              features: ['Advanced algorithm', 'Ground cover classification', 'Vegetation percentage'],
       route: '/tools?tool=daubenmire'
     }
   ];
@@ -175,86 +176,25 @@ export default function Home() {
   return (
     <div className="pb-20">
       {/* Header */}
-      <div className="analysis-gradient text-white p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12 bg-white/20">
-              <AvatarFallback className="bg-white/20 text-white">
-                <Leaf className="h-6 w-6" />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-xl font-bold">Ecological Suite</h1>
-              <p className="text-sm opacity-90">Field Research Tools</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setLocation('/settings')}
-            className="text-white hover:bg-white/20"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-        </div>
+      <header className="bg-black text-white pt-6 pb-12 shadow relative z-10 flex flex-col items-center">
+        {/* Settings button top-right */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation('/settings')}
+          className="absolute top-4 right-4 text-white hover:bg-white/20"
+        >
+          <Settings className="h-5 w-5" />
+        </Button>
 
-        {/* Site Information */}
-        {currentSite ? (
-          <div className="bg-white/10 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-3">
-              <Target className="h-5 w-5" />
-              <h2 className="text-lg font-semibold">{currentSite.name}</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4" />
-                <span className="text-sm">{formatCoordinates(currentSite.latitude, currentSite.longitude)}</span>
-              </div>
-              {currentSite.altitude && (
-                <div className="flex items-center space-x-2">
-                  <Mountain className="h-4 w-4" />
-                  <span className="text-sm">{currentSite.altitude.toFixed(0)}m elevation</span>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white/10 rounded-lg p-4 text-center">
-            <Target className="h-8 w-8 mx-auto mb-2 opacity-60" />
-            <p className="text-sm opacity-80">No research site selected</p>
-            <p className="text-xs opacity-60">Create a site below to start logging measurements</p>
-          </div>
-        )}
-      </div>
+        {/* Centered brand logo */}
+        <EcoMeasureLogo size={160} />
+      </header>
+      {/* Site Information block removed per branding simplification */}
 
-      <div className="p-6 space-y-6">
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Zap className="h-5 w-5 mr-2" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="h-20 flex-col space-y-2"
-                  onClick={action.action}
-                >
-                  <action.icon className="h-6 w-6" />
-                  <div className="text-center">
-                    <div className="font-medium text-sm">{action.title}</div>
-                    <div className="text-xs text-muted-foreground">{action.description}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24 space-y-6">
+
+        {/* Quick Actions block removed */}
 
         {/* Site Selector */}
         <SiteSelector 
@@ -283,7 +223,7 @@ export default function Home() {
                   <TreePine className="h-6 w-6" />
                   <div className="text-left">
                     <div className="font-medium">Canopy Cover Analysis</div>
-                    <div className="text-xs opacity-90">Upload photo → instant GLAMA results</div>
+                    <div className="text-xs opacity-90">Upload photo → instant analysis results</div>
                   </div>
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
@@ -306,7 +246,7 @@ export default function Home() {
                     <Grid3X3 className="h-5 w-5 text-primary" />
                     <div className="text-center">
                       <div className="font-medium text-sm">Ground Cover</div>
-                      <div className="text-xs text-muted-foreground">Canopeo method</div>
+                      <div className="text-xs text-muted-foreground">Advanced method</div>
                     </div>
                   </Button>
                 </div>
@@ -383,7 +323,7 @@ export default function Home() {
                 {recentSessions.map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg bg-card border border-border cursor-pointer hover:bg-accent/20 transition-colors"
                     onClick={() => setLocation(`/analysis?id=${session.id}`)}
                   >
                     <div className="flex items-center space-x-3">
@@ -470,17 +410,13 @@ export default function Home() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Moon className="h-5 w-5 text-primary" />
+                {theme === 'dark' ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
                 <div>
                   <p className="font-medium">Theme</p>
-                  <p className="text-sm text-muted-foreground">
-                    Gaia GPS Dark Mode
-                  </p>
+                  <p className="text-sm text-muted-foreground">{theme === 'dark' ? 'Dark' : 'Light'} Mode</p>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                Default
-              </Badge>
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
             </div>
           </CardContent>
         </Card>
@@ -495,15 +431,15 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=technical')}>
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 View Technical Documentation
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=photography')}>
                 <Camera className="h-4 w-4 mr-2" />
                 Photography Guidelines
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=accuracy')}>
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Measurement Accuracy Info
               </Button>

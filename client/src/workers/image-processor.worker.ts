@@ -59,7 +59,7 @@ async function analyzeCanopyInWorker(imageData: ImageData, options: any) {
     const g = data[i + 1];
     const b = data[i + 2];
     
-    // GLAMA method threshold
+    // Standard method threshold
     const brightness = (r + g + b) / 3;
     if (brightness < 127) {
       canopyPixels++;

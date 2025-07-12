@@ -41,6 +41,15 @@ export class MemStorage implements IStorage {
       ...insertSession,
       id,
       timestamp: new Date(),
+      canopyHeight: insertSession.canopyHeight ?? null,
+      altitude: insertSession.altitude ?? null,
+      latitude: insertSession.latitude ?? null,
+      longitude: insertSession.longitude ?? null,
+      sitePhotoUrl: insertSession.sitePhotoUrl ?? null,
+      toolType: insertSession.toolType || "canopy",
+      analysisMethod: insertSession.analysisMethod || "GLAMA",
+      zenithAngle: insertSession.zenithAngle ?? null,
+      isCompleted: insertSession.isCompleted ?? false,
     };
     this.sessions.set(id, session);
     return session;
@@ -82,24 +91,27 @@ export class MemStorage implements IStorage {
   }
 
   async createOrUpdateAnalysisSettings(insertSettings: InsertAnalysisSettings): Promise<AnalysisSettings> {
-    const existing = this.settings.get(insertSettings.userId);
+    const userId = insertSettings.userId || "default";
+    const existing = this.settings.get(userId);
     
     if (existing) {
       const updated: AnalysisSettings = {
         ...existing,
         ...insertSettings,
+        userId,
         updatedAt: new Date(),
       };
-      this.settings.set(insertSettings.userId, updated);
+      this.settings.set(userId, updated);
       return updated;
     } else {
       const id = this.currentSettingsId++;
       const settings: AnalysisSettings = {
         ...insertSettings,
         id,
+        userId,
         updatedAt: new Date(),
       };
-      this.settings.set(insertSettings.userId, settings);
+      this.settings.set(userId, settings);
       return settings;
     }
   }

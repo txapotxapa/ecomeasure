@@ -13,8 +13,8 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border z-50">
-      <div className="flex justify-around py-2">
+    <div className="fixed inset-x-0 bottom-0 bg-card border-t border-border z-50 pb-[env(safe-area-inset-bottom)] h-16 flex items-center justify-center">
+      <div className="flex justify-around w-full px-4">
         {navItems.map((item) => {
           const isActive = location === item.path;
           return (

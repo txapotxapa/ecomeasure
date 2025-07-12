@@ -101,7 +101,7 @@ export default function QuickActions({
         // Copy current data to clipboard
         const shareData = {
           timestamp: new Date().toISOString(),
-          tool: 'Ecological Measurement Suite',
+          tool: 'EcoMeasure Precision Field Analytics',
           url: window.location.href
         };
         

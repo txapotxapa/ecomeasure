@@ -205,7 +205,19 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
         title: "Analysis Complete",
         description: `Digital analysis of "${siteName}" completed successfully`,
       });
-      
+
+      // Reset photos so user can perform another measurement easily
+      setDirectionPhotos([
+        { direction: 'North', file: null, preview: null, analyzed: false, isDragging: false },
+        { direction: 'East', file: null, preview: null, analyzed: false, isDragging: false },
+        { direction: 'South', file: null, preview: null, analyzed: false, isDragging: false },
+        { direction: 'West', file: null, preview: null, analyzed: false, isDragging: false },
+      ]);
+
+      // Optionally reset progress indicators
+      setProgress(0);
+      setStage('');
+ 
     } catch (error) {
       toast({
         title: "Analysis Failed",
@@ -430,11 +442,7 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
                     </div>
                   ) : (
                     <div 
-                      className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                        photo.isDragging
-                          ? "border-primary bg-primary/10"
-                          : "border-gray-300 bg-gray-50"
-                      }`}
+                      className={`upload-box p-4 ${photo.isDragging ? 'drag-active' : ''}`}
                       onDragOver={(e) => handleDragOver(e, photo.direction)}
                       onDragLeave={(e) => handleDragLeave(e, photo.direction)}
                       onDrop={(e) => handleDrop(e, photo.direction)}

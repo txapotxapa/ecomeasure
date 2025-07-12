@@ -62,6 +62,9 @@ export default {
           ring: "var(--sidebar-ring)",
         },
       },
+      fontFamily: {
+        sans: ["'Inter'", "'DM Sans'", 'ui-sans-serif', 'system-ui'],
+      },
       keyframes: {
         "accordion-down": {
           from: {

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Switch, Route } from "wouter";
+import { revealOnScroll } from "@/lib/scroll-anim";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,6 +12,7 @@ import Analysis from "@/pages/analysis";
 import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import AccuracyReference from "@/pages/accuracy-reference";
+import DocsPage from "@/pages/docs";
 
 function Router() {
   return (
@@ -21,6 +23,7 @@ function Router() {
       <Route path="/history" component={History} />
       <Route path="/settings" component={Settings} />
       <Route path="/accuracy-reference" component={AccuracyReference} />
+      <Route path="/docs" component={DocsPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -28,15 +31,22 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    // Set dark theme by default
-    document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
+    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    let mode: 'light' | 'dark';
+    mode = stored ?? 'light';
+    if (!stored) localStorage.setItem('theme', 'light');
+    const doc = document.documentElement;
+    doc.classList.toggle('dark', mode === 'dark');
+    doc.classList.toggle('light', mode === 'light');
+    document.documentElement.classList.add('theme-transition');
+
+    revealOnScroll();
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="max-w-md mx-auto bg-background min-h-screen shadow-xl">
+        <div className="min-h-screen bg-background">
           <Router />
         </div>
         <Toaster />

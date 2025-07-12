@@ -1,7 +1,7 @@
 {
-  "name": "Ecological Measurement Suite",
+  "name": "EcoMeasure Precision Field Analytics",
   "short_name": "EcoMeasure",
-  "description": "Professional ecological field research tools for vegetation analysis",
+  "description": "EcoMeasure Precision Field Analytics – professional ecological field research tools for vegetation analysis",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

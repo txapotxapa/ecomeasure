@@ -125,9 +125,9 @@ async function processMainThread(
   
   switch (options.method) {
     case 'GLAMA':
-      return await processGLAMA(data, width, height, options);
+      return await processStandardAnalysis(data, width, height, options);
     case 'Canopeo':
-      return await processCanopeo(data, width, height, options);
+      return await processAdvancedAnalysis(data, width, height, options);
     case 'Custom':
       return await processCustom(data, width, height, options);
     default:
@@ -135,13 +135,13 @@ async function processMainThread(
   }
 }
 
-async function processGLAMA(
+async function processStandardAnalysis(
   data: Uint8ClampedArray,
   width: number,
   height: number,
   options: AnalysisOptions
 ): Promise<CanopyAnalysisResult> {
-  console.log('GLAMA processing started for', width, 'x', height, 'image');
+  console.log('Standard analysis processing started for', width, 'x', height, 'image');
   
   const centerX = width / 2;
   const centerY = height / 2;
@@ -184,7 +184,7 @@ async function processGLAMA(
         
         totalPixels++;
         
-        // GLAMA algorithm: classify based on brightness and green content
+        // Standard algorithm: classify based on brightness and green content
         const brightness = (r + g + b) / 3;
         const greenness = g / Math.max(r + g + b, 1);
         
@@ -201,7 +201,7 @@ async function processGLAMA(
     }
   }
   
-  console.log('GLAMA analysis complete:', {
+  console.log('Standard analysis complete:', {
     totalPixels,
     canopyPixels,
     skyPixels,
@@ -230,22 +230,22 @@ async function processGLAMA(
     processingTime: 0, // Will be set by caller
   };
   
-  console.log('GLAMA final result:', result);
+  console.log('Standard analysis final result:', result);
   return result;
 }
 
-async function processCanopeo(
+async function processAdvancedAnalysis(
   data: Uint8ClampedArray,
   width: number,
   height: number,
   options: AnalysisOptions
 ): Promise<CanopyAnalysisResult> {
-  console.log('Canopeo processing started for', width, 'x', height, 'image');
+  console.log('Advanced analysis processing started for', width, 'x', height, 'image');
   
   let greenPixels = 0;
   let totalPixels = 0;
   
-  options.onProgress?.(30, 'Applying Canopeo algorithm...');
+  options.onProgress?.(30, 'Applying advanced algorithm...');
   
   // Ensure we have valid data
   if (!data || data.length === 0) {
@@ -259,7 +259,7 @@ async function processCanopeo(
     
     totalPixels++;
     
-    // Canopeo algorithm: R/G and B/G ratios
+    // Advanced algorithm: R/G and B/G ratios
     const rg = g > 0 ? r / g : 0;
     const bg = g > 0 ? b / g : 0;
     
@@ -276,7 +276,7 @@ async function processCanopeo(
     }
   }
   
-  console.log('Canopeo analysis complete:', {
+  console.log('Advanced analysis complete:', {
     totalPixels,
     greenPixels,
     greenPercent: (greenPixels / totalPixels) * 100
@@ -300,7 +300,7 @@ async function processCanopeo(
     processingTime: 0,
   };
   
-  console.log('Canopeo final result:', result);
+  console.log('Advanced analysis final result:', result);
   return result;
 }
 

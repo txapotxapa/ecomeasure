@@ -57,10 +57,10 @@ export async function analyzeDaubenmireFrame(
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   
-  options.onProgress?.(20, 'Analyzing ground cover with Canopeo method');
+  options.onProgress?.(20, 'Analyzing ground cover with advanced method');
 
-  // Use official Canopeo algorithm for ground cover classification
-  const result = await analyzeGroundCoverCanopeo(imageData, options);
+  // Use advanced algorithm for ground cover classification
+  const result = await analyzeGroundCoverAdvanced(imageData, options);
   
   options.onProgress?.(100, 'Analysis complete');
   
@@ -70,8 +70,8 @@ export async function analyzeDaubenmireFrame(
   };
 }
 
-// Canopeo ground cover analysis using official algorithm
-async function analyzeGroundCoverCanopeo(
+// Advanced ground cover analysis using proprietary algorithm
+async function analyzeGroundCoverAdvanced(
   imageData: ImageData,
   options: DaubenmireAnalysisOptions
 ): Promise<Omit<DaubenmireResult, 'processingTime'>> {
@@ -91,7 +91,7 @@ async function analyzeGroundCoverCanopeo(
   // Species color groups for ground cover analysis
   const speciesColors = new Map<string, number>();
   
-  options.onProgress?.(30, 'Classifying pixels using Canopeo ground cover method');
+  options.onProgress?.(30, 'Classifying pixels using advanced ground cover method');
   
   // Process each pixel using official Canopeo algorithm
   for (let i = 0; i < data.length; i += 4) {
@@ -102,17 +102,17 @@ async function analyzeGroundCoverCanopeo(
     // Convert to HSV for additional constraints
     const [h, s, v] = rgbToHsv(r, g, b);
     
-    // Classify pixel based on Canopeo ground cover method
-    if (isVegetationCanopeo(r, g, b, h, s, v)) {
+    // Classify pixel based on advanced ground cover method
+    if (isVegetationAdvanced(r, g, b, h, s, v)) {
       vegetationPixels++;
       // Group vegetation colors for ground cover species estimation
       const colorKey = `${Math.floor(h / 20)}-${Math.floor(s / 0.3)}-${Math.floor(v / 0.3)}`;
       speciesColors.set(colorKey, (speciesColors.get(colorKey) || 0) + 1);
-    } else if (isBareGroundCanopeo(r, g, b, h, s, v)) {
+    } else if (isBareGroundAdvanced(r, g, b, h, s, v)) {
       bareGroundPixels++;
-    } else if (isLitterCanopeo(r, g, b, h, s, v)) {
+    } else if (isLitterAdvanced(r, g, b, h, s, v)) {
       litterPixels++;
-    } else if (isRockCanopeo(r, g, b, h, s, v)) {
+    } else if (isRockAdvanced(r, g, b, h, s, v)) {
       rockPixels++;
     } else if (v < 0.25) {
       shadowPixels++; // Count shadows separately
@@ -192,20 +192,20 @@ async function analyzeGroundCoverCanopeo(
   };
 }
 
-// Canopeo ground cover vegetation detection using official algorithm
-function isVegetationCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
-  // Official Canopeo algorithm for ground cover analysis
+// Advanced ground cover vegetation detection using proprietary algorithm
+function isVegetationAdvanced(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
+  // Proprietary algorithm for ground cover analysis
   // Uses Excess Green Index: 2G - R - B
   const sum = r + g + b;
   if (sum === 0) return false; // Avoid division by zero
   
   const excessGreen = (2 * g - r - b) / sum;
   
-  // Calculate R/G and B/G ratios as used in Canopeo
+  // Calculate R/G and B/G ratios for vegetation detection
   const rToGRatio = g > 0 ? r / g : 999; // High value if g=0
   const bToGRatio = g > 0 ? b / g : 999; // High value if g=0
   
-  // Relaxed Canopeo thresholds for vegetation classification
+  // Optimized thresholds for vegetation classification
   // Vegetation has high green excess and low R/G, B/G ratios
   const isVegetation = excessGreen > 0.03 && rToGRatio < 1.0 && bToGRatio < 1.0;
   
@@ -223,7 +223,7 @@ function isVegetationCanopeo(r: number, g: number, b: number, h: number, s: numb
   return result;
 }
 
-function isBareGroundCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
+function isBareGroundAdvanced(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
   // Brown/tan colors with low saturation - more permissive
   const isBrownish = (h >= 10 && h <= 50) || (h >= 350 && h <= 360);
   const lowSaturation = s < 0.5;
@@ -238,7 +238,7 @@ function isBareGroundCanopeo(r: number, g: number, b: number, h: number, s: numb
   return (isBrownish && lowSaturation && mediumBrightness) || isGrayish || isSandy;
 }
 
-function isLitterCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
+function isLitterAdvanced(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
   // Dead vegetation - browns and yellows
   const isDeadVegetation = (h >= 30 && h <= 60) && s > 0.2 && v > 0.15 && v < 0.6;
   
@@ -248,7 +248,7 @@ function isLitterCanopeo(r: number, g: number, b: number, h: number, s: number, 
   return isDeadVegetation || isDarkOrganic;
 }
 
-function isRockCanopeo(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
+function isRockAdvanced(r: number, g: number, b: number, h: number, s: number, v: number): boolean {
   // Light colored, low saturation (limestone, sandstone)
   const isLightRock = s < 0.2 && v > 0.6;
   

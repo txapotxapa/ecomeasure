@@ -3,7 +3,7 @@
 ## Quick Reference: Accuracy Metrics
 
 ### 1. Canopy Cover Analysis
-- **GLAMA Method:** R² > 0.8 correlation with expert visual estimation
+- **Standard Method:** R² > 0.8 correlation with expert visual estimation
 - **Smartphone Apps:** R² = 0.94, RRMSE = 17.27% for LAI range 0.13-1.41
 - **Target Accuracy:** R² > 0.8, RMSE < 0.5 for operational use
 - **Precision:** 10-15% repeatability for field applications

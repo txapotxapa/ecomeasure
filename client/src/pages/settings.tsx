@@ -35,6 +35,10 @@ export default function Settings() {
     autoGpsLogging: true,
     imageQualityThreshold: 0.8,
     exportFormat: "CSV",
+    defaultToolType: "canopy",
+    horizontalVegetationHeights: [0.5, 1.0, 1.5, 2.0],
+    daubenmireQuadratSize: 1,
+    daubenmireGridSize: 10,
     updatedAt: new Date(),
   });
 
@@ -61,7 +65,11 @@ export default function Settings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (settingsData: Partial<AnalysisSettings>) => {
-      const response = await apiRequest('POST', '/api/settings', settingsData);
+      const response = await apiRequest('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsData)
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -171,8 +179,8 @@ export default function Settings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="GLAMA">GLAMA Standard</SelectItem>
-                  <SelectItem value="Canopeo">Canopeo Algorithm</SelectItem>
+                  <SelectItem value="GLAMA">Standard Analysis</SelectItem>
+                  <SelectItem value="Canopeo">Advanced Analysis</SelectItem>
                   <SelectItem value="Custom">Custom Threshold</SelectItem>
                 </SelectContent>
               </Select>
@@ -385,13 +393,13 @@ export default function Settings() {
                 percentage calculation in ecological research.
               </p>
               <p className="mb-2">
-                The app implements scientifically validated algorithms including GLAMA 
-                (Gap Light Analysis Mobile Application) and Canopeo methodologies.
+                The app implements scientifically validated algorithms for canopy cover
+                analysis and vegetation classification.
               </p>
               <p>
                 <strong>Version:</strong> 1.0.0<br />
                 <strong>Build:</strong> {new Date().toISOString().split('T')[0]}<br />
-                <strong>License:</strong> MIT
+                <strong>License:</strong> Proprietary
               </p>
             </div>
           </CardContent>

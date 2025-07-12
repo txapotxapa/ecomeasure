@@ -28,7 +28,7 @@ export default function GoogleSheetsExport({ sessions = [], selectedSessionIds =
   const [spreadsheetId, setSpreadsheetId] = useState('');
   const [serviceAccountEmail, setServiceAccountEmail] = useState('');
   const [privateKey, setPrivateKey] = useState('');
-  const [sheetTitle, setSheetTitle] = useState('Ecological Field Data');
+  const [sheetTitle, setSheetTitle] = useState('EcoMeasure Field Data');
   const [shareEmail, setShareEmail] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -68,18 +68,19 @@ export default function GoogleSheetsExport({ sessions = [], selectedSessionIds =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessions: sessionsToExport,
           spreadsheetId: spreadsheetId.trim(),
-          sessionIds: selectedSessionIds.length > 0 ? selectedSessionIds : undefined,
           serviceAccountEmail: serviceAccountEmail.trim(),
           privateKey: privateKey.trim()
         })
       });
 
-      if (response.success) {
-        setLastSheetUrl(response.sheetUrl);
+      const responseData = await response.json();
+      if (responseData.success) {
+        setLastSheetUrl(responseData.sheetUrl);
         toast({
           title: "Export Successful",
-          description: `${response.sessionCount} sessions exported to Google Sheets`,
+          description: `${responseData.sessionCount} sessions exported to Google Sheets`,
         });
       }
     } catch (error) {
@@ -118,9 +119,10 @@ export default function GoogleSheetsExport({ sessions = [], selectedSessionIds =
         })
       });
 
-      if (response.success) {
-        setSpreadsheetId(response.spreadsheetId);
-        setLastSheetUrl(response.sheetUrl);
+      const responseData = await response.json();
+      if (responseData.success) {
+        setSpreadsheetId(responseData.spreadsheetId);
+        setLastSheetUrl(responseData.sheetUrl);
         toast({
           title: "Spreadsheet Created",
           description: "New Google Sheets datasheet created successfully",
@@ -173,7 +175,8 @@ export default function GoogleSheetsExport({ sessions = [], selectedSessionIds =
         })
       });
 
-      if (response.success) {
+      const responseData = await response.json();
+      if (responseData.success) {
         toast({
           title: "Sheet Shared",
           description: `Google Sheets shared with ${shareEmail}`,
@@ -275,7 +278,7 @@ export default function GoogleSheetsExport({ sessions = [], selectedSessionIds =
                   id="sheet-title"
                   value={sheetTitle}
                   onChange={(e) => setSheetTitle(e.target.value)}
-                  placeholder="My Ecological Field Data 2025"
+                  placeholder="My EcoMeasure Field Data 2025"
                 />
               </div>
               <Button

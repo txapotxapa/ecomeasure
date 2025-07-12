@@ -69,7 +69,7 @@ export default function ProcessingModal({
             <p className="text-sm text-gray-600">
               {analysisType === 'canopy' && 'Analyzing canopy cover and light transmission patterns...'}
               {analysisType === 'horizontal_vegetation' && 'Analyzing vegetation density at multiple heights...'}
-              {analysisType === 'daubenmire' && 'Analyzing ground cover using Canopeo method...'}
+              {analysisType === 'daubenmire' && 'Analyzing ground cover using advanced method...'}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               Please keep this window open during processing

@@ -31,7 +31,7 @@ const tools = [
   {
     id: 'daubenmire' as ToolType,
     name: 'Ground Cover',
-    description: 'Canopeo ground cover analysis',
+            description: 'Advanced ground cover analysis',
     icon: Grid3x3,
     iconColor: 'text-primary',
   },
@@ -47,14 +47,14 @@ export default function ToolSelector({ selectedTool, onToolSelect, className }: 
         return (
           <Card 
             key={tool.id}
-            className={`cursor-pointer transition-all duration-200 card-topo ${
+            className={`cursor-pointer card-3d ${
               isSelected 
                 ? 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-accent/20' 
                 : 'hover:bg-accent/10'
             }`}
             onClick={() => onToolSelect(tool.id)}
           >
-            <CardContent className="p-4">
+            <CardContent className="p-6 md:p-8">
               <div className="flex items-center space-x-3">
                 <IconComponent className={`h-5 w-5 ${tool.iconColor} ${isSelected ? 'drop-shadow-lg' : ''}`} />
                 <div className="flex-1 min-w-0">

@@ -190,7 +190,7 @@ export default function BatchProcessor({ toolType, onBatchComplete, className }:
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors"
+          className="upload-box hover:border-muted-foreground/50 p-8"
         >
           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground mb-2">

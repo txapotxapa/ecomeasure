@@ -52,7 +52,7 @@ After analyzing the entire application, I've identified several key areas for im
 - **Quick Actions**: One-tap shortcuts for common tasks
 - **Voice Notes**: Audio annotations for each measurement
 - **Batch Site Creation**: Import multiple sites from CSV
-- **Template System**: Save and reuse measurement protocols
+- **Template System (Deferred)**: Save and reuse measurement protocols through a protocol template library and progress tracking
 
 ### Data Visualization
 - **Interactive Charts**: D3.js powered visualizations
@@ -159,3 +159,41 @@ After analyzing the entire application, I've identified several key areas for im
 ## Conclusion
 
 These improvements will transform the Ecological Measurement Suite into a world-class research tool, balancing scientific rigor with field practicality. The phased approach ensures continuous value delivery while building towards a comprehensive solution.
+
+- [ ] Integrate Google Sheets export & sharing workflow (service account flow, spreadsheet creation, data append). *(Deferred – remove UI option for now)*
+
+## Data Saving & Long-Term Monitoring
+
+- [ ] **Robust Local Persistence**: 
+  - Migrate WatermelonDB schema to use incremental sync logs for conflict-free replication.
+  - Index frequently queried fields (timestamp, siteName, toolType) for faster filtering/search.
+
+- [ ] **Background Autosave**:
+  - Debounced write-behind cache that flushes measurements to IndexedDB every 5 s or on visibilitychange.
+  - Graceful retry queue when offline; exponential back-off on failure.
+
+- [ ] **Cloud Backup / Sync**:
+  - Implement periodic backup to cloud storage (Supabase bucket or S3) with encrypted archives.
+  - Optionally push full database export (SQLite/WMDB JSON) nightly when online & on Wi-Fi.
+
+- [ ] **Versioned Exports**:
+  - Append export session metadata (hash, exportedAt) to `SyncLog` table for audit trail.
+  - Allow users to restore an older snapshot from History ➜ Settings ➜ “Restore backup”.
+
+- [ ] **Review & Dashboards**:
+  - Add aggregate charts (time-series, trend lines) per site & metric in Analysis page.
+  - Implement comparison view: select two date ranges → overlay canopy/light graphs.
+
+- [ ] **Long-Term Monitoring Alerts**:
+  - Define threshold rules (e.g., >10 % canopy loss) and notify via push / email.
+  - Store rule evaluations in `AlertLog` table for later review.
+
+- [ ] **Metadata Completeness Checks**:
+  - Pre-save validation ensuring each session has location, method, toolType, and at least one photo.
+  - Warn user & queue incomplete sessions for later editing.
+
+- [ ] **Data Governance**:
+  - Respect FAIR principles (Findable, Accessible, Interoperable, Reusable).
+  - Provide DOI-ready metadata JSON for each dataset export.
+
+---
