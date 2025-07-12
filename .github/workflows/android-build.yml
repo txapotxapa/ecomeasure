@@ -27,7 +27,7 @@ jobs:
         run: npm run build
 
       - name: Add Android platform
-        run: npx cap add android --skip-update || true
+        run: npx cap add android --no-interactive
 
       - name: Sync web assets
         run: npx cap sync android
