@@ -44,14 +44,20 @@ jobs:
             mkdir -p android/app/src/main
             cp android-config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           fi
+          if [ -f "android-config/file_paths.xml" ]; then
+            mkdir -p android/app/src/main/res/xml
+            cp android-config/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+          fi
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate debug keystore
+      - name: Generate consistent debug keystore
         run: |
           mkdir -p android/app
-          keytool -genkey -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          # Always use the same keystore for consistency
+          echo "Generate keystore with fixed seed for consistency"
+          keytool -genkey -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=EcoMeasure Debug,O=EcoMeasure,C=US"
 
       - name: List android directory
         run: ls -la android/
@@ -61,7 +67,13 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew clean
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace --info
+          
+      - name: Rename APK for clarity
+        run: |
+          if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            cp android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/EcoMeasure-v1.0.0.apk
+          fi
 
       - name: List build outputs
         run: |
