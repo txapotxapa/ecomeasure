@@ -10,14 +10,8 @@ interface SplashScreenProps {
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000, saveSkipPreference = false }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [animationPhase, setAnimationPhase] = useState<'fade-in' | 'show' | 'fade-out'>('fade-in');
-  const [showSkipHint, setShowSkipHint] = useState(false);
 
   useEffect(() => {
-    // Show skip hint after 500ms
-    const skipHintTimer = setTimeout(() => {
-      setShowSkipHint(true);
-    }, 500);
-
     // Start fade-in animation
     const fadeInTimer = setTimeout(() => {
       setAnimationPhase('show');
@@ -35,39 +29,23 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
     }, duration);
 
     return () => {
-      clearTimeout(skipHintTimer);
       clearTimeout(fadeInTimer);
       clearTimeout(fadeOutTimer);
       clearTimeout(completeTimer);
     };
   }, [duration, onComplete]);
 
-  const handleSkip = () => {
-    // Save skip preference if requested
-    if (saveSkipPreference) {
-      localStorage.setItem('skip-splash', 'true');
-    }
-    
-    setAnimationPhase('fade-out');
-    setTimeout(() => {
-      setIsVisible(false);
-      onComplete();
-    }, 300);
-  };
-
   if (!isVisible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 transition-all duration-700 cursor-pointer select-none ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 transition-all duration-700 select-none ${
         animationPhase === 'fade-in' 
           ? 'opacity-0 scale-95' 
           : animationPhase === 'fade-out' 
             ? 'opacity-0 scale-105' 
             : 'opacity-100 scale-100'
       }`}
-      onClick={handleSkip}
-      onTouchStart={handleSkip}
     >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -108,20 +86,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
           <EcoMeasureLogo size={250} showText={true} />
         </div>
 
-        {/* Skip indicator */}
-        {showSkipHint && (
-          <div 
-            className={`mt-12 text-center transition-all duration-500 ${
-              animationPhase === 'show' ? 'opacity-70' : 'opacity-0'
-            }`}
-          >
-            <div className="flex items-center justify-center space-x-2 text-white/70">
-              <div className="w-2 h-2 bg-white/50 rounded-full animate-ping" />
-              <span className="text-sm tracking-wide uppercase">Tap to skip</span>
-              <div className="w-2 h-2 bg-white/50 rounded-full animate-ping" style={{ animationDelay: '0.5s' }} />
-            </div>
-          </div>
-        )}
+        {/* Skip indicator removed */}
 
         {/* Loading dots */}
         <div 

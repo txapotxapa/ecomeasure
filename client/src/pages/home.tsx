@@ -36,6 +36,7 @@ import ExportManager from "@/components/export-manager";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import EcoMeasureLogo from "@/components/eco-measure-logo";
+import { getCurrentLocation } from "@/lib/gps";
 
 import { analyzeCanopyImage, validateImage } from "@/lib/image-processing";
 import type { HorizontalVegetationAnalysis } from "@/lib/horizontal-vegetation";
@@ -270,16 +271,10 @@ export default function Home() {
         throw new Error('Invalid analysis results received');
       }
 
-      // Get GPS location if available
+      // Get GPS location if available using Capacitor helper
       let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
       try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
-        });
+        const position = await getCurrentLocation();
         gpsData = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
@@ -344,16 +339,10 @@ export default function Home() {
   };
 
   const handleHorizontalVegetationAnalysis = async (results: HorizontalVegetationAnalysis) => {
-    // Get GPS location if available
+    // Get GPS location if available using Capacitor helper
     let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
+      const position = await getCurrentLocation();
       gpsData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude
@@ -381,16 +370,10 @@ export default function Home() {
   };
 
   const handleDaubenmireAnalysis = async (results: DaubenmireResult, imageUrl?: string) => {
-    // Get GPS location if available
+    // Get GPS location if available using Capacitor helper
     let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
+      const position = await getCurrentLocation();
       gpsData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude

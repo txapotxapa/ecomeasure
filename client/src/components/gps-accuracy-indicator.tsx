@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { watchLocation, clearLocationWatch } from "@/lib/gps";
 
 interface GPSAccuracy {
   latitude: number | null;
@@ -26,57 +27,58 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
     altitudeAccuracy: null,
     status: 'acquiring'
   });
-  const [watchId, setWatchId] = useState<number | null>(null);
+  const [watchId, setWatchId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setGpsAccuracy(prev => ({ ...prev, status: 'error' }));
-      return;
-    }
+    let activeWatchId: string;
 
-    const id = navigator.geolocation.watchPosition(
-      (position) => {
-        const accuracy = position.coords.accuracy;
-        const altitude = position.coords.altitude;
-        const altitudeAccuracy = position.coords.altitudeAccuracy;
+    const startWatch = async () => {
+      try {
+        activeWatchId = await watchLocation(
+          (position) => {
+            const accuracy = position.coords.accuracy;
+            const altitude = position.coords.altitude ?? null;
+            const altitudeAccuracy = position.coords.altitudeAccuracy ?? null;
 
-        let status: GPSAccuracy['status'] = 'good';
-        if (accuracy <= 3) {
-          status = 'good';
-        } else if (accuracy <= 10) {
-          status = 'fair';
-        } else {
-          status = 'poor';
-        }
+            let status: GPSAccuracy['status'] = 'good';
+            if (accuracy <= 3) {
+              status = 'good';
+            } else if (accuracy <= 10) {
+              status = 'fair';
+            } else {
+              status = 'poor';
+            }
 
-        const newAccuracy = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy,
-          altitude,
-          altitudeAccuracy,
-          status
-        };
+            const newAccuracy = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy,
+              altitude,
+              altitudeAccuracy,
+              status
+            };
 
-        setGpsAccuracy(newAccuracy);
-        onAccuracyUpdate?.(newAccuracy);
-      },
-      (error) => {
-        console.error('GPS error:', error);
+            setGpsAccuracy(newAccuracy);
+            onAccuracyUpdate?.(newAccuracy);
+          },
+          (error) => {
+            console.error('GPS error:', error);
+            setGpsAccuracy(prev => ({ ...prev, status: 'error' }));
+          }
+        );
+
+        setWatchId(activeWatchId);
+      } catch (err) {
+        console.error('Failed to start GPS watch:', err);
         setGpsAccuracy(prev => ({ ...prev, status: 'error' }));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
       }
-    );
+    };
 
-    setWatchId(id);
+    startWatch();
 
     return () => {
-      if (id) {
-        navigator.geolocation.clearWatch(id);
+      if (activeWatchId) {
+        clearLocationWatch(activeWatchId);
       }
     };
   }, [onAccuracyUpdate]);
