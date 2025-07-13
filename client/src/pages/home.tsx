@@ -467,8 +467,8 @@ export default function Home() {
     <div className="pb-20">
       {/* Header */}
       <header className="bg-black text-white pt-6 pb-12 shadow relative z-10 flex flex-col items-center">
-        {/* Settings and Theme Toggle buttons top-right */}
-        <div className="absolute top-4 right-4 flex space-x-2">
+        {/* Theme Toggle button top-right */}
+        <div className="absolute top-4 right-4">
           {/* Theme Toggle Button */}
           <Button
             variant="ghost"
@@ -477,16 +477,6 @@ export default function Home() {
             className="text-white hover:bg-white/20 backdrop-blur-sm bg-white/10 border border-white/20"
           >
             {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
-          </Button>
-          
-          {/* Settings Button */}
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={() => setLocation('/settings')}
-            className="text-white hover:bg-white/20 backdrop-blur-sm bg-white/10 border border-white/20"
-          >
-            <Settings className="h-6 w-6" />
           </Button>
         </div>
 
@@ -521,7 +511,7 @@ export default function Home() {
               <div className="grid gap-3">
                 <Button
                   className="h-16 justify-start space-x-4 bg-primary hover:bg-primary/90"
-                  onClick={() => setLocation('/tools?tool=canopy')}
+                  onClick={() => setSelectedTool('canopy')}
                 >
                   <TreePine className="h-6 w-6" />
                   <div className="text-left">
@@ -533,7 +523,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     className="h-16 flex-col space-y-1 card-topo"
-                    onClick={() => setLocation('/tools?tool=horizontal_vegetation')}
+                    onClick={() => setSelectedTool('horizontal_vegetation')}
                   >
                     <Layers className="h-5 w-5 text-primary" />
                     <div className="text-center">
@@ -544,7 +534,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     className="h-16 flex-col space-y-1 card-topo"
-                    onClick={() => setLocation('/tools?tool=daubenmire')}
+                    onClick={() => setSelectedTool('daubenmire')}
                   >
                     <Grid3X3 className="h-5 w-5 text-primary" />
                     <div className="text-center">
@@ -558,16 +548,13 @@ export default function Home() {
           </Card>
         ) : (
           <Card>
-            <CardHeader 
-              className="cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => setLocation('/tools')}
-            >
+            <CardHeader>
               <CardTitle className="flex items-center">
                 <Camera className="h-5 w-5 mr-2" />
                 Measurement Tools
               </CardTitle>
               <CardDescription>
-                Click to access measurement tools (site creation optional)
+                Choose a tool to start measuring (site creation optional)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -575,7 +562,7 @@ export default function Home() {
                 <div
                   key={tool.id}
                   className="border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors hover:opacity-100"
-                  onClick={() => setLocation(tool.route)}
+                  onClick={() => setSelectedTool(tool.id as ToolType)}
                 >
                   <div className="flex items-start space-x-4">
                     <div className={`p-3 rounded-lg ${tool.lightColor} dark:${tool.darkColor}`}>
@@ -598,6 +585,147 @@ export default function Home() {
             </CardContent>
           </Card>
         )}
+
+        {/* Tool Interface Section - Only show when a tool is selected */}
+        {selectedTool && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {selectedTool === 'canopy' && <TreePine className="h-5 w-5 mr-2" />}
+                  {selectedTool === 'horizontal_vegetation' && <Eye className="h-5 w-5 mr-2" />}
+                  {selectedTool === 'daubenmire' && <Grid3X3 className="h-5 w-5 mr-2" />}
+                  {selectedTool === 'canopy' && 'Canopy Analysis'}
+                  {selectedTool === 'horizontal_vegetation' && 'Horizontal Vegetation'}
+                  {selectedTool === 'daubenmire' && 'Ground Cover Analysis'}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  setSelectedTool('canopy');
+                  setSelectedImage(null);
+                  setCurrentAnalysisResults(null);
+                  setCanopyHeight("");
+                }}>
+                  ← Back to Tools
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Photo Upload */}
+              <ImageUpload 
+                onImageUploaded={setSelectedImage} 
+                currentImage={selectedImage?.url}
+              />
+
+              {/* Optional Height Entry */}
+              {selectedImage && (
+                <div className="space-y-2">
+                  <Label htmlFor="canopy-height">Canopy Height (optional)</Label>
+                  <Input
+                    id="canopy-height"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={canopyHeight}
+                    onChange={(e) => setCanopyHeight(e.target.value)}
+                    placeholder="e.g., 15.5 meters"
+                  />
+                </div>
+              )}
+
+              {/* Analyze Button */}
+              {selectedImage && (
+                <Button 
+                  onClick={() => handleCanopyAnalysis('GLAMA')}
+                  disabled={isProcessing}
+                  className="w-full"
+                  size="lg"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  {isProcessing ? "Analyzing..." : "Analyze"}
+                </Button>
+              )}
+
+              {/* Analysis Results */}
+              {currentAnalysisResults && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-semibold">Analysis Results</Label>
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(currentAnalysisResults.timestamp).toLocaleTimeString()}
+                    </Badge>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Canopy Cover:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.canopyCover?.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Light Transmission:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.lightTransmission?.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Pixels Analyzed:</span>
+                          <span className="text-sm font-mono">
+                            {currentAnalysisResults.pixelsAnalyzed?.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Processing Time:</span>
+                          <span className="text-sm font-mono">
+                            {(currentAnalysisResults.processingTime / 1000)?.toFixed(2)}s
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setCurrentAnalysisResults(null);
+                      setSelectedImage(null);
+                      setCanopyHeight("");
+                    }}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    Analyze Another Image
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {selectedTool === 'horizontal_vegetation' && (
+          <HorizontalVegetationTool 
+            onAnalysisComplete={handleHorizontalVegetationAnalysis}
+          />
+        )}
+        
+        {selectedTool === 'daubenmire' && (
+          <DaubenmireTool 
+            onAnalysisComplete={handleDaubenmireAnalysis}
+          />
+        )}
+
+        {/* Processing Modal */}
+        <ProcessingModal
+          isOpen={isProcessing}
+          onClose={() => setIsProcessing(false)}
+          progress={progress}
+          stage={currentStage}
+          canCancel={true}
+          onCancel={() => setIsProcessing(false)}
+          analysisType={selectedTool}
+        />
 
         {/* Recent Activity */}
         <Card>
