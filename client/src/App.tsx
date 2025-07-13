@@ -39,9 +39,9 @@ function App() {
     return splashPreference !== 'true';
   });
   const [showPermissions, setShowPermissions] = useState(false);
-  const [permissionsGranted, setPermissionsGranted] = useState(() => {
-    // Check if permissions were previously granted
-    const permissionStatus = localStorage.getItem('permissions-granted');
+  const [permissionsCompleted, setPermissionsCompleted] = useState(() => {
+    // Check if user has made a decision about permissions
+    const permissionStatus = localStorage.getItem('permissions-completed');
     return permissionStatus === 'true';
   });
 
@@ -76,16 +76,16 @@ function App() {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
-    // After splash, show permissions screen (if not already granted)
-    if (!permissionsGranted) {
+    // After splash, show permissions screen (if not already completed)
+    if (!permissionsCompleted) {
       setShowPermissions(true);
     }
   };
 
-  const handlePermissionsGranted = () => {
-    setPermissionsGranted(true);
+  const handlePermissionsDecision = () => {
+    setPermissionsCompleted(true);
     setShowPermissions(false);
-    localStorage.setItem('permissions-granted', 'true');
+    localStorage.setItem('permissions-completed', 'true');
   };
 
   return (
@@ -104,11 +104,11 @@ function App() {
         
         {/* 2. After splash, show permissions (if needed) */}
         {!showSplash && showPermissions && (
-          <PermissionManager onAllPermissionsGranted={handlePermissionsGranted} />
+          <PermissionManager onPermissionsDecision={handlePermissionsDecision} />
         )}
         
         {/* 3. Finally show the main app */}
-        {!showSplash && !showPermissions && permissionsGranted && (
+        {!showSplash && !showPermissions && permissionsCompleted && (
           <div className="min-h-screen bg-background">
             <Router />
           </div>

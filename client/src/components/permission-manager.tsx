@@ -7,7 +7,8 @@ import {
   FolderOpen,
   CheckCircle,
   AlertCircle,
-  Shield
+  Shield,
+  Mic
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Camera as CapacitorCamera } from '@capacitor/camera';
@@ -19,17 +20,19 @@ interface PermissionStatus {
   location: 'granted' | 'denied' | 'prompt' | 'unknown';
   camera: 'granted' | 'denied' | 'prompt' | 'unknown';
   storage: 'granted' | 'denied' | 'prompt' | 'unknown';
+  microphone: 'granted' | 'denied' | 'prompt' | 'unknown';
 }
 
 interface PermissionManagerProps {
-  onAllPermissionsGranted: () => void;
+  onPermissionsDecision: () => void;
 }
 
-const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsGranted }) => {
+const PermissionManager: React.FC<PermissionManagerProps> = ({ onPermissionsDecision }) => {
   const [permissions, setPermissions] = useState<PermissionStatus>({
     location: 'unknown',
     camera: 'unknown', 
-    storage: 'unknown'
+    storage: 'unknown',
+    microphone: 'unknown'
   });
   const [isRequestingPermissions, setIsRequestingPermissions] = useState(false);
   const { toast } = useToast();
@@ -39,7 +42,8 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
     const newPermissions: PermissionStatus = {
       location: 'unknown',
       camera: 'unknown',
-      storage: 'unknown'
+      storage: 'unknown',
+      microphone: 'unknown'
     };
 
     try {
@@ -51,11 +55,15 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
         const cameraPerm = await CapacitorCamera.checkPermissions();
         newPermissions.camera = cameraPerm.camera;
         newPermissions.storage = cameraPerm.photos;
+        
+        // For microphone, we can check if audio recording is available
+        newPermissions.microphone = 'prompt'; // Will be checked when needed
       } else {
         // Web fallback - check if geolocation is available
         newPermissions.location = navigator.geolocation ? 'prompt' : 'denied';
         newPermissions.camera = 'prompt'; // Web camera requires user gesture
         newPermissions.storage = 'granted'; // Web storage is always available
+        newPermissions.microphone = navigator.mediaDevices ? 'prompt' : 'denied';
       }
     } catch (error) {
       console.error('Error checking permissions:', error);
@@ -63,11 +71,7 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
 
     setPermissions(newPermissions);
     
-    // Check if all permissions are granted
-    const allGranted = Object.values(newPermissions).every(status => status === 'granted');
-    if (allGranted) {
-      onAllPermissionsGranted();
-    }
+    // Don't auto-proceed - let user decide
   };
 
   useEffect(() => {
@@ -112,18 +116,16 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
             title: "Permissions granted",
             description: "All permissions have been granted. You can now use all app features.",
           });
-          onAllPermissionsGranted();
         } else {
           console.log('❌ Some permissions denied:', { locationResult, cameraResult });
           toast({
-            title: "Permissions Required",
-            description: "Location and Camera permissions are required. Please grant them when prompted by Android.",
-            variant: "destructive",
+            title: "Some permissions denied",
+            description: "You can enable them later in Settings if needed.",
           });
-          
-          // Don't proceed without permissions
-          return;
         }
+        
+        // Always proceed after permission request
+        onPermissionsDecision();
       } else {
         // Web environment - try to trigger permission prompts
         try {
@@ -148,7 +150,7 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
           storage: 'granted' 
         }));
         
-        onAllPermissionsGranted();
+        onPermissionsDecision();
       }
     } catch (error: any) {
       console.error('Permission request error:', error);
@@ -184,11 +186,9 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
     }
   };
 
-  const allPermissionsGranted = Object.values(permissions).every(status => status === 'granted');
-
-  if (allPermissionsGranted) {
-    return null; // Don't show if all permissions are granted
-  }
+  const skipPermissions = () => {
+    onPermissionsDecision();
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-4">
@@ -197,9 +197,9 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
           <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
             <Shield className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>App Permissions Required</CardTitle>
+          <CardTitle>Enable App Features</CardTitle>
           <p className="text-sm text-muted-foreground">
-            EcoMeasure needs these permissions to provide field research capabilities
+            Grant permissions to unlock full functionality, or continue with limited features
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -238,8 +238,8 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
             <div className="flex items-center space-x-3">
               <FolderOpen className="h-5 w-5 text-primary" />
               <div>
-                <p className="font-medium">Media Access</p>
-                <p className="text-xs text-muted-foreground">Save and access photos</p>
+                <p className="font-medium">File Storage</p>
+                <p className="text-xs text-muted-foreground">Save analysis data and exports</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -248,17 +248,43 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
             </div>
           </div>
 
-          <Button 
-            onClick={requestAllPermissions}
-            disabled={isRequestingPermissions}
-            className="w-full"
-            size="lg"
-          >
-            {isRequestingPermissions ? 'Opening System Permissions...' : 'Allow App Permissions'}
-          </Button>
+          {/* Microphone Permission */}
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Mic className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium">Microphone Access</p>
+                <p className="text-xs text-muted-foreground">Voice notes and audio recordings</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              {getPermissionIcon(permissions.microphone)}
+              <span className="text-sm">{getPermissionText(permissions.microphone)}</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button 
+              onClick={requestAllPermissions}
+              disabled={isRequestingPermissions}
+              className="w-full"
+              size="lg"
+            >
+              {isRequestingPermissions ? 'Opening System Permissions...' : 'Grant Permissions'}
+            </Button>
+            
+            <Button 
+              onClick={skipPermissions}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              Skip & Continue
+            </Button>
+          </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            These permissions are required for core app functionality. You can change them later in device settings.
+            You can enable individual permissions anytime in the Settings tab
           </p>
         </CardContent>
       </Card>

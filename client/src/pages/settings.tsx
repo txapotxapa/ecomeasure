@@ -22,7 +22,13 @@ import {
   Bell,
   FileSpreadsheet,
   Sun,
-  Moon
+  Moon,
+  Shield,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Mic,
+  FolderOpen
 } from "lucide-react";
 
 import BottomNavigation from "@/components/bottom-navigation";
@@ -30,6 +36,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { apiRequest } from "@/lib/queryClient";
 import { AnalysisSettings } from "@shared/schema";
+import { Camera as CapacitorCamera } from '@capacitor/camera';
+import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 
 export default function Settings() {
   const [settings, setSettings] = useState<AnalysisSettings>({
@@ -50,6 +59,14 @@ export default function Settings() {
   // Additional app settings
   const [autoSave, setAutoSave] = useState(true);
   const [notifications, setNotifications] = useState(false);
+  
+  // Permission states
+  const [permissions, setPermissions] = useState({
+    location: 'unknown',
+    camera: 'unknown',
+    storage: 'unknown',
+    microphone: 'unknown'
+  });
 
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
@@ -70,6 +87,108 @@ export default function Settings() {
       setSettings(currentSettings);
     }
   }, [currentSettings]);
+
+  // Check permissions on load
+  useEffect(() => {
+    checkPermissions();
+  }, []);
+
+  const checkPermissions = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const locationPerm = await Geolocation.checkPermissions();
+        const cameraPerm = await CapacitorCamera.checkPermissions();
+        
+        setPermissions({
+          location: locationPerm.location,
+          camera: cameraPerm.camera,
+          storage: cameraPerm.photos,
+          microphone: 'prompt' // Will be checked when needed
+        });
+      } else {
+        setPermissions({
+          location: navigator.geolocation ? 'prompt' : 'denied',
+          camera: navigator.mediaDevices ? 'prompt' : 'denied',
+          storage: 'granted',
+          microphone: navigator.mediaDevices ? 'prompt' : 'denied'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking permissions:', error);
+    }
+  };
+
+  const requestPermission = async (type: 'location' | 'camera' | 'microphone') => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        if (type === 'location') {
+          const result = await Geolocation.requestPermissions();
+          setPermissions(prev => ({ ...prev, location: result.location }));
+          
+          if (result.location === 'granted') {
+            toast({
+              title: "Location permission granted",
+              description: "GPS features are now available",
+            });
+          }
+        } else if (type === 'camera') {
+          const result = await CapacitorCamera.requestPermissions({ permissions: ['camera', 'photos'] });
+          setPermissions(prev => ({ 
+            ...prev, 
+            camera: result.camera,
+            storage: result.photos 
+          }));
+          
+          if (result.camera === 'granted') {
+            toast({
+              title: "Camera permission granted",
+              description: "Photo capture is now available",
+            });
+          }
+        } else if (type === 'microphone') {
+          // For microphone, we need to request it during actual use
+          toast({
+            title: "Microphone permission",
+            description: "Will be requested when recording audio",
+          });
+          setPermissions(prev => ({ ...prev, microphone: 'prompt' }));
+        }
+      } else {
+        toast({
+          title: "Permissions not required",
+          description: "Web version doesn't require explicit permissions",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Permission request failed",
+        description: "Please grant permission manually in device settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getPermissionIcon = (status: string) => {
+    switch (status) {
+      case 'granted':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'denied':
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
+  const getPermissionText = (status: string) => {
+    switch (status) {
+      case 'granted':
+        return 'Granted';
+      case 'denied':
+        return 'Denied';
+      default:
+        return 'Not requested';
+    }
+  };
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -249,6 +368,122 @@ export default function Settings() {
                 checked={settings.autoGpsLogging}
                 onCheckedChange={(checked) => setSettings({...settings, autoGpsLogging: checked})}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Permissions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Shield className="h-5 w-5" />
+              <span>App Permissions</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Location Permission */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <MapPin className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium">Location Access</p>
+                  <p className="text-xs text-muted-foreground">GPS coordinates for site mapping</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {getPermissionIcon(permissions.location)}
+                <span className="text-sm mr-2">{getPermissionText(permissions.location)}</span>
+                {permissions.location !== 'granted' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => requestPermission('location')}
+                  >
+                    Enable
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Camera Permission */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Camera className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium">Camera Access</p>
+                  <p className="text-xs text-muted-foreground">Photo capture for analysis</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {getPermissionIcon(permissions.camera)}
+                <span className="text-sm mr-2">{getPermissionText(permissions.camera)}</span>
+                {permissions.camera !== 'granted' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => requestPermission('camera')}
+                  >
+                    Enable
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Storage Permission */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <FolderOpen className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium">File Storage</p>
+                  <p className="text-xs text-muted-foreground">Save analysis data and exports</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {getPermissionIcon(permissions.storage)}
+                <span className="text-sm mr-2">{getPermissionText(permissions.storage)}</span>
+                {permissions.storage !== 'granted' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => toast({ 
+                      title: "Storage access", 
+                      description: "File storage uses app-specific directories and doesn't require additional permissions on Android 15"
+                    })}
+                  >
+                    Info
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Microphone Permission */}
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Mic className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium">Microphone Access</p>
+                  <p className="text-xs text-muted-foreground">Voice notes and audio recordings</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {getPermissionIcon(permissions.microphone)}
+                <span className="text-sm mr-2">{getPermissionText(permissions.microphone)}</span>
+                {permissions.microphone !== 'granted' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => requestPermission('microphone')}
+                  >
+                    Enable
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> You can use the app without permissions, but some features may be limited. GPS and camera access enable full functionality.
+              </p>
             </div>
           </CardContent>
         </Card>
