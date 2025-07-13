@@ -1,38 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- CRITICAL PERMISSIONS - MUST BE INCLUDED -->
+    <!-- Base permission for internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
-    
-    <!-- Location permissions - ANDROID 15 REQUIRED -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:replace="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:replace="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    
-    <!-- Camera permissions - ANDROID 15 REQUIRED -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
-    
-    <!-- Storage permissions - Android 15 compliant -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    
-    <!-- Audio permission for voice notes -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    
-    <!-- Notification permission -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
-    <!-- Hardware features -->
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!--
+      Correctly-scoped permissions for modern Android (API 33+ for Pixel 8)
+      Capacitor's plugins will automatically handle runtime requests.
+      This declaration ensures the OS knows the app *can* ask for them.
+    -->
+
+    <!-- Geolocation -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- `uses-feature` declarations clarify that GPS is not strictly required to run the app -->
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <!-- Camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- Media/Storage Access (for Android 13+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- Optional: Add if you plan to support video picking -->
+    <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->
+    
+    <!-- Optional: Add for voice note functionality -->
+    <!-- <uses-permission android:name="android.permission.RECORD_AUDIO" /> -->
+    <!-- <uses-feature android:name="android.hardware.microphone" android:required="false" /> -->
 
     <application
         android:allowBackup="true"
