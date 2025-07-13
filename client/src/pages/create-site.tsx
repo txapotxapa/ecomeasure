@@ -50,20 +50,28 @@ export default function CreateSite() {
 
   const getCurrentLocationForSite = async () => {
     setIsGettingLocation(true);
+    console.log('🛰️ GPS: Starting location request...');
+    
     try {
       // Check if geolocation is supported
       if (!navigator.geolocation) {
+        console.log('❌ GPS: Geolocation not supported');
         throw new Error('GPS not supported on this device');
       }
+      
+      console.log('✅ GPS: Geolocation API available, requesting position...');
 
-      // Force permission prompt by making the actual geolocation request
-      // The browser will show permission dialog automatically
-
-      // Request location
+      // Request location - this SHOULD trigger permission prompt on mobile
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
+          (pos) => {
+            console.log('✅ GPS: Position received:', pos.coords.latitude, pos.coords.longitude);
+            resolve(pos);
+          },
+          (err) => {
+            console.log('❌ GPS: Error occurred:', err.code, err.message);
+            reject(err);
+          },
           {
             enableHighAccuracy: true,
             timeout: 15000,
