@@ -26,10 +26,7 @@ jobs:
       - name: Build web
         run: npm run build
 
-      - name: Add Android platform
-        run: npx cap add android
-
-      - name: Sync web assets
+      - name: Sync web assets to existing Android platform
         run: npx cap sync android
 
       - name: Setup JDK
@@ -38,17 +35,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Copy and update Android config files
+      - name: Update Android version info
         run: |
-          if [ -f "android-config/AndroidManifest.xml" ]; then
-            mkdir -p android/app/src/main
-            # Update version in manifest
-            sed "s/android:versionCode=\"1\"/android:versionCode=\"$VERSION_CODE\"/" android-config/AndroidManifest.xml > android/app/src/main/AndroidManifest.xml
-            sed -i "s/android:versionName=\"1.0.0\"/android:versionName=\"$VERSION\"/" android/app/src/main/AndroidManifest.xml
-          fi
-          if [ -f "android-config/file_paths.xml" ]; then
-            mkdir -p android/app/src/main/res/xml
-            cp android-config/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+          # Android platform already exists, just update version codes
+          if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VERSION_CODE\"/" android/app/src/main/AndroidManifest.xml
+            sed -i "s/android:versionName=\"[^\"]*\"/android:versionName=\"$VERSION\"/" android/app/src/main/AndroidManifest.xml
           fi
 
       - name: Setup Android SDK
@@ -82,16 +74,20 @@ jobs:
           echo "VERSION_CODE=$NEW_VERSION_CODE" >> $GITHUB_ENV
           echo "BUILD_NUMBER=$NEW_BUILD_NUMBER" >> $GITHUB_ENV
 
-      - name: Generate persistent debug keystore
+      - name: Generate debug keystore if needed
         run: |
-          mkdir -p android/app
-          # Use consistent keystore parameters for all builds
-          keytool -genkey -v -keystore android/app/debug.keystore \
-            -storepass ecomeasure123 \
-            -alias ecomeasuredebug \
-            -keypass ecomeasure123 \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=EcoMeasure Debug,O=EcoMeasure,L=Field,ST=Research,C=US"
+          if [ ! -f "android/app/debug.keystore" ]; then
+            mkdir -p android/app
+            # Use consistent keystore parameters for all builds
+            keytool -genkey -v -keystore android/app/debug.keystore \
+              -storepass ecomeasure123 \
+              -alias ecomeasuredebug \
+              -keypass ecomeasure123 \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=EcoMeasure Debug,O=EcoMeasure,L=Field,ST=Research,C=US"
+          else
+            echo "Debug keystore already exists"
+          fi
 
       - name: List android directory
         run: ls -la android/
