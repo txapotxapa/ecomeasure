@@ -1,0 +1,64 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="250" fill="url(#bgGradient)" stroke="none"/>
+  
+  <!-- Main tree/canopy shape -->
+  <path
+    d="M256 90 L320 180 L290 180 L330 230 L300 230 L350 280 L162 280 L212 230 L182 230 L222 180 L192 180 Z"
+    fill="url(#treeGradient)"
+  />
+  
+  <!-- Horizontal vegetation bars -->
+  <rect x="140" y="310" width="232" height="12" rx="6" fill="url(#barGradient)" opacity="0.9" />
+  <rect x="160" y="330" width="192" height="12" rx="6" fill="url(#barGradient)" opacity="0.7" />
+  <rect x="180" y="350" width="152" height="12" rx="6" fill="url(#barGradient)" opacity="0.5" />
+  
+  <!-- Ground measurement dots -->
+  <g opacity="0.8">
+    <circle cx="180" cy="380" r="8" fill="url(#dotGradient)"/>
+    <circle cx="220" cy="380" r="8" fill="url(#dotGradient)"/>
+    <circle cx="256" cy="380" r="8" fill="url(#dotGradient)"/>
+    <circle cx="292" cy="380" r="8" fill="url(#dotGradient)"/>
+    <circle cx="332" cy="380" r="8" fill="url(#dotGradient)"/>
+    
+    <circle cx="200" cy="410" r="6" fill="url(#dotGradient)" opacity="0.7"/>
+    <circle cx="240" cy="410" r="6" fill="url(#dotGradient)" opacity="0.7"/>
+    <circle cx="256" cy="410" r="6" fill="url(#dotGradient)" opacity="0.7"/>
+    <circle cx="272" cy="410" r="6" fill="url(#dotGradient)" opacity="0.7"/>
+    <circle cx="312" cy="410" r="6" fill="url(#dotGradient)" opacity="0.7"/>
+  </g>
+  
+  <!-- Center measurement point -->
+  <circle cx="256" cy="256" r="12" fill="url(#centerGradient)" stroke="#ffffff" stroke-width="3"/>
+  
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </linearGradient>
+    
+    <linearGradient id="treeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    
+    <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    
+    <radialGradient id="dotGradient">
+      <stop offset="0%" stop-color="#6EE7B7" />
+      <stop offset="100%" stop-color="#10B981" />
+    </radialGradient>
+    
+    <radialGradient id="centerGradient">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#6EE7B7" />
+      <stop offset="100%" stop-color="#10B981" />
+    </radialGradient>
+  </defs>
+</svg>
