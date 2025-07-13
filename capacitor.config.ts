@@ -13,31 +13,18 @@ const config: CapacitorConfig = {
     webContentsDebuggingEnabled: true
   },
   plugins: {
+    // Correct, minimal permissions for modern Android.
+    // Capacitor will automatically add these to the AndroidManifest.
     Camera: {
-      permissions: ['camera', 'photos'],
-      androidPermissions: [
-        'android.permission.CAMERA',
-        'android.permission.READ_MEDIA_IMAGES',
-        'android.permission.READ_MEDIA_VIDEO',
-        'android.permission.READ_MEDIA_VISUAL_USER_SELECTED',
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE'
-      ]
+      // No need to specify androidPermissions here, Capacitor infers them
+      // from the main permissions list for standard plugins.
     },
     Geolocation: {
-      permissions: ['location'],
-      androidPermissions: [
-        'android.permission.ACCESS_COARSE_LOCATION',
-        'android.permission.ACCESS_FINE_LOCATION',
-        'android.permission.ACCESS_BACKGROUND_LOCATION'
-      ]
+      // No androidPermissions needed here either.
     },
     Filesystem: {
-      permissions: ['storage'],
-      androidPermissions: [
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE'
-      ]
+      // Filesystem plugin does not require explicit permissions for its primary functions
+      // on modern Android (scoped storage).
     },
     App: {
       handleBackButton: false // Let the JS handle back button behavior
