@@ -21,6 +21,9 @@ const config: CapacitorConfig = {
     },
     Filesystem: {
       permissions: ['storage']
+    },
+    App: {
+      handleBackButton: false // Let the JS handle back button behavior
     }
   }
 };

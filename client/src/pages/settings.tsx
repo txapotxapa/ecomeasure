@@ -18,11 +18,16 @@ import {
   BarChart3,
   FileText,
   Smartphone,
-  Target
+  Target,
+  Bell,
+  FileSpreadsheet,
+  Sun,
+  Moon
 } from "lucide-react";
 
 import BottomNavigation from "@/components/bottom-navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 import { apiRequest } from "@/lib/queryClient";
 import { AnalysisSettings } from "@shared/schema";
 
@@ -42,7 +47,12 @@ export default function Settings() {
     updatedAt: new Date(),
   });
 
+  // Additional app settings
+  const [autoSave, setAutoSave] = useState(true);
+  const [notifications, setNotifications] = useState(false);
+
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const queryClient = useQueryClient();
 
   // Fetch current settings
@@ -243,6 +253,66 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* App Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <SettingsIcon className="h-5 w-5" />
+              <span>App Preferences</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="autoSave">Auto-save Results</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Automatically save completed analyses
+                </p>
+              </div>
+              <Switch
+                id="autoSave"
+                checked={autoSave}
+                onCheckedChange={setAutoSave}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="notifications">Notifications</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Analysis completion alerts
+                </p>
+              </div>
+              <Switch
+                id="notifications"
+                checked={notifications}
+                onCheckedChange={setNotifications}
+              />
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label htmlFor="theme">Theme</Label>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {theme === 'dark' ? 'Dark' : 'Light'} Mode
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {theme === 'dark' ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-primary" />}
+                <Switch
+                  id="theme"
+                  checked={theme === 'dark'}
+                  onCheckedChange={toggleTheme}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Export Settings */}
         <Card>
           <CardHeader>
@@ -307,26 +377,37 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Accuracy Reference */}
+        {/* Help & Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Target className="h-5 w-5" />
-              <span>Measurement Accuracy Guide</span>
+              <FileText className="h-5 w-5" />
+              <span>Help & Information</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              View detailed accuracy specifications for all measurement tools
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.href = '/accuracy-reference'}
-              className="w-full"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              View Accuracy Reference
-            </Button>
+            <div className="space-y-3">
+              <Button variant="outline" className="w-full justify-start" onClick={() => window.location.href = '/docs?doc=technical'}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                View Technical Documentation
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => window.location.href = '/docs?doc=photography'}>
+                <Camera className="h-4 w-4 mr-2" />
+                Photography Guidelines
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => window.location.href = '/docs?doc=accuracy'}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Measurement Accuracy Info
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/accuracy-reference'}
+                className="w-full justify-start"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                View Accuracy Reference
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

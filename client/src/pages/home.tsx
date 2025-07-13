@@ -15,24 +15,10 @@ import {
   TrendingUp,
   Sun,
   Moon,
-  Bell,
-  FileSpreadsheet,
   Eye,
   Grid3X3,
-  Home as HomeIcon,
   Clock,
-  Calendar,
-  Award,
-  Target,
-  Download,
-  Zap,
-  Info,
-  Mountain,
-  Navigation,
-  Layers,
-  CheckCircle,
-  Users,
-  Compass
+  Layers
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
@@ -59,9 +45,6 @@ interface SiteInfo {
 
 export default function Home() {
   const [, setLocation] = useLocation();
-  const [gpsEnabled, setGpsEnabled] = useState(true);
-  const [autoSave, setAutoSave] = useState(true);
-  const [notifications, setNotifications] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
 
@@ -177,15 +160,28 @@ export default function Home() {
     <div className="pb-20">
       {/* Header */}
       <header className="bg-black text-white pt-6 pb-12 shadow relative z-10 flex flex-col items-center">
-        {/* Settings button top-right */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setLocation('/settings')}
-          className="absolute top-4 right-4 text-white hover:bg-white/20"
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
+        {/* Settings and Theme Toggle buttons top-right */}
+        <div className="absolute top-4 right-4 flex space-x-2">
+          {/* Theme Toggle Button */}
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={toggleTheme}
+            className="text-white hover:bg-white/20 backdrop-blur-sm bg-white/10 border border-white/20"
+          >
+            {theme === 'dark' ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+          </Button>
+          
+          {/* Settings Button */}
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={() => setLocation('/settings')}
+            className="text-white hover:bg-white/20 backdrop-blur-sm bg-white/10 border border-white/20"
+          >
+            <Settings className="h-6 w-6" />
+          </Button>
+        </div>
 
         {/* Centered brand logo */}
         <EcoMeasureLogo size={160} />
@@ -360,92 +356,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Quick Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Settings className="h-5 w-5 mr-2" />
-              Quick Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">GPS Location</p>
-                  <p className="text-sm text-muted-foreground">Auto-capture coordinates</p>
-                </div>
-              </div>
-              <Switch checked={gpsEnabled} onCheckedChange={setGpsEnabled} />
-            </div>
 
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <FileSpreadsheet className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Auto-save Results</p>
-                  <p className="text-sm text-muted-foreground">Automatically save completed analyses</p>
-                </div>
-              </div>
-              <Switch checked={autoSave} onCheckedChange={setAutoSave} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Bell className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Notifications</p>
-                  <p className="text-sm text-muted-foreground">Analysis completion alerts</p>
-                </div>
-              </div>
-              <Switch checked={notifications} onCheckedChange={setNotifications} />
-            </div>
-
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {theme === 'dark' ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
-                <div>
-                  <p className="font-medium">Theme</p>
-                  <p className="text-sm text-muted-foreground">{theme === 'dark' ? 'Dark' : 'Light'} Mode</p>
-                </div>
-              </div>
-              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Help & Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Info className="h-5 w-5 mr-2" />
-              Help & Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=technical')}>
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                View Technical Documentation
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=photography')}>
-                <Camera className="h-4 w-4 mr-2" />
-                Photography Guidelines
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/docs?doc=accuracy')}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Measurement Accuracy Info
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <BottomNavigation />

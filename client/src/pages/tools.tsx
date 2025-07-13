@@ -50,6 +50,7 @@ interface SiteInfo {
   longitude: number;
   altitude?: number;
   photoUrl?: string;
+  notes?: string;
   createdAt: Date;
   sessionCounts: {
     canopy: number;
@@ -326,9 +327,19 @@ export default function Tools() {
       console.log('📥 API response:', result);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       console.log('✅ Session created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/analysis-sessions"] });
+      
+      // Also store in localStorage for offline support and history synchronization
+      try {
+        const existingSessions = await LocalStorageService.getPreference<any[]>('sessions', []);
+        const updatedSessions = [data, ...existingSessions];
+        await LocalStorageService.setPreference('sessions', updatedSessions);
+        console.log('📱 Session also saved to localStorage for offline access');
+      } catch (error) {
+        console.warn('Failed to save to localStorage:', error);
+      }
       
       // Update protocol progress
       if (selectedProtocol && protocolProgress) {
@@ -696,36 +707,26 @@ export default function Tools() {
               <div className="text-center space-y-4">
                 <h3 className="text-lg font-semibold">Ready to Measure</h3>
                 <p className="text-sm text-muted-foreground">
-                  Start measuring immediately or create a named site first
+                  Start measuring immediately, or use site selector below to create a named site
                 </p>
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    onClick={() => {
-                      // Create untitled site and proceed
-                      const untitledSite: SiteInfo = {
-                        name: "Untitled Location",
-                        latitude: 0,
-                        longitude: 0,
-                        createdAt: new Date(),
-                        sessionCounts: { canopy: 0, horizontal_vegetation: 0, daubenmire: 0 }
-                      };
-                      setCurrentSite(untitledSite);
-                    }}
-                    className="w-full"
-                    variant="default"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Start Without Site
-                  </Button>
-                  <Button 
-                    onClick={() => setShowSiteCreator(true)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Create Named Site
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => {
+                    // Create untitled site and proceed
+                    const untitledSite: SiteInfo = {
+                      name: "Untitled Location",
+                      latitude: 0,
+                      longitude: 0,
+                      createdAt: new Date(),
+                      sessionCounts: { canopy: 0, horizontal_vegetation: 0, daubenmire: 0 }
+                    };
+                    setCurrentSite(untitledSite);
+                  }}
+                  className="w-full"
+                  variant="default"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Start Without Site
+                </Button>
                 
                 {showSiteCreator && (
                   <div className="mt-4">
@@ -995,7 +996,6 @@ export default function Tools() {
               {!currentAnalysisResults && (
                 <ImageUpload 
                   onImageUploaded={setSelectedImage} 
-                  onAnalyze={() => handleCanopyAnalysis('GLAMA')}
                   onBatchUploaded={(images) => {
                     if (images.length > 1) {
                       // Process multiple images for batch analysis

@@ -194,35 +194,36 @@ export default function History() {
   }, [handleObserver]);
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="analysis-gradient text-white p-4">
         <div className="flex items-center space-x-3">
           <HistoryIcon className="h-6 w-6" />
-          <div>
-            <h1 className="text-lg font-semibold">Session History</h1>
-            <p className="text-xs opacity-80">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-semibold truncate">Session History</h1>
+            <p className="text-xs opacity-80 truncate">
               {filteredSessions.length} of {sessions.length} sessions
             </p>
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-6 max-w-full overflow-x-hidden">
         {/* Search and Filter Controls */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <span className="flex items-center space-x-2">
                 <Filter className="h-5 w-5" />
                 <span>Filter & Search</span>
               </span>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
                 <div className="flex gap-1">
                   <Button
                     variant={viewMode === 'cards' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('cards')}
+                    className="flex-1 sm:flex-none"
                   >
                     Cards
                   </Button>
@@ -230,6 +231,7 @@ export default function History() {
                     variant={viewMode === 'spreadsheet' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setViewMode('spreadsheet')}
+                    className="flex-1 sm:flex-none"
                   >
                     <FileSpreadsheet className="h-4 w-4 mr-1" />
                     Spreadsheet
@@ -240,6 +242,7 @@ export default function History() {
                   size="sm"
                   onClick={handleExportAll}
                   disabled={filteredSessions.length === 0}
+                  className="w-full sm:w-auto"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
@@ -261,9 +264,9 @@ export default function History() {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Analysis Method
                 </label>
                 <Select value={methodFilter} onValueChange={setMethodFilter}>
@@ -280,7 +283,7 @@ export default function History() {
               </div>
 
               <div>
-                <Label htmlFor="tool-type">Tool Type</Label>
+                <Label htmlFor="tool-type" className="text-sm font-medium text-gray-700 dark:text-gray-300">Tool Type</Label>
                 <Select value={toolTypeFilter} onValueChange={setToolTypeFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All tools" />
@@ -295,7 +298,7 @@ export default function History() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
                   Sort By
                 </label>
                 <Select value={sortBy} onValueChange={setSortBy}>

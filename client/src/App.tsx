@@ -5,6 +5,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { App as CapacitorApp } from '@capacitor/app';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Tools from "@/pages/tools";
@@ -41,6 +42,22 @@ function App() {
     document.documentElement.classList.add('theme-transition');
 
     revealOnScroll();
+
+    // Handle hardware back button on mobile
+    const handleBackButton = () => {
+      // Prevent app from closing on back button press
+      // The app should only close when using home button or app switcher
+      console.log('Hardware back button pressed - preventing app exit');
+      // Do nothing - this prevents the default behavior of closing the app
+    };
+
+    // Register back button listener for Capacitor
+    CapacitorApp.addListener('backButton', handleBackButton);
+
+    // Cleanup
+    return () => {
+      CapacitorApp.removeAllListeners();
+    };
   }, []);
 
   return (

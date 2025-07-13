@@ -30,6 +30,7 @@ interface SiteInfo {
   longitude: number;
   altitude?: number;
   photoUrl?: string; // Site documentation photo
+  notes?: string; // Site notes for documentation
   createdAt: Date;
   sessionCounts: {
     canopy: number;
@@ -61,6 +62,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
   const [useManualCoords, setUseManualCoords] = useState(false);
   const [allowNoCoordinates, setAllowNoCoordinates] = useState(false);
   const [newSitePhoto, setNewSitePhoto] = useState<{ url: string; file: File } | null>(null);
+  const [newSiteNotes, setNewSiteNotes] = useState("");
   const { toast } = useToast();
 
   // Load sites from localStorage
@@ -172,6 +174,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
       longitude: finalLocation?.longitude || 0,
       altitude: finalLocation?.altitude,
       photoUrl: newSitePhoto?.url,
+      notes: newSiteNotes.trim() || undefined,
       createdAt: new Date(),
       sessionCounts: {
         canopy: 0,
@@ -191,6 +194,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     setUseManualCoords(false);
     setAllowNoCoordinates(false);
     setNewSitePhoto(null);
+    setNewSiteNotes("");
     setShowNewSiteDialog(false);
 
     toast({
@@ -227,11 +231,11 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                 New Site
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Research Site</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 pb-8">
                 <div>
                   <Label htmlFor="siteName">Site Name</Label>
                   <Input
@@ -282,7 +286,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                     </Button>
                   </div>
 
-                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50">
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                     <Checkbox
                       id="allowNoCoordinates"
                       checked={allowNoCoordinates}
@@ -294,7 +298,7 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                         }
                       }}
                     />
-                    <Label htmlFor="allowNoCoordinates" className="text-sm font-normal cursor-pointer">
+                    <Label htmlFor="allowNoCoordinates" className="text-sm font-normal cursor-pointer text-gray-700 dark:text-gray-300">
                       Create site without coordinates (location can be added later)
                     </Label>
                   </div>
@@ -366,6 +370,22 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                   />
                 </div>
 
+                {/* Site Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="site-notes">Site Notes (Optional)</Label>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Add descriptive notes about the site conditions, vegetation, research objectives, etc.
+                  </div>
+                  <textarea
+                    id="site-notes"
+                    value={newSiteNotes}
+                    onChange={(e) => setNewSiteNotes(e.target.value)}
+                    placeholder="e.g. Dense deciduous forest, south-facing slope, understory dominated by ferns..."
+                    className="w-full p-3 rounded-md border border-input bg-background text-sm resize-none"
+                    rows={3}
+                  />
+                </div>
+
                 <Button 
                   onClick={createNewSite} 
                   className="w-full"
@@ -407,6 +427,16 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
                   <span>Created {currentSite.createdAt.toLocaleDateString()}</span>
                 </div>
               </div>
+              
+              {/* Site Notes */}
+              {currentSite.notes && (
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <h4 className="font-medium text-sm mb-2">Site Notes</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                    {currentSite.notes}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Session Progress */}
@@ -455,15 +485,10 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
           </div>
         ) : (
           <div className="text-center py-8">
-            <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-600 mb-4">No research site selected</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a site to start logging measurements
+            <p className="text-gray-600 mb-2">No research site selected</p>
+            <p className="text-sm text-muted-foreground">
+              Use the "New Site" button above to create a site and start logging measurements
             </p>
-            <Button onClick={() => setShowNewSiteDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create First Site
-            </Button>
           </div>
         )}
       </CardContent>

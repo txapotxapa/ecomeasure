@@ -208,6 +208,19 @@
       min-height: 44px;
       min-width: 44px;
     }
+    
+    /* Prevent keyboard from blocking dialog content */
+    [role="dialog"] {
+      position: fixed !important;
+      top: 10px !important;
+      max-height: calc(100vh - 20px) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Ensure viewport units work correctly with mobile keyboards */
+    .mobile-safe-height {
+      height: calc(100vh - env(keyboard-inset-height, 0px));
+    }
   }
   
   /* Loading animations */
