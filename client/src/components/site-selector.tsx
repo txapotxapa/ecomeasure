@@ -1,28 +1,19 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { 
   MapPin, 
   Plus, 
-  Navigation, 
   Mountain,
   Target,
   TreePine,
   Eye,
   Grid3X3,
-  Clock,
-  Camera,
-  Upload
+  Clock
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { getCurrentLocation } from "@/lib/gps";
-import ImageUpload from "@/components/image-upload";
+import { useLocation } from "wouter";
 
 interface SiteInfo {
   name: string;
@@ -46,24 +37,7 @@ interface SiteSelectorProps {
 
 export default function SiteSelector({ currentSite, onSiteChange }: SiteSelectorProps) {
   const [sites, setSites] = useState<SiteInfo[]>([]);
-  const [showNewSiteDialog, setShowNewSiteDialog] = useState(false);
-  const [newSiteName, setNewSiteName] = useState("");
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [newSiteLocation, setNewSiteLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    altitude?: number;
-  } | null>(null);
-  const [manualCoords, setManualCoords] = useState({
-    latitude: "",
-    longitude: "",
-    altitude: ""
-  });
-  const [useManualCoords, setUseManualCoords] = useState(false);
-  const [allowNoCoordinates, setAllowNoCoordinates] = useState(false);
-  const [newSitePhoto, setNewSitePhoto] = useState<{ url: string; file: File } | null>(null);
-  const [newSiteNotes, setNewSiteNotes] = useState("");
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Load sites from localStorage
   useEffect(() => {
@@ -81,127 +55,34 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
     }
   }, []);
 
-  // Save sites to localStorage
-  const saveSites = (updatedSites: SiteInfo[]) => {
-    setSites(updatedSites);
-    localStorage.setItem('research-sites', JSON.stringify(updatedSites));
-  };
-
-  const getCurrentLocationForNewSite = async () => {
-    setIsGettingLocation(true);
-    try {
-      const position = await getCurrentLocation();
-      setNewSiteLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        altitude: position.coords.altitude || undefined
-      });
-      toast({
-        title: "Location acquired",
-        description: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Location error",
-        description: "Could not get current location. You can enter coordinates manually.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGettingLocation(false);
-    }
-  };
-
-  const createNewSite = () => {
-    if (!newSiteName.trim()) {
-      toast({
-        title: "Site name required",
-        description: "Please enter a name for the new site",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    let finalLocation = newSiteLocation;
-
-    // If using manual coordinates, validate and convert them
-    if (useManualCoords) {
-      const lat = parseFloat(manualCoords.latitude);
-      const lng = parseFloat(manualCoords.longitude);
-      const alt = manualCoords.altitude ? parseFloat(manualCoords.altitude) : undefined;
-
-      if (isNaN(lat) || isNaN(lng)) {
-        toast({
-          title: "Invalid coordinates",
-          description: "Please enter valid latitude and longitude values",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (lat < -90 || lat > 90) {
-        toast({
-          title: "Invalid latitude",
-          description: "Latitude must be between -90 and 90 degrees",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (lng < -180 || lng > 180) {
-        toast({
-          title: "Invalid longitude", 
-          description: "Longitude must be between -180 and 180 degrees",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      finalLocation = { latitude: lat, longitude: lng, altitude: alt };
-    }
-
-    if (!finalLocation && !allowNoCoordinates) {
-      toast({
-        title: "Location required",
-        description: "Please get GPS location, enter coordinates manually, or enable 'Create without coordinates'",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newSite: SiteInfo = {
-      name: newSiteName.trim(),
-      latitude: finalLocation?.latitude || 0,
-      longitude: finalLocation?.longitude || 0,
-      altitude: finalLocation?.altitude,
-      photoUrl: newSitePhoto?.url,
-      notes: newSiteNotes.trim() || undefined,
-      createdAt: new Date(),
-      sessionCounts: {
-        canopy: 0,
-        horizontal_vegetation: 0,
-        daubenmire: 0
+  // Watch for changes to current site from the create-site page
+  useEffect(() => {
+    const handleSiteCreated = (event: CustomEvent) => {
+      const newSite = event.detail;
+      onSiteChange(newSite);
+      
+      // Update sites list
+      const savedSites = localStorage.getItem('research-sites');
+      if (savedSites) {
+        try {
+          const parsedSites = JSON.parse(savedSites).map((s: any) => ({
+            ...s,
+            createdAt: new Date(s.createdAt)
+          }));
+          setSites(parsedSites);
+        } catch (error) {
+          console.error('Error loading updated sites:', error);
+        }
       }
     };
 
-    const updatedSites = [...sites, newSite];
-    saveSites(updatedSites);
-    onSiteChange(newSite);
+    // Listen for custom siteCreated event
+    window.addEventListener('siteCreated', handleSiteCreated as EventListener);
     
-    // Reset form
-    setNewSiteName("");
-    setNewSiteLocation(null);
-    setManualCoords({ latitude: "", longitude: "", altitude: "" });
-    setUseManualCoords(false);
-    setAllowNoCoordinates(false);
-    setNewSitePhoto(null);
-    setNewSiteNotes("");
-    setShowNewSiteDialog(false);
-
-    toast({
-      title: "Site created",
-      description: `${newSite.name} is now your active research site`,
-    });
-  };
+    return () => {
+      window.removeEventListener('siteCreated', handleSiteCreated as EventListener);
+    };
+  }, [onSiteChange]);
 
   const formatCoordinates = (lat: number, lng: number) => {
     return `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`;
@@ -224,178 +105,14 @@ export default function SiteSelector({ currentSite, onSiteChange }: SiteSelector
             <Target className="h-5 w-5 mr-2" />
             Research Site
           </span>
-          <Dialog open={showNewSiteDialog} onOpenChange={setShowNewSiteDialog}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Site
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Research Site</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pb-8">
-                <div>
-                  <Label htmlFor="siteName">Site Name</Label>
-                  <Input
-                    id="siteName"
-                    value={newSiteName}
-                    onChange={(e) => setNewSiteName(e.target.value)}
-                    placeholder="e.g., Forest Plot A1"
-                  />
-                </div>
-                
-                <div className="space-y-3">
-                  <Label>Location</Label>
-                  
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() => {
-                        setUseManualCoords(false);
-                        getCurrentLocationForNewSite();
-                      }}
-                      disabled={isGettingLocation}
-                      variant={!useManualCoords ? "default" : "outline"}
-                      className="w-full"
-                    >
-                      {isGettingLocation ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent mr-2" />
-                          Getting location...
-                        </>
-                      ) : (
-                        <>
-                          <Navigation className="h-4 w-4 mr-2" />
-                          Use Current GPS Location
-                        </>
-                      )}
-                    </Button>
-                    
-                    <Button
-                      onClick={() => {
-                        setUseManualCoords(true);
-                        setNewSiteLocation(null);
-                        setAllowNoCoordinates(false);
-                      }}
-                      variant={useManualCoords ? "default" : "outline"}
-                      className="w-full"
-                    >
-                      <MapPin className="h-4 w-4 mr-2" />
-                      Enter Coordinates Manually
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-                    <Checkbox
-                      id="allowNoCoordinates"
-                      checked={allowNoCoordinates}
-                      onCheckedChange={(checked) => {
-                        setAllowNoCoordinates(checked as boolean);
-                        if (checked) {
-                          setUseManualCoords(false);
-                          setNewSiteLocation(null);
-                        }
-                      }}
-                    />
-                    <Label htmlFor="allowNoCoordinates" className="text-sm font-normal cursor-pointer text-gray-700 dark:text-gray-300">
-                      Create site without coordinates (location can be added later)
-                    </Label>
-                  </div>
-
-                  {useManualCoords ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="latitude" className="text-sm">Latitude</Label>
-                        <Input
-                          id="latitude"
-                          type="number"
-                          step="any"
-                          value={manualCoords.latitude}
-                          onChange={(e) => setManualCoords(prev => ({ ...prev, latitude: e.target.value }))}
-                          placeholder="e.g., 40.123456"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="longitude" className="text-sm">Longitude</Label>
-                        <Input
-                          id="longitude"
-                          type="number"
-                          step="any"
-                          value={manualCoords.longitude}
-                          onChange={(e) => setManualCoords(prev => ({ ...prev, longitude: e.target.value }))}
-                          placeholder="e.g., -74.123456"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label htmlFor="altitude" className="text-sm">Altitude (optional)</Label>
-                        <Input
-                          id="altitude"
-                          type="number"
-                          step="any"
-                          value={manualCoords.altitude}
-                          onChange={(e) => setManualCoords(prev => ({ ...prev, altitude: e.target.value }))}
-                          placeholder="e.g., 120 (meters)"
-                          className="text-sm"
-                        />
-                      </div>
-                    </div>
-                  ) : newSiteLocation && (
-                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <MapPin className="h-4 w-4 text-green-600" />
-                        <span>{formatCoordinates(newSiteLocation.latitude, newSiteLocation.longitude)}</span>
-                      </div>
-                      {newSiteLocation.altitude && (
-                        <div className="flex items-center space-x-2 text-sm mt-1">
-                          <Mountain className="h-4 w-4 text-blue-600" />
-                          <span>{newSiteLocation.altitude.toFixed(0)}m elevation</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Site Photo Upload */}
-                <div className="space-y-2">
-                  <Label htmlFor="site-photo">Site Documentation Photo (Optional)</Label>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Add a photo to document the site characteristics for future reference
-                  </div>
-                  <ImageUpload 
-                    onImageUploaded={setNewSitePhoto} 
-                    currentImage={newSitePhoto?.url}
-                  />
-                </div>
-
-                {/* Site Notes */}
-                <div className="space-y-2">
-                  <Label htmlFor="site-notes">Site Notes (Optional)</Label>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Add descriptive notes about the site conditions, vegetation, research objectives, etc.
-                  </div>
-                  <textarea
-                    id="site-notes"
-                    value={newSiteNotes}
-                    onChange={(e) => setNewSiteNotes(e.target.value)}
-                    placeholder="e.g. Dense deciduous forest, south-facing slope, understory dominated by ferns..."
-                    className="w-full p-3 rounded-md border border-input bg-background text-sm resize-none"
-                    rows={3}
-                  />
-                </div>
-
-                <Button 
-                  onClick={createNewSite} 
-                  className="w-full"
-                  disabled={!newSiteName.trim() || (!newSiteLocation && !useManualCoords && !allowNoCoordinates)}
-                >
-                  Create Site
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setLocation('/create-site')}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Site
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent>

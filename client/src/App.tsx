@@ -13,6 +13,7 @@ import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import AccuracyReference from "@/pages/accuracy-reference";
 import DocsPage from "@/pages/docs";
+import CreateSite from "@/pages/create-site";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/accuracy-reference" component={AccuracyReference} />
       <Route path="/docs" component={DocsPage} />
+      <Route path="/create-site" component={CreateSite} />
       <Route component={NotFound} />
     </Switch>
   );
