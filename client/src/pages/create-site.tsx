@@ -15,7 +15,6 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/bottom-navigation";
 import EcoMeasureLogo from "@/components/eco-measure-logo";
-import { getCurrentLocation } from "@/lib/gps";
 
 interface SiteInfo {
   name: string;
@@ -52,8 +51,23 @@ export default function CreateSite() {
   const getCurrentLocationForSite = async () => {
     setIsGettingLocation(true);
     try {
-      // Use the proper GPS library that handles both Capacitor and web fallback
-      const position = await getCurrentLocation();
+      // Use simple navigator.geolocation - works everywhere, no bullshit
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('GPS not supported'));
+          return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 30000
+          }
+        );
+      });
 
       setSiteLocation({
         latitude: position.coords.latitude,
@@ -65,11 +79,11 @@ export default function CreateSite() {
         title: "Location acquired",
         description: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('GPS error:', error);
       toast({
         title: "Location error",
-        description: "Could not get current location. You can enter coordinates manually below.",
+        description: error.message || "Could not get current location. You can enter coordinates manually below.",
         variant: "destructive",
       });
     } finally {
