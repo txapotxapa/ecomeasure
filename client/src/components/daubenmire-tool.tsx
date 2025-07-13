@@ -139,9 +139,18 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       });
 
       if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        console.error('Upload failed:', uploadResponse.status, errorText);
-        throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
+        const contentType = uploadResponse.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          try {
+            const errorData = await uploadResponse.json();
+            throw new Error(`Upload failed: ${uploadResponse.status} ${errorData.message || 'Unknown error'}`);
+          } catch {
+            throw new Error(`Upload failed: ${uploadResponse.status} Invalid JSON response`);
+          }
+        } else {
+          const errorText = await uploadResponse.text();
+          throw new Error(`Upload failed: ${uploadResponse.status} ${errorText.substring(0, 200)}`);
+        }
       }
 
       const uploadData = await uploadResponse.json();

@@ -50,8 +50,7 @@ export default function History() {
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['/api/analysis-sessions'],
     queryFn: async () => {
-      const response = await fetch('/api/analysis-sessions');
-      if (!response.ok) throw new Error('Failed to fetch sessions');
+      const response = await apiRequest('/api/analysis-sessions');
       return response.json() as Promise<AnalysisSession[]>;
     },
   });

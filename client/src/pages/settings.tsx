@@ -49,8 +49,7 @@ export default function Settings() {
   const { data: currentSettings, isLoading } = useQuery({
     queryKey: ['/api/settings', 'default'],
     queryFn: async () => {
-      const response = await fetch('/api/settings/default');
-      if (!response.ok) throw new Error('Failed to fetch settings');
+      const response = await apiRequest('/api/settings/default');
       return response.json() as Promise<AnalysisSettings>;
     },
   });
