@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/bottom-navigation";
 import EcoMeasureLogo from "@/components/eco-measure-logo";
+import { getCurrentLocation } from "@/lib/gps"; // <-- IMPORT THE HELPER
 
 interface SiteInfo {
   name: string;
@@ -50,66 +51,22 @@ export default function CreateSite() {
 
   const getCurrentLocationForSite = async () => {
     setIsGettingLocation(true);
-    console.log('🛰️ GPS: Starting location request...');
-    
     try {
-      // Check if geolocation is supported
-      if (!navigator.geolocation) {
-        console.log('❌ GPS: Geolocation not supported');
-        throw new Error('GPS not supported on this device');
-      }
-      
-      console.log('✅ GPS: Geolocation API available, requesting position...');
-
-      // Request location - this SHOULD trigger permission prompt on mobile
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            console.log('✅ GPS: Position received:', pos.coords.latitude, pos.coords.longitude);
-            resolve(pos);
-          },
-          (err) => {
-            console.log('❌ GPS: Error occurred:', err.code, err.message);
-            reject(err);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 30000
-          }
-        );
-      });
-
+      const position = await getCurrentLocation(); // <-- USE THE HELPER
       setSiteLocation({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-        altitude: position.coords.altitude || undefined
+        altitude: position.coords.altitude,
       });
-      
       toast({
         title: "Location acquired",
         description: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
       });
     } catch (error: any) {
       console.error('GPS error:', error);
-      
-      let errorMessage = "Could not get current location.";
-      let actionMessage = "You can enter coordinates manually below.";
-      
-      if (error.code === 1 || error.message?.includes('denied')) {
-        errorMessage = "Location permission needed";
-        actionMessage = "Click the location icon in your browser's address bar and select 'Allow', then try again.";
-      } else if (error.code === 2) {
-        errorMessage = "Location unavailable";
-        actionMessage = "Make sure GPS is enabled on your device.";
-      } else if (error.code === 3) {
-        errorMessage = "Location request timed out";
-        actionMessage = "Try again or enter coordinates manually below.";
-      }
-      
       toast({
-        title: errorMessage,
-        description: actionMessage,
+        title: "Could not get location",
+        description: error.message || "Please ensure GPS is enabled and permissions are granted.",
         variant: "destructive",
       });
     } finally {
@@ -266,60 +223,30 @@ export default function CreateSite() {
           </CardHeader>
           <CardContent className="space-y-4">
             {!useManualCoords && (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Button
-                    onClick={getCurrentLocationForSite}
-                    disabled={isGettingLocation}
-                    className="w-full h-12"
-                    size="lg"
-                  >
-                    {isGettingLocation ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
-                        Getting GPS location...
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="h-5 w-5 mr-3" />
-                        Use Current GPS Location
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Your browser will ask for location permission
-                  </p>
-                </div>
-                
-                {siteLocation && (
-                  <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <div className="flex items-center space-x-2 text-sm">
-                      <MapPin className="h-4 w-4 text-green-600" />
-                      <span className="font-mono">{formatCoordinates(siteLocation.latitude, siteLocation.longitude)}</span>
-                    </div>
-                    {siteLocation.altitude && (
-                      <div className="flex items-center space-x-2 text-sm mt-1">
-                        <Mountain className="h-4 w-4 text-blue-600" />
-                        <span>{siteLocation.altitude.toFixed(0)}m elevation</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="text-center">
-                  <Button
-                    onClick={() => setUseManualCoords(true)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Enter coordinates manually instead
-                  </Button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  onClick={getCurrentLocationForSite}
+                  disabled={isGettingLocation || useManualCoords}
+                  className="flex-grow"
+                >
+                  <Navigation className="h-4 w-4 mr-2" />
+                  {isGettingLocation ? "Acquiring..." : "Use Current GPS Location"}
+                </Button>
               </div>
-            )}
 
-            {useManualCoords && (
-              <div className="space-y-4">
+              {siteLocation && !useManualCoords && (
+                <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>
+                    Location set: {formatCoordinates(siteLocation.latitude, siteLocation.longitude)}
+                    {siteLocation.altitude && ` at ${siteLocation.altitude.toFixed(1)}m altitude`}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Manual Coordinate Entry */}
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="latitude">Latitude</Label>
