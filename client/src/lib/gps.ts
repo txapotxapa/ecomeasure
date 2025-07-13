@@ -46,38 +46,36 @@ async function browserGeo(opts: PositionOptions = {
 }
 
 export async function getCurrentLocation(): Promise<GeolocationPosition> {
-  // Use Capacitor plugin only when running natively; web uses navigator directly for reliability
-  if (Capacitor.isNativePlatform()) {
-    try {
-      // Request permissions first
-      const permissions = await Geolocation.requestPermissions();
+  // Attempt Capacitor plugin first; if unavailable or fails we fallback to browser
+  try {
+    // Request permissions first
+    const permissions = await Geolocation.requestPermissions();
 
-      if (permissions.location !== 'granted') {
-        throw new Error('Location permission denied');
-      }
-
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000, // Cache for 1 minute
-      });
-
-      return {
-        coords: {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude || undefined,
-          altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-          heading: position.coords.heading || undefined,
-          speed: position.coords.speed || undefined,
-        },
-        timestamp: position.timestamp,
-      };
-    } catch (error: any) {
-      console.warn('[gps] Capacitor geolocation failed, falling back to navigator:', error?.message || error);
-      // fall through to navigator below
+    if (permissions.location !== 'granted') {
+      throw new Error('Location permission denied');
     }
+
+    const position = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000, // Cache for 1 minute
+    });
+
+    return {
+      coords: {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude || undefined,
+        altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+        heading: position.coords.heading || undefined,
+        speed: position.coords.speed || undefined,
+      },
+      timestamp: position.timestamp,
+    };
+  } catch (error: any) {
+    console.warn('[gps] Capacitor geolocation failed, falling back to navigator:', error?.message || error);
+    // fall through to browser fallback
   }
 
   // Browser fallback (or primary on web)
@@ -100,48 +98,46 @@ export async function watchLocation(
   onLocationUpdate: (position: GeolocationPosition) => void,
   onError: (error: GeolocationError) => void
 ): Promise<string> {
-  // Use Capacitor plugin only on native platform
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const permissions = await Geolocation.requestPermissions();
+  // Attempt Capacitor plugin first
+  try {
+    const permissions = await Geolocation.requestPermissions();
 
-      if (permissions.location !== 'granted') {
-        throw new Error('Location permission denied');
-      }
-
-      const watchId = await Geolocation.watchPosition(
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 30000, // Cache for 30 seconds
-        },
-        (position, err) => {
-          if (err) {
-            onError({ code: 1, message: err.message });
-            return;
-          }
-          if (position) {
-            onLocationUpdate({
-              coords: {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                altitude: position.coords.altitude || undefined,
-                altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-                heading: position.coords.heading || undefined,
-                speed: position.coords.speed || undefined,
-              },
-              timestamp: position.timestamp,
-            });
-          }
-        }
-      );
-
-      return watchId;
-    } catch (error: any) {
-      console.warn('[gps] Capacitor watchPosition failed, falling back to navigator:', error?.message || error);
-      // fall through to navigator below
+    if (permissions.location !== 'granted') {
+      throw new Error('Location permission denied');
     }
+
+    const watchId = await Geolocation.watchPosition(
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000, // Cache for 30 seconds
+      },
+      (position, err) => {
+        if (err) {
+          onError({ code: 1, message: err.message });
+          return;
+        }
+        if (position) {
+          onLocationUpdate({
+            coords: {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              altitude: position.coords.altitude || undefined,
+              altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+              heading: position.coords.heading || undefined,
+              speed: position.coords.speed || undefined,
+            },
+            timestamp: position.timestamp,
+          });
+        }
+      }
+    );
+
+    return watchId;
+  } catch (error: any) {
+    console.warn('[gps] Capacitor watchPosition failed, falling back to navigator:', error?.message || error);
+    // fall through to browser fallback
   }
 
   if (!navigator.geolocation) {
