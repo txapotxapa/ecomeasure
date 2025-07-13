@@ -38,12 +38,7 @@ function App() {
     const splashPreference = localStorage.getItem('skip-splash');
     return splashPreference !== 'true';
   });
-  const [showPermissions, setShowPermissions] = useState(false);
-  const [permissionsCompleted, setPermissionsCompleted] = useState(() => {
-    // Check if user has made a decision about permissions
-    const permissionStatus = localStorage.getItem('permissions-completed');
-    return permissionStatus === 'true';
-  });
+  // Permissions now requested silently on launch; no UI flow needed
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -76,16 +71,6 @@ function App() {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
-    // After splash, show permissions screen (if not already completed)
-    if (!permissionsCompleted) {
-      setShowPermissions(true);
-    }
-  };
-
-  const handlePermissionsDecision = () => {
-    setPermissionsCompleted(true);
-    setShowPermissions(false);
-    localStorage.setItem('permissions-completed', 'true');
   };
 
   return (
@@ -102,13 +87,11 @@ function App() {
           />
         )}
         
-        {/* 2. After splash, show permissions (if needed) */}
-        {!showSplash && showPermissions && (
-          <PermissionManager onPermissionsDecision={handlePermissionsDecision} />
-        )}
-        
-        {/* 3. Finally show the main app */}
-        {!showSplash && !showPermissions && permissionsCompleted && (
+        {/* Permissions are requested in background via PermissionManager */}
+        <PermissionManager />
+
+        {/* App after splash */}
+        {!showSplash && (
           <div className="min-h-screen bg-background">
             <Router />
           </div>
