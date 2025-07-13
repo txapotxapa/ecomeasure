@@ -1,7 +1,8 @@
-import { Geolocation } from '@capacitor/geolocation';
+import { Geolocation, PositionOptions } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 
-interface GeolocationPosition {
+// Renamed to avoid conflict with native GeolocationPosition
+export interface GpsPosition {
   coords: {
     latitude: number;
     longitude: number;
@@ -23,7 +24,7 @@ async function browserGeo(opts: PositionOptions = {
   enableHighAccuracy: true,
   timeout: 10000,
   maximumAge: 60000,
-}): Promise<GeolocationPosition> {
+}): Promise<GeolocationPosition> { // Returns native GeolocationPosition
   // Check permission state first (supported in modern browsers)
   try {
     if (navigator.permissions && typeof navigator.permissions.query === 'function') {
@@ -45,7 +46,7 @@ async function browserGeo(opts: PositionOptions = {
   });
 }
 
-export async function getCurrentLocation(): Promise<GeolocationPosition> {
+export async function getCurrentLocation(): Promise<GpsPosition> {
   // Attempt Capacitor plugin first; if unavailable or fails we fallback to browser
   try {
     // Request permissions first
@@ -66,10 +67,10 @@ export async function getCurrentLocation(): Promise<GeolocationPosition> {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude || undefined,
-        altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-        heading: position.coords.heading || undefined,
-        speed: position.coords.speed || undefined,
+        altitude: position.coords.altitude ?? undefined,
+        altitudeAccuracy: position.coords.altitudeAccuracy ?? undefined,
+        heading: position.coords.heading ?? undefined,
+        speed: position.coords.speed ?? undefined,
       },
       timestamp: position.timestamp,
     };
@@ -85,17 +86,17 @@ export async function getCurrentLocation(): Promise<GeolocationPosition> {
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,
       accuracy: pos.coords.accuracy,
-      altitude: pos.coords.altitude || undefined,
-      altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
-      heading: pos.coords.heading || undefined,
-      speed: pos.coords.speed || undefined,
+      altitude: pos.coords.altitude ?? undefined,
+      altitudeAccuracy: pos.coords.altitudeAccuracy ?? undefined,
+      heading: pos.coords.heading ?? undefined,
+      speed: pos.coords.speed ?? undefined,
     },
     timestamp: pos.timestamp,
   };
 }
 
 export async function watchLocation(
-  onLocationUpdate: (position: GeolocationPosition) => void,
+  onLocationUpdate: (position: GpsPosition) => void,
   onError: (error: GeolocationError) => void
 ): Promise<string> {
   // Attempt Capacitor plugin first
@@ -123,10 +124,10 @@ export async function watchLocation(
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
               accuracy: position.coords.accuracy,
-              altitude: position.coords.altitude || undefined,
-              altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-              heading: position.coords.heading || undefined,
-              speed: position.coords.speed || undefined,
+              altitude: position.coords.altitude ?? undefined,
+              altitudeAccuracy: position.coords.altitudeAccuracy ?? undefined,
+              heading: position.coords.heading ?? undefined,
+              speed: position.coords.speed ?? undefined,
             },
             timestamp: position.timestamp,
           });
@@ -151,10 +152,10 @@ export async function watchLocation(
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
-          altitude: pos.coords.altitude || undefined,
-          altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
-          heading: pos.coords.heading || undefined,
-          speed: pos.coords.speed || undefined,
+          altitude: pos.coords.altitude ?? undefined,
+          altitudeAccuracy: pos.coords.altitudeAccuracy ?? undefined,
+          heading: pos.coords.heading ?? undefined,
+          speed: pos.coords.speed ?? undefined,
         },
         timestamp: pos.timestamp,
       });
