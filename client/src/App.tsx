@@ -38,6 +38,7 @@ function App() {
     const splashPreference = localStorage.getItem('skip-splash');
     return splashPreference !== 'true';
   });
+  const [showPermissions, setShowPermissions] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(() => {
     // Check if permissions were previously granted
     const permissionStatus = localStorage.getItem('permissions-granted');
@@ -75,32 +76,44 @@ function App() {
 
   const handleSplashComplete = () => {
     setShowSplash(false);
+    // After splash, show permissions screen (if not already granted)
+    if (!permissionsGranted) {
+      setShowPermissions(true);
+    }
   };
 
   const handlePermissionsGranted = () => {
     setPermissionsGranted(true);
+    setShowPermissions(false);
     localStorage.setItem('permissions-granted', 'true');
   };
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Show permissions first, then splash, then app */}
-        {!permissionsGranted && (
-          <PermissionManager onAllPermissionsGranted={handlePermissionsGranted} />
-        )}
-        {permissionsGranted && showSplash && (
+        {/* Flow: Splash → Permissions → App */}
+        
+        {/* 1. Show splash screen first */}
+        {showSplash && (
           <SplashScreen 
             onComplete={handleSplashComplete}
             duration={3500}
             saveSkipPreference={true}
           />
         )}
-        {permissionsGranted && (
+        
+        {/* 2. After splash, show permissions (if needed) */}
+        {!showSplash && showPermissions && (
+          <PermissionManager onAllPermissionsGranted={handlePermissionsGranted} />
+        )}
+        
+        {/* 3. Finally show the main app */}
+        {!showSplash && !showPermissions && permissionsGranted && (
           <div className="min-h-screen bg-background">
             <Router />
           </div>
         )}
+        
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
