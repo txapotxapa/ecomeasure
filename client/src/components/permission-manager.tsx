@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera as CapacitorCamera } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
+import { CapacitorHttp } from '@capacitor/core';
 
 interface PermissionStatus {
   location: 'granted' | 'denied' | 'prompt' | 'unknown';
@@ -78,33 +79,45 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
     
     try {
       if (Capacitor.isNativePlatform()) {
-        // Request location permission
+        // For Android 15+, request permissions more aggressively
+        console.log('🔐 Requesting permissions for Android 15+');
+        
+        // Request location permission with high accuracy
         const locationResult = await Geolocation.requestPermissions();
+        console.log('📍 Location permission result:', locationResult);
         
-        // Request camera permissions  
-        const cameraResult = await CapacitorCamera.requestPermissions();
+        // Request camera permissions with all options
+        const cameraResult = await CapacitorCamera.requestPermissions({
+          permissions: ['camera', 'photos']
+        });
+        console.log('📷 Camera permission result:', cameraResult);
         
+        // Update state with results
         setPermissions({
           location: locationResult.location,
           camera: cameraResult.camera,
           storage: cameraResult.photos
         });
 
-        // Check if all granted
-        const allGranted = locationResult.location === 'granted' && 
-                          cameraResult.camera === 'granted' && 
-                          cameraResult.photos === 'granted';
+        // Android 15 might return 'limited' or 'restricted' - treat as granted for now
+        const locationOK = ['granted', 'limited'].includes(locationResult.location);
+        const cameraOK = ['granted', 'limited'].includes(cameraResult.camera);
+        const storageOK = ['granted', 'limited'].includes(cameraResult.photos);
+        
+        const allGranted = locationOK && cameraOK && storageOK;
         
         if (allGranted) {
+          console.log('✅ All permissions granted for Android 15');
           toast({
             title: "Permissions granted",
             description: "All permissions have been granted. You can now use all app features.",
           });
           onAllPermissionsGranted();
         } else {
+          console.log('❌ Some permissions denied:', { locationResult, cameraResult });
           toast({
-            title: "Some permissions denied",
-            description: "Please grant all permissions in your device settings to use all features.",
+            title: "Permissions needed",
+            description: "Please grant location and camera access in your device settings to use all features.",
             variant: "destructive",
           });
         }

@@ -44,18 +44,25 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     
-    <!-- Photo/Media permissions for Android 13+ -->
+    <!-- Photo/Media permissions for Android 15+ -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     
     <!-- Camera permissions -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     
     <!-- Storage permissions -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    
+    <!-- Android 15 location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    
+    <!-- Android 15 notification permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- GPS/Location permissions -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
