@@ -51,13 +51,16 @@ export default function CreateSite() {
   const getCurrentLocationForSite = async () => {
     setIsGettingLocation(true);
     try {
-      // Use simple navigator.geolocation - works everywhere, no bullshit
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        throw new Error('GPS not supported on this device');
+      }
+
+      // Force permission prompt by making the actual geolocation request
+      // The browser will show permission dialog automatically
+
+      // Request location
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error('GPS not supported'));
-          return;
-        }
-        
         navigator.geolocation.getCurrentPosition(
           resolve,
           reject,
@@ -81,9 +84,24 @@ export default function CreateSite() {
       });
     } catch (error: any) {
       console.error('GPS error:', error);
+      
+      let errorMessage = "Could not get current location.";
+      let actionMessage = "You can enter coordinates manually below.";
+      
+      if (error.code === 1 || error.message?.includes('denied')) {
+        errorMessage = "Location permission needed";
+        actionMessage = "Click the location icon in your browser's address bar and select 'Allow', then try again.";
+      } else if (error.code === 2) {
+        errorMessage = "Location unavailable";
+        actionMessage = "Make sure GPS is enabled on your device.";
+      } else if (error.code === 3) {
+        errorMessage = "Location request timed out";
+        actionMessage = "Try again or enter coordinates manually below.";
+      }
+      
       toast({
-        title: "Location error",
-        description: error.message || "Could not get current location. You can enter coordinates manually below.",
+        title: errorMessage,
+        description: actionMessage,
         variant: "destructive",
       });
     } finally {
@@ -241,24 +259,29 @@ export default function CreateSite() {
           <CardContent className="space-y-4">
             {!useManualCoords && (
               <div className="space-y-3">
-                <Button
-                  onClick={getCurrentLocationForSite}
-                  disabled={isGettingLocation}
-                  className="w-full h-12"
-                  size="lg"
-                >
-                  {isGettingLocation ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
-                      Getting GPS location...
-                    </>
-                  ) : (
-                    <>
-                      <Navigation className="h-5 w-5 mr-3" />
-                      Use Current GPS Location
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    onClick={getCurrentLocationForSite}
+                    disabled={isGettingLocation}
+                    className="w-full h-12"
+                    size="lg"
+                  >
+                    {isGettingLocation ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3" />
+                        Getting GPS location...
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="h-5 w-5 mr-3" />
+                        Use Current GPS Location
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Your browser will ask for location permission
+                  </p>
+                </div>
                 
                 {siteLocation && (
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
