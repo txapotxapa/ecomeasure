@@ -26,8 +26,11 @@ jobs:
       - name: Build web
         run: npm run build
 
-      - name: Sync web assets to existing Android platform
-        run: npx cap sync android
+      - name: Remove old Android platform and recreate
+        run: |
+          rm -rf android
+          npx cap add android
+          npx cap sync android
 
       - name: Setup JDK
         uses: actions/setup-java@v3
@@ -35,12 +38,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Update Android version info
+      - name: Configure Android for CI
         run: |
-          # Android platform already exists, just update version codes
-          if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
-            sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VERSION_CODE\"/" android/app/src/main/AndroidManifest.xml
-            sed -i "s/android:versionName=\"[^\"]*\"/android:versionName=\"$VERSION\"/" android/app/src/main/AndroidManifest.xml
+          # Configure Gradle for CI builds
+          echo "org.gradle.java.home=/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.13-11/x64" >> android/gradle.properties
+          echo "android.overrideVersionCheck=true" >> android/gradle.properties
+          
+          # Update Gradle wrapper
+          cd android
+          sed -i 's/gradle-8.0.2-all.zip/gradle-8.10-all.zip/' gradle/wrapper/gradle-wrapper.properties
+          
+          # Update version info if needed
+          if [ -f "app/src/main/AndroidManifest.xml" ]; then
+            sed -i "s/android:versionCode=\"[0-9]*\"/android:versionCode=\"$VERSION_CODE\"/" app/src/main/AndroidManifest.xml
+            sed -i "s/android:versionName=\"[^\"]*\"/android:versionName=\"$VERSION\"/" app/src/main/AndroidManifest.xml
           fi
 
       - name: Setup Android SDK
