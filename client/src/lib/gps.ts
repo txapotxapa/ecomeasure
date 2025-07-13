@@ -1,4 +1,5 @@
 import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 
 interface GeolocationPosition {
   coords: {
@@ -18,138 +19,158 @@ interface GeolocationError {
   message: string;
 }
 
-export async function getCurrentLocation(): Promise<GeolocationPosition> {
-  // Try Capacitor plugin first
+async function browserGeo(opts: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 60000,
+}): Promise<GeolocationPosition> {
+  // Check permission state first (supported in modern browsers)
   try {
-    // Request permissions first
-    const permissions = await Geolocation.requestPermissions();
-
-    if (permissions.location !== 'granted') {
-      throw new Error('Location permission denied');
-    }
-
-    const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000, // Cache for 1 minute
-    });
-
-    return {
-      coords: {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude || undefined,
-        altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-        heading: position.coords.heading || undefined,
-        speed: position.coords.speed || undefined,
-      },
-      timestamp: position.timestamp,
-    };
-  } catch (error: any) {
-    console.warn('[gps] Capacitor geolocation failed, falling back to navigator:', error?.message || error);
-    return new Promise<GeolocationPosition>((resolve, reject) => {
-      if (!navigator.geolocation) {
-        return reject(new Error('Geolocation not supported'));
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+      if (status.state === 'denied') {
+        throw new Error('Location permission denied');
       }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          resolve({
-            coords: {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-              altitude: pos.coords.altitude || undefined,
-              altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
-              heading: pos.coords.heading || undefined,
-              speed: pos.coords.speed || undefined,
-            },
-            timestamp: pos.timestamp,
-          });
-        },
-        (err) => reject(err),
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        }
-      );
-    });
+      // If prompt or granted we continue; prompt will show browser dialog
+    }
+  } catch (_) {
+    // permissions API not available – ignore and continue to request
   }
+
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    if (!navigator.geolocation) {
+      return reject(new Error('Geolocation not supported'));
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, opts);
+  });
+}
+
+export async function getCurrentLocation(): Promise<GeolocationPosition> {
+  // Use Capacitor plugin only when running natively; web uses navigator directly for reliability
+  if (Capacitor.isNativePlatform()) {
+    try {
+      // Request permissions first
+      const permissions = await Geolocation.requestPermissions();
+
+      if (permissions.location !== 'granted') {
+        throw new Error('Location permission denied');
+      }
+
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000, // Cache for 1 minute
+      });
+
+      return {
+        coords: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude || undefined,
+          altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+          heading: position.coords.heading || undefined,
+          speed: position.coords.speed || undefined,
+        },
+        timestamp: position.timestamp,
+      };
+    } catch (error: any) {
+      console.warn('[gps] Capacitor geolocation failed, falling back to navigator:', error?.message || error);
+      // fall through to navigator below
+    }
+  }
+
+  // Browser fallback (or primary on web)
+  const pos = await browserGeo();
+  return {
+    coords: {
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      accuracy: pos.coords.accuracy,
+      altitude: pos.coords.altitude || undefined,
+      altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
+      heading: pos.coords.heading || undefined,
+      speed: pos.coords.speed || undefined,
+    },
+    timestamp: pos.timestamp,
+  };
 }
 
 export async function watchLocation(
   onLocationUpdate: (position: GeolocationPosition) => void,
   onError: (error: GeolocationError) => void
 ): Promise<string> {
-  // Try Capacitor plugin first
-  try {
-    const permissions = await Geolocation.requestPermissions();
+  // Use Capacitor plugin only on native platform
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const permissions = await Geolocation.requestPermissions();
 
-    if (permissions.location !== 'granted') {
-      throw new Error('Location permission denied');
-    }
-
-    const watchId = await Geolocation.watchPosition(
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000, // Cache for 30 seconds
-      },
-      (position, err) => {
-        if (err) {
-          onError({ code: 1, message: err.message });
-          return;
-        }
-        if (position) {
-          onLocationUpdate({
-            coords: {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy,
-              altitude: position.coords.altitude || undefined,
-              altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
-              heading: position.coords.heading || undefined,
-              speed: position.coords.speed || undefined,
-            },
-            timestamp: position.timestamp,
-          });
-        }
+      if (permissions.location !== 'granted') {
+        throw new Error('Location permission denied');
       }
-    );
 
-    return watchId;
-  } catch (error: any) {
-    console.warn('[gps] Capacitor watchPosition failed, falling back to navigator:', error?.message || error);
-    if (!navigator.geolocation) {
-      onError({ code: 1, message: 'Geolocation not supported' });
-      throw error;
+      const watchId = await Geolocation.watchPosition(
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 30000, // Cache for 30 seconds
+        },
+        (position, err) => {
+          if (err) {
+            onError({ code: 1, message: err.message });
+            return;
+          }
+          if (position) {
+            onLocationUpdate({
+              coords: {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                altitude: position.coords.altitude || undefined,
+                altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
+                heading: position.coords.heading || undefined,
+                speed: position.coords.speed || undefined,
+              },
+              timestamp: position.timestamp,
+            });
+          }
+        }
+      );
+
+      return watchId;
+    } catch (error: any) {
+      console.warn('[gps] Capacitor watchPosition failed, falling back to navigator:', error?.message || error);
+      // fall through to navigator below
     }
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        onLocationUpdate({
-          coords: {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            altitude: pos.coords.altitude || undefined,
-            altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
-            heading: pos.coords.heading || undefined,
-            speed: pos.coords.speed || undefined,
-          },
-          timestamp: pos.timestamp,
-        });
-      },
-      (err) => onError({ code: err.code, message: err.message }),
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 30000,
-      }
-    );
-    // Return as string to keep type consistent
-    return String(watchId);
   }
+
+  if (!navigator.geolocation) {
+    onError({ code: 1, message: 'Geolocation not supported' });
+    throw new Error('Geolocation not supported');
+  }
+  const watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      onLocationUpdate({
+        coords: {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          altitude: pos.coords.altitude || undefined,
+          altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
+          heading: pos.coords.heading || undefined,
+          speed: pos.coords.speed || undefined,
+        },
+        timestamp: pos.timestamp,
+      });
+    },
+    (err) => onError({ code: err.code, message: err.message }),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 30000,
+    }
+  );
+  return String(watchId);
 }
 
 export async function clearLocationWatch(watchId: string): Promise<void> {
