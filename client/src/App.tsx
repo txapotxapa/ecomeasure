@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Switch, Route } from "wouter";
 import { revealOnScroll } from "@/lib/scroll-anim";
 import { queryClient } from "./lib/queryClient";
@@ -14,6 +14,7 @@ import Settings from "@/pages/settings";
 import AccuracyReference from "@/pages/accuracy-reference";
 import DocsPage from "@/pages/docs";
 import CreateSite from "@/pages/create-site";
+import SplashScreen from "@/components/splash-screen";
 
 function Router() {
   return (
@@ -31,6 +32,12 @@ function Router() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Check if user has seen splash before and prefers to skip it
+    const splashPreference = localStorage.getItem('skip-splash');
+    return splashPreference !== 'true';
+  });
+
   useEffect(() => {
     const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
     let mode: 'light' | 'dark';
@@ -60,9 +67,20 @@ function App() {
     };
   }, []);
 
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        {showSplash && (
+          <SplashScreen 
+            onComplete={handleSplashComplete}
+            duration={3500}
+            saveSkipPreference={true}
+          />
+        )}
         <div className="min-h-screen bg-background">
           <Router />
         </div>
