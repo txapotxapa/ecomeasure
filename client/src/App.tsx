@@ -41,8 +41,8 @@ function App() {
   useEffect(() => {
     const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
     let mode: 'light' | 'dark';
-    mode = stored ?? 'light';
-    if (!stored) localStorage.setItem('theme', 'light');
+    mode = stored ?? 'dark';
+    if (!stored) localStorage.setItem('theme', 'dark');
     const doc = document.documentElement;
     doc.classList.toggle('dark', mode === 'dark');
     doc.classList.toggle('light', mode === 'light');
