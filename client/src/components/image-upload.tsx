@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Camera, Upload, X, ImageIcon, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import { useRef } from 'react';
 
 interface ImageUploadProps {
   onImageUploaded: (imageData: { url: string; file: File }) => void;
@@ -19,6 +21,7 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(',');
@@ -59,11 +62,16 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
   const handleImageCapture = async (source: CameraSource) => {
     try {
       setIsUploading(true);
-      
-      // Request camera permissions
-      const permissions = await CapacitorCamera.requestPermissions();
-      if (permissions.camera !== 'granted') {
-        throw new Error('Camera permission denied');
+
+      // Request camera & photo library permissions when running natively
+      if (Capacitor.isNativePlatform()) {
+        const permissions = await CapacitorCamera.requestPermissions({ permissions: ['camera', 'photos'] });
+        if (permissions.camera !== 'granted' && source === CameraSource.Camera) {
+          throw new Error('Camera permission denied');
+        }
+        if (permissions.photos !== 'granted' && source !== CameraSource.Camera) {
+          throw new Error('Photos permission denied');
+        }
       }
 
       const image = await CapacitorCamera.getPhoto({
@@ -96,6 +104,22 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Web/browser fallback for gallery selection
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreviewImage(reader.result as string);
+      setCapturedFile(file);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleVerifyAndSave = async () => {
@@ -202,32 +226,34 @@ export default function ImageUpload({ onImageUploaded, onBatchUploaded, currentI
               </div>
             </div>
           ) : (
-            // Initial capture state
-            <>
-              <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground mb-4">
-                Capture or select an image for vegetation analysis
-              </p>
-              <div className="space-y-2">
-                <Button
-                  onClick={() => handleImageCapture(CameraSource.Camera)}
-                  disabled={isUploading}
-                  className="w-full"
-                >
+            // Initial state: no image selected yet
+            <div className="space-y-4">
+              <div className="flex justify-center gap-4">
+                <Button onClick={() => handleImageCapture(CameraSource.Camera)} disabled={isUploading}>
                   <Camera className="h-4 w-4 mr-2" />
-                  {isUploading ? "Opening Camera..." : "Take Photo"}
+                  {isUploading ? 'Opening...' : 'Take Photo'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleImageCapture(CameraSource.Photos)}
-                  disabled={isUploading}
-                  className="w-full"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Select from Gallery
-                </Button>
+                {Capacitor.isNativePlatform() ? (
+                  <Button onClick={() => handleImageCapture(CameraSource.Photos)} disabled={isUploading} variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? 'Opening...' : 'Choose From Gallery'}
+                  </Button>
+                ) : (
+                  <Button onClick={openFilePicker} disabled={isUploading} variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isUploading ? 'Loading...' : 'Choose File'}
+                  </Button>
+                )}
               </div>
-            </>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+              <p className="text-sm text-muted-foreground">Capture a new photo or select one from your library.</p>
+            </div>
           )}
         </div>
       </CardContent>
