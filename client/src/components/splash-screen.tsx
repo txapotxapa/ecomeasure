@@ -9,18 +9,13 @@ interface SplashScreenProps {
 
 const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000, saveSkipPreference = false }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const [animationPhase, setAnimationPhase] = useState<'fade-in' | 'show' | 'fade-out'>('fade-in');
+  const [animationPhase, setAnimationPhase] = useState<'show' | 'fade-out'>('show');
 
   useEffect(() => {
-    // Start fade-in animation
-    const fadeInTimer = setTimeout(() => {
-      setAnimationPhase('show');
-    }, 300);
-
-    // Start fade-out animation before completion
+    // Start fade-out shortly before completion
     const fadeOutTimer = setTimeout(() => {
       setAnimationPhase('fade-out');
-    }, duration - 800);
+    }, duration - 300);
 
     // Complete the splash screen
     const completeTimer = setTimeout(() => {
@@ -29,7 +24,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
     }, duration);
 
     return () => {
-      clearTimeout(fadeInTimer);
+      // no skipHintTimer or fadeInTimer now
       clearTimeout(fadeOutTimer);
       clearTimeout(completeTimer);
     };
@@ -39,12 +34,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 transition-all duration-700 select-none ${
-        animationPhase === 'fade-in' 
-          ? 'opacity-0 scale-95' 
-          : animationPhase === 'fade-out' 
-            ? 'opacity-0 scale-105' 
-            : 'opacity-100 scale-100'
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 transition-all duration-500 select-none ${
+        animationPhase === 'fade-out' ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
       }`}
     >
       {/* Animated background elements */}
@@ -75,12 +66,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
       <div className="relative z-10 flex flex-col items-center">
         {/* Logo with enhanced animation */}
         <div 
-          className={`transform transition-all duration-1000 ${
-            animationPhase === 'fade-in' 
-              ? 'scale-50 opacity-0 rotate-12' 
-              : animationPhase === 'show'
-                ? 'scale-100 opacity-100 rotate-0'
-                : 'scale-110 opacity-0 -rotate-12'
+          className={`transform transition-all duration-700 ${
+            animationPhase === 'fade-out' ? 'scale-110 opacity-0 -rotate-12' : 'scale-100 opacity-100 rotate-0'
           }`}
         >
           <EcoMeasureLogo size={250} showText={true} />
@@ -88,20 +75,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 3000
 
         {/* Skip indicator removed */}
 
-        {/* Loading dots */}
-        <div 
-          className={`mt-8 flex space-x-2 transition-all duration-500 ${
-            animationPhase === 'show' ? 'opacity-50' : 'opacity-0'
-          }`}
-        >
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
-              style={{ animationDelay: `${i * 0.2}s` }}
-            />
-          ))}
-        </div>
+        {/* Loading dots removed for faster display */}
       </div>
 
       {/* Gradient overlay for better text readability */}
