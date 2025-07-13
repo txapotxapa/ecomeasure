@@ -19,10 +19,11 @@ interface GeolocationError {
 }
 
 export async function getCurrentLocation(): Promise<GeolocationPosition> {
+  // Try Capacitor plugin first
   try {
     // Request permissions first
     const permissions = await Geolocation.requestPermissions();
-    
+
     if (permissions.location !== 'granted') {
       throw new Error('Location permission denied');
     }
@@ -46,7 +47,34 @@ export async function getCurrentLocation(): Promise<GeolocationPosition> {
       timestamp: position.timestamp,
     };
   } catch (error: any) {
-    throw new Error(error.message || 'Failed to get current location');
+    console.warn('[gps] Capacitor geolocation failed, falling back to navigator:', error?.message || error);
+    return new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error('Geolocation not supported'));
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({
+            coords: {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              altitude: pos.coords.altitude || undefined,
+              altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
+              heading: pos.coords.heading || undefined,
+              speed: pos.coords.speed || undefined,
+            },
+            timestamp: pos.timestamp,
+          });
+        },
+        (err) => reject(err),
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        }
+      );
+    });
   }
 }
 
@@ -54,10 +82,10 @@ export async function watchLocation(
   onLocationUpdate: (position: GeolocationPosition) => void,
   onError: (error: GeolocationError) => void
 ): Promise<string> {
+  // Try Capacitor plugin first
   try {
-    // Request permissions first
     const permissions = await Geolocation.requestPermissions();
-    
+
     if (permissions.location !== 'granted') {
       throw new Error('Location permission denied');
     }
@@ -70,13 +98,9 @@ export async function watchLocation(
       },
       (position, err) => {
         if (err) {
-          onError({
-            code: 1,
-            message: err.message,
-          });
+          onError({ code: 1, message: err.message });
           return;
         }
-
         if (position) {
           onLocationUpdate({
             coords: {
@@ -96,16 +120,47 @@ export async function watchLocation(
 
     return watchId;
   } catch (error: any) {
-    onError({
-      code: 1,
-      message: error.message || 'Failed to watch location',
-    });
-    throw error;
+    console.warn('[gps] Capacitor watchPosition failed, falling back to navigator:', error?.message || error);
+    if (!navigator.geolocation) {
+      onError({ code: 1, message: 'Geolocation not supported' });
+      throw error;
+    }
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        onLocationUpdate({
+          coords: {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+            altitude: pos.coords.altitude || undefined,
+            altitudeAccuracy: pos.coords.altitudeAccuracy || undefined,
+            heading: pos.coords.heading || undefined,
+            speed: pos.coords.speed || undefined,
+          },
+          timestamp: pos.timestamp,
+        });
+      },
+      (err) => onError({ code: err.code, message: err.message }),
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
+    // Return as string to keep type consistent
+    return String(watchId);
   }
 }
 
 export async function clearLocationWatch(watchId: string): Promise<void> {
-  await Geolocation.clearWatch({ id: watchId });
+  try {
+    await Geolocation.clearWatch({ id: watchId });
+  } catch {
+    // Fallback for navigator watch
+    if (watchId && typeof navigator.geolocation?.clearWatch === 'function') {
+      navigator.geolocation.clearWatch(Number(watchId));
+    }
+  }
 }
 
 export function formatCoordinates(lat: number, lng: number): string {
