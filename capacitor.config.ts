@@ -14,13 +14,31 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Camera: {
-      permissions: ['camera', 'photos']
+      permissions: ['camera', 'photos'],
+      androidPermissions: [
+        'android.permission.CAMERA',
+        'android.permission.READ_MEDIA_IMAGES',
+        'android.permission.READ_MEDIA_VIDEO',
+        'android.permission.READ_MEDIA_VISUAL_USER_SELECTED',
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE'
+      ]
     },
     Geolocation: {
-      permissions: ['location']
+      permissions: ['location'],
+      androidPermissions: [
+        'android.permission.ACCESS_COARSE_LOCATION',
+        'android.permission.ACCESS_FINE_LOCATION',
+        'android.permission.ACCESS_BACKGROUND_LOCATION'
+      ]
     },
     Filesystem: {
-      permissions: ['storage']
+      permissions: ['storage'],
+      androidPermissions: [
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.MANAGE_EXTERNAL_STORAGE'
+      ]
     },
     App: {
       handleBackButton: false // Let the JS handle back button behavior

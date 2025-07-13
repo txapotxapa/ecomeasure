@@ -116,10 +116,13 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
         } else {
           console.log('❌ Some permissions denied:', { locationResult, cameraResult });
           toast({
-            title: "Permissions needed",
-            description: "Please grant location and camera access in your device settings to use all features.",
+            title: "Permissions Required",
+            description: "Location and Camera permissions are required. Please grant them when prompted by Android.",
             variant: "destructive",
           });
+          
+          // Don't proceed without permissions
+          return;
         }
       } else {
         // Web environment - try to trigger permission prompts
@@ -251,7 +254,7 @@ const PermissionManager: React.FC<PermissionManagerProps> = ({ onAllPermissionsG
             className="w-full"
             size="lg"
           >
-            {isRequestingPermissions ? 'Requesting Permissions...' : 'Grant All Permissions'}
+            {isRequestingPermissions ? 'Opening System Permissions...' : 'Allow App Permissions'}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
