@@ -15,6 +15,7 @@ import AccuracyReference from "@/pages/accuracy-reference";
 import DocsPage from "@/pages/docs";
 import CreateSite from "@/pages/create-site";
 import SplashScreen from "@/components/splash-screen";
+import PermissionManager from "@/components/permission-manager";
 
 function Router() {
   return (
@@ -36,6 +37,11 @@ function App() {
     // Check if user has seen splash before and prefers to skip it
     const splashPreference = localStorage.getItem('skip-splash');
     return splashPreference !== 'true';
+  });
+  const [permissionsGranted, setPermissionsGranted] = useState(() => {
+    // Check if permissions were previously granted
+    const permissionStatus = localStorage.getItem('permissions-granted');
+    return permissionStatus === 'true';
   });
 
   useEffect(() => {
@@ -71,19 +77,30 @@ function App() {
     setShowSplash(false);
   };
 
+  const handlePermissionsGranted = () => {
+    setPermissionsGranted(true);
+    localStorage.setItem('permissions-granted', 'true');
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && (
+        {/* Show permissions first, then splash, then app */}
+        {!permissionsGranted && (
+          <PermissionManager onAllPermissionsGranted={handlePermissionsGranted} />
+        )}
+        {permissionsGranted && showSplash && (
           <SplashScreen 
             onComplete={handleSplashComplete}
             duration={3500}
             saveSkipPreference={true}
           />
         )}
-        <div className="min-h-screen bg-background">
-          <Router />
-        </div>
+        {permissionsGranted && (
+          <div className="min-h-screen bg-background">
+            <Router />
+          </div>
+        )}
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
