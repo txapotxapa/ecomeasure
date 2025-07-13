@@ -40,8 +40,8 @@ jobs:
 
       - name: Configure Android for CI
         run: |
-          # Configure Gradle for CI builds
-          echo "org.gradle.java.home=/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.13-11/x64" >> android/gradle.properties
+          # Configure Gradle for CI builds using the JAVA_HOME set by setup-java action
+          echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
           
           # Update Gradle wrapper
