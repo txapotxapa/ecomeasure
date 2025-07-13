@@ -37,7 +37,6 @@ export default function BottomNavigation() {
 
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
-    { path: "/tools", icon: Camera, label: "Tools" },
     { path: "/history", icon: History, label: "History" },
     { path: "/settings", icon: Settings, label: "Settings" },
   ];
