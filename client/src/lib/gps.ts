@@ -58,8 +58,8 @@ export async function getCurrentLocation(): Promise<GpsPosition> {
 
     const position = await Geolocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000, // Cache for 1 minute
+      timeout: 20000, // Increased to 20 seconds
+      maximumAge: 300000, // Allow cached position up to 5 minutes old
     });
 
     return {
@@ -80,7 +80,11 @@ export async function getCurrentLocation(): Promise<GpsPosition> {
   }
 
   // Browser fallback (or primary on web)
-  const pos = await browserGeo();
+  const pos = await browserGeo({
+    enableHighAccuracy: true,
+    timeout: 20000, // Increased to 20 seconds
+    maximumAge: 300000, // Allow cached position up to 5 minutes old
+  });
   return {
     coords: {
       latitude: pos.coords.latitude,
