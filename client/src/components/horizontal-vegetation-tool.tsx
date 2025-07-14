@@ -28,10 +28,11 @@ interface DirectionPhoto {
 }
 
 interface HorizontalVegetationToolProps {
-  onAnalysisComplete: (results: HorizontalVegetationAnalysis) => void;
+  onSubmit: (results: HorizontalVegetationAnalysis) => void;
+  disabled?: boolean;
 }
 
-export default function HorizontalVegetationTool({ onAnalysisComplete }: HorizontalVegetationToolProps) {
+export default function HorizontalVegetationTool({ onSubmit, disabled }: HorizontalVegetationToolProps) {
   // Load current site from localStorage to sync across tools
   const savedSite = localStorage.getItem('current-research-site');
   const currentSiteName = savedSite ? JSON.parse(savedSite).name : '';
@@ -136,20 +137,11 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
   };
 
   const handleAnalysis = async () => {
-    if (!siteName.trim()) {
-      toast({
-        title: "Site Name Required",
-        description: "Please enter a site name before analyzing",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const missingPhotos = directionPhotos.filter(p => !p.file);
-    if (missingPhotos.length > 0) {
+    const photosToAnalyze = directionPhotos.filter(p => p.file);
+    if (photosToAnalyze.length !== 4) {
       toast({
         title: "Missing Photos",
-        description: `Please upload photos for: ${missingPhotos.map(p => p.direction).join(', ')}`,
+        description: "Please upload photos for all four cardinal directions.",
         variant: "destructive"
       });
       return;
@@ -160,64 +152,47 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
     setStage('Initializing analysis...');
     
     try {
-      // Simulate digital analysis of pole photos
       const obstructionData = [];
       
-      for (let i = 0; i < directionPhotos.length; i++) {
-        const photo = directionPhotos[i];
+      for (let i = 0; i < photosToAnalyze.length; i++) {
+        const photo = photosToAnalyze[i];
         if (!photo.file) continue;
         
-        setProgress(((i + 1) / directionPhotos.length) * 90);
-        setStage(`Analyzing ${photo.direction} direction photo...`);
+        setStage(`Analyzing ${photo.direction} direction...`);
         
-        // Simulate processing time for digital analysis
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // For now, simulate obstruction height detection
-        // In a real implementation, this would use computer vision to detect
-        // the lowest pole band completely obscured by vegetation
-        const simulatedHeight = Math.floor(Math.random() * 180) + 20; // 20-200cm range
-        
+        const singleImageResult = await analyzeHorizontalVegetation([photo.file], {
+           onProgress: (p, s) => {
+              const baseProgress = (i / photosToAnalyze.length) * 100;
+              setProgress(baseProgress + p / photosToAnalyze.length);
+              setStage(s);
+           }
+        });
+
         obstructionData.push({
           direction: photo.direction,
-          height: simulatedHeight
+          // Assuming the analysis returns a single value for a single image
+          height: singleImageResult.averageObstructionHeight, 
         });
       }
 
+      // Final aggregation analysis
+      setStage('Aggregating results...');
       setProgress(95);
-      setStage('Calculating vegetation metrics...');
-      
-      const options: RobelPoleOptions = {
-        siteName: siteName.trim(),
-        poleHeight: 200, // 2m standard pole
-        viewingDistance: 400, // 4m standard viewing distance
-        eyeHeight: 100, // 1m camera height
-      };
-
-      const results = await analyzeHorizontalVegetation(obstructionData, options);
+      const finalResults = await analyzeHorizontalVegetation(photosToAnalyze.map(p => p.file!), {});
       
       setProgress(100);
       setStage('Analysis complete!');
       
-      onAnalysisComplete(results);
+      onSubmit(finalResults);
       
       toast({
         title: "Analysis Complete",
-        description: `Digital analysis of "${siteName}" completed successfully`,
+        description: `Horizontal vegetation analysis completed successfully.`,
       });
+      
+      // Reset photos
+      setDirectionPhotos(prev => prev.map(p => ({ ...p, file: null, preview: null, analyzed: false })));
 
-      // Reset photos so user can perform another measurement easily
-      setDirectionPhotos([
-        { direction: 'North', file: null, preview: null, analyzed: false, isDragging: false },
-        { direction: 'East', file: null, preview: null, analyzed: false, isDragging: false },
-        { direction: 'South', file: null, preview: null, analyzed: false, isDragging: false },
-        { direction: 'West', file: null, preview: null, analyzed: false, isDragging: false },
-      ]);
-
-      // Optionally reset progress indicators
-      setProgress(0);
-      setStage('');
- 
     } catch (error) {
       toast({
         title: "Analysis Failed",
@@ -235,7 +210,7 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
   };
 
   const isReadyToAnalyze = () => {
-    return siteName.trim() && directionPhotos.every(p => p.file);
+    return directionPhotos.every(p => p.file);
   };
 
   return (
@@ -497,7 +472,7 @@ export default function HorizontalVegetationTool({ onAnalysisComplete }: Horizon
           <div className="flex items-center justify-center">
             <Button
               onClick={handleAnalysis}
-              disabled={!isReadyToAnalyze() || isAnalyzing}
+              disabled={!isReadyToAnalyze() || isAnalyzing || disabled}
               className="w-full md:w-auto"
             >
               {isAnalyzing ? (

@@ -128,3 +128,12 @@ export async function processBatch<T>(
   await Promise.all(executing);
   return results;
 }
+
+export async function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}

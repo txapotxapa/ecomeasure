@@ -31,9 +31,9 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
         </div>
 
         <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <BarChart3 className="w-3 h-3" />
-            {session.toolType}
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <BarChart3 className="w-3 h-3" />
+          {session.toolType}
           </div>
           <div className="text-sm font-medium">
             {mainValue}

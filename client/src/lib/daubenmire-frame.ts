@@ -1,4 +1,5 @@
-import { loadImage, validateImage as validateDaubenmireImage } from './worker-utils';
+import { loadImage } from './worker-utils';
+import { validateImage as validateDaubenmireImage } from './image-processing';
 
 export interface DaubenmireResult {
   samplingArea: number;

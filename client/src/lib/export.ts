@@ -277,14 +277,14 @@ function downloadFile(blob: Blob, filename: string): void {
     };
     reader.readAsDataURL(blob);
   } else {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
     link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
   }
 }
 

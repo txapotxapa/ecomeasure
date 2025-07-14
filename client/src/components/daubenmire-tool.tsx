@@ -20,17 +20,17 @@ import GPSAccuracyIndicator from "./gps-accuracy-indicator";
 import { useToast } from "@/hooks/use-toast";
 
 interface DaubenmireToolProps {
-  onAnalysisComplete: (results: DaubenmireResult, imageUrl?: string) => void;
+  onSubmit: (results: DaubenmireResult, imageUrl?: string) => void;
+  disabled?: boolean;
 }
 
-export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolProps) {
+export default function DaubenmireTool({ onSubmit, disabled }: DaubenmireToolProps) {
   // Load current site from localStorage to sync across tools
   const savedSite = localStorage.getItem('current-research-site');
   const currentSiteName = savedSite ? JSON.parse(savedSite).name : '';
   
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [siteName, setSiteName] = useState<string>(currentSiteName);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -167,7 +167,7 @@ export default function DaubenmireTool({ onAnalysisComplete }: DaubenmireToolPro
       });
 
       console.log('Analysis complete:', results);
-      onAnalysisComplete(results, uploadData.imageUrl);
+      onSubmit(results, uploadData.imageUrl);
       
       toast({
                   title: "Ground Cover Analysis Complete",

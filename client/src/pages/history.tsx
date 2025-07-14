@@ -272,11 +272,11 @@ export default function History() {
       <div className="bg-gradient-to-br from-green-600 via-blue-600 to-purple-600 text-white">
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3">
               <div className="p-2 bg-white/20 rounded-lg backdrop-blur">
-                <HistoryIcon className="h-6 w-6" />
+          <HistoryIcon className="h-6 w-6" />
               </div>
-              <div>
+          <div>
                 <h1 className="text-xl font-bold">Field Data</h1>
                 <p className="text-sm opacity-90">
                   {filteredSessions.length} {filteredSessions.length === 1 ? 'session' : 'sessions'}
@@ -315,15 +315,15 @@ export default function History() {
 
       <div className="p-4 space-y-4">
         {/* Search Bar - Always Visible */}
-        <div className="relative">
+            <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+              <Input
             placeholder="Search measurements..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-12 text-base"
-          />
-        </div>
+              />
+            </div>
 
         {/* Collapsible Filters */}
         <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -343,69 +343,69 @@ export default function History() {
             <Card>
               <CardContent className="pt-4 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+              <div>
                     <Label className="text-sm font-medium">Tool Type</Label>
                     <Select value={toolTypeFilter} onValueChange={setToolTypeFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                         <SelectItem value="all">All Tools</SelectItem>
                         <SelectItem value="canopy">🌲 Canopy Analysis</SelectItem>
                         <SelectItem value="horizontal_vegetation">👁️ Horizontal Vegetation</SelectItem>
                         <SelectItem value="daubenmire">⬜ Ground Cover</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  <div>
+              <div>
                     <Label className="text-sm font-medium">Analysis Method</Label>
                     <Select value={methodFilter} onValueChange={setMethodFilter}>
-                      <SelectTrigger>
+                  <SelectTrigger>
                         <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
+                  </SelectTrigger>
+                  <SelectContent>
                         <SelectItem value="all">All Methods</SelectItem>
                         <SelectItem value="GLAMA">GLAMA</SelectItem>
                         <SelectItem value="Canopeo">Canopeo</SelectItem>
                         <SelectItem value="Digital Robel Pole">Digital Robel</SelectItem>
                         <SelectItem value="Frame-free Analysis">Frame-free</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  <div>
+              <div>
                     <Label className="text-sm font-medium">Sort By</Label>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                         <SelectItem value="date">📅 Newest First</SelectItem>
                         <SelectItem value="name">📝 Plot Name</SelectItem>
                         <SelectItem value="canopy">🌲 Canopy Cover</SelectItem>
                         <SelectItem value="light">☀️ Light Transmission</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  <div className="flex items-end">
-                    <Button
-                      variant="outline"
+              <div className="flex items-end">
+                <Button
+                  variant="outline"
                       onClick={() => {
                         setMethodFilter("all");
                         setToolTypeFilter("all");
                         setSortBy("date");
                         setSearchTerm("");
                       }}
-                      className="w-full"
-                    >
+                  className="w-full"
+                >
                       Clear All
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
           </CollapsibleContent>
         </Collapsible>
 
@@ -452,9 +452,9 @@ export default function History() {
         )}
 
         {/* Main Content */}
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
               <Card key={i}>
                 <CardContent className="pt-4">
                   <div className="animate-pulse space-y-3">
@@ -468,9 +468,9 @@ export default function History() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        ) : filteredSessions.length === 0 ? (
+                ))}
+              </div>
+            ) : filteredSessions.length === 0 ? (
           <Card>
             <CardContent className="pt-8 pb-8">
               <div className="text-center space-y-4">
@@ -481,10 +481,10 @@ export default function History() {
                   <h3 className="text-lg font-medium">No measurements found</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     {searchTerm || methodFilter !== "all" || toolTypeFilter !== "all"
-                      ? "Try adjusting your search or filter criteria"
+                    ? "Try adjusting your search or filter criteria"
                       : "Start by creating your first field measurement"
-                    }
-                  </p>
+                  }
+                </p>
                 </div>
                 {(!searchTerm && methodFilter === "all" && toolTypeFilter === "all") && (
                   <Button onClick={() => setLocation('/')} className="mt-4">
@@ -587,8 +587,8 @@ export default function History() {
                                     <div className="flex items-center space-x-1">
                                       <MapPin className="h-3 w-3" />
                                       <span>{session.latitude.toFixed(4)}, {session.longitude.toFixed(4)}</span>
-                                    </div>
-                                  )}
+                  </div>
+                )}
                                 </div>
                               </div>
                             </div>
