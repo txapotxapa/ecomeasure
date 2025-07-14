@@ -16,6 +16,7 @@ import DocsPage from "@/pages/docs";
 import CreateSite from "@/pages/create-site";
 import SplashScreen from "@/components/splash-screen";
 import { LocationProvider } from "@/hooks/use-location";
+import LocationPermissionGate from "@/components/location-permission-gate";
 
 function Router() {
   return (
@@ -80,12 +81,18 @@ function App() {
           {/* Flow: Splash → App */}
           
           {/* 1. Show splash screen first */}
-          {showSplash && (
+          {showSplash ? (
             <SplashScreen 
               onComplete={handleSplashComplete}
               duration={3500}
               saveSkipPreference={true}
             />
+          ) : (
+            <LocationPermissionGate>
+              <div className="min-h-screen bg-background">
+                <Router />
+              </div>
+            </LocationPermissionGate>
           )}
           
           {/* Permissions are now handled by useLocation hook */}

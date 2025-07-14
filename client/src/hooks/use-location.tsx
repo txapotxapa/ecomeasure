@@ -20,38 +20,37 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<Error | null>(null);
   const [watchId, setWatchId] = useState<string | null>(null);
 
-  const checkAndRequestPermissions = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
-      setStatus('PERMISSIONS_GRANTED'); // Assume granted for web for now, browser will prompt
-      return 'granted';
-    }
-
+  const requestPermissions = useCallback(async () => {
     try {
+      if (!Capacitor.isNativePlatform()) {
+        // For web, the browser will prompt on the first `getCurrentPosition` or `watchPosition` call.
+        // We can proceed assuming we can ask. The actual grant/deny is handled by the browser.
+        setStatus('PERMISSIONS_GRANTED');
+        return;
+      }
+
       setStatus('PERMISSIONS_PENDING');
       let permStatus: PermissionStatus = await Geolocation.checkPermissions();
 
       if (permStatus.location === 'denied' || permStatus.coarseLocation === 'denied') {
         setStatus('PERMISSIONS_DENIED');
-        setError(new Error('Location permission denied.'));
-        return 'denied';
+        setError(new Error('Location permission has been denied. Please enable it in your device settings.'));
+        return;
       }
 
       if (permStatus.location === 'prompt' || permStatus.coarseLocation === 'prompt') {
         permStatus = await Geolocation.requestPermissions({ permissions: ['location', 'coarseLocation'] });
       }
-
+      
       if (permStatus.location === 'granted' || permStatus.coarseLocation === 'granted') {
         setStatus('PERMISSIONS_GRANTED');
-        return 'granted';
       } else {
         setStatus('PERMISSIONS_DENIED');
         setError(new Error('Location permission was not granted.'));
-        return 'denied';
       }
     } catch (e: any) {
       setStatus('ERROR');
       setError(new Error(`Permission check failed: ${e.message}`));
-      return 'denied';
     }
   }, []);
 
@@ -96,22 +95,43 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   }, [watchId]);
 
   useEffect(() => {
-    checkAndRequestPermissions().then(permissionState => {
-      if (permissionState === 'granted') {
-        startWatch();
-      }
-    });
-
+    // When status becomes granted, start the location watch.
+    if (status === 'PERMISSIONS_GRANTED') {
+      startWatch();
+    }
+    
+    // Cleanup the watch when the component unmounts.
     return () => {
       clearWatch();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount
+  }, [status, startWatch, clearWatch]);
+  
+  // This useEffect now only checks the initial status without requesting.
+  useEffect(() => {
+    const checkInitialStatus = async () => {
+        if (Capacitor.isNativePlatform()) {
+            const initialStatus = await Geolocation.checkPermissions();
+            if (initialStatus.location === 'granted' || initialStatus.coarseLocation === 'granted') {
+                setStatus('PERMISSIONS_GRANTED');
+            } else if (initialStatus.location === 'denied' || initialStatus.coarseLocation === 'denied') {
+                setStatus('PERMISSIONS_DENIED');
+            } else {
+                setStatus('INITIAL'); // Ready to be prompted
+            }
+        } else {
+            // On web, we can't check without prompting, so we start in INITIAL state.
+            // The first call to getCurrentLocation will trigger the browser prompt.
+            setStatus('INITIAL');
+        }
+    };
+    checkInitialStatus();
+  }, []);
 
   const getCurrentLocation = useCallback(async (): Promise<Position | null> => {
-    const permissionState = await checkAndRequestPermissions();
-    if (permissionState !== 'granted') {
-        const err = new Error('Permission not granted');
+    if (status !== 'PERMISSIONS_GRANTED') {
+        // Optionally trigger request here, or rely on the gate
+        // For now, we assume the gate has handled it.
+        const err = new Error('Permissions not granted before requesting location.');
         setError(err);
         setStatus('PERMISSIONS_DENIED');
         throw err;
@@ -138,14 +158,14 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
         setStatus('ERROR');
         throw err;
     }
-  }, [checkAndRequestPermissions, position]);
+  }, [status, position]);
 
 
   const value: LocationState = {
     position,
     status,
     error,
-    requestPermissions: checkAndRequestPermissions,
+    requestPermissions,
     getCurrentLocation,
   };
 
