@@ -9,7 +9,7 @@ interface CanopyAnalysisResult {
 }
 
 interface AnalysisOptions {
-  method: 'GLAMA' | 'Canopeo' | 'Custom';
+  method: 'GLAMA' | 'Custom';
   zenithAngle: number;
   threshold?: number;
   onProgress?: (progress: number, stage: string) => void;
@@ -62,7 +62,7 @@ export async function analyzeCanopyImage(
         
         let result: CanopyAnalysisResult;
         
-        // Try to use web worker for better performance
+        // Try to use web worker for better performance for GLAMA method
         if (typeof Worker !== 'undefined' && options.method === 'GLAMA') {
           try {
             options.onProgress?.(20, 'Processing with optimized engine...');
@@ -126,8 +126,6 @@ async function processMainThread(
   switch (options.method) {
     case 'GLAMA':
       return await processStandardAnalysis(data, width, height, options);
-    case 'Canopeo':
-      return await processAdvancedAnalysis(data, width, height, options);
     case 'Custom':
       return await processCustom(data, width, height, options);
     default:
@@ -135,7 +133,7 @@ async function processMainThread(
   }
 }
 
-async function processStandardAnalysis(
+export async function processStandardAnalysis(
   data: Uint8ClampedArray,
   width: number,
   height: number,
@@ -234,77 +232,7 @@ async function processStandardAnalysis(
   return result;
 }
 
-async function processAdvancedAnalysis(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-  options: AnalysisOptions
-): Promise<CanopyAnalysisResult> {
-  console.log('Advanced analysis processing started for', width, 'x', height, 'image');
-  
-  let greenPixels = 0;
-  let totalPixels = 0;
-  
-  options.onProgress?.(30, 'Applying advanced algorithm...');
-  
-  // Ensure we have valid data
-  if (!data || data.length === 0) {
-    throw new Error('No image data to process');
-  }
-  
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    
-    totalPixels++;
-    
-    // Advanced algorithm: R/G and B/G ratios
-    const rg = g > 0 ? r / g : 0;
-    const bg = g > 0 ? b / g : 0;
-    
-    // Excess green index
-    const excessGreen = 2 * g - r - b;
-    
-    // Classification thresholds
-    if (rg < 0.95 && bg < 0.95 && excessGreen > 20) {
-      greenPixels++;
-    }
-    
-    if (totalPixels % 10000 === 0) {
-      options.onProgress?.(30 + (totalPixels / (data.length / 4)) * 50, 'Processing...');
-    }
-  }
-  
-  console.log('Advanced analysis complete:', {
-    totalPixels,
-    greenPixels,
-    greenPercent: (greenPixels / totalPixels) * 100
-  });
-  
-  if (totalPixels === 0) {
-    throw new Error('No pixels were analyzed - check image data');
-  }
-  
-  options.onProgress?.(80, 'Calculating results...');
-  
-  const canopyCover = (greenPixels / totalPixels) * 100;
-  const lightTransmission = 100 - canopyCover;
-  
-  options.onProgress?.(100, 'Complete');
-  
-  const result = {
-    canopyCover: Number(canopyCover.toFixed(2)),
-    lightTransmission: Number(lightTransmission.toFixed(2)),
-    pixelsAnalyzed: totalPixels,
-    processingTime: 0,
-  };
-  
-  console.log('Advanced analysis final result:', result);
-  return result;
-}
-
-async function processCustom(
+export async function processCustom(
   data: Uint8ClampedArray,
   width: number,
   height: number,

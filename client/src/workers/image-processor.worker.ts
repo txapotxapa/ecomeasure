@@ -1,6 +1,12 @@
 // Web Worker for off-thread image processing
 // Handles heavy computation without blocking the UI
 
+import { 
+  processStandardAnalysis, 
+  processAdvancedAnalysis, 
+  processCustom 
+} from '../lib/image-processing';
+
 interface WorkerMessage {
   type: 'ANALYZE_CANOPY' | 'ANALYZE_DAUBENMIRE' | 'ANALYZE_VEGETATION';
   imageData: ImageData;
@@ -20,9 +26,10 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
   const { type, imageData, options } = event.data;
 
   try {
+    let result;
     switch (type) {
       case 'ANALYZE_CANOPY':
-        await analyzeCanopyInWorker(imageData, options);
+        result = await analyzeCanopyInWorker(imageData, options);
         break;
       case 'ANALYZE_DAUBENMIRE':
         await analyzeDaubenmireInWorker(imageData, options);
@@ -30,69 +37,37 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
       case 'ANALYZE_VEGETATION':
         await analyzeVegetationInWorker(imageData, options);
         break;
+      default:
+        throw new Error(`Unknown worker task type: ${type}`);
     }
+    
+    self.postMessage({ type: 'RESULT', data: result });
+
   } catch (error) {
     self.postMessage({
       type: 'ERROR',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    } as WorkerResponse);
+      error: error instanceof Error ? error.message : 'Unknown worker error'
+    });
   }
 };
 
 async function analyzeCanopyInWorker(imageData: ImageData, options: any) {
   const { data, width, height } = imageData;
-  let canopyPixels = 0;
-  let totalPixels = width * height;
-  
-  // Report initial progress
-  self.postMessage({
-    type: 'PROGRESS',
-    progress: 10,
-    stage: 'Analyzing pixels...'
-  } as WorkerResponse);
 
-  // Process in chunks to report progress
-  const chunkSize = Math.floor(data.length / 20);
+  const onProgress = (progress: number, stage: string) => {
+    self.postMessage({ type: 'PROGRESS', progress, stage });
+  };
   
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    
-    // Standard method threshold
-    const brightness = (r + g + b) / 3;
-    if (brightness < 127) {
-      canopyPixels++;
-    }
-    
-    // Report progress every chunk
-    if (i % chunkSize === 0) {
-      const progress = 10 + (i / data.length) * 80;
-      self.postMessage({
-        type: 'PROGRESS',
-        progress,
-        stage: `Processing pixels: ${Math.round(progress)}%`
-      } as WorkerResponse);
-    }
+  const workerOptions = { ...options, onProgress };
+
+  switch (options.method) {
+    case 'GLAMA':
+      return await processStandardAnalysis(data, width, height, workerOptions);
+    case 'Custom':
+        return await processCustom(data, width, height, workerOptions);
+    default:
+      throw new Error(`Unknown analysis method in worker: ${options.method}`);
   }
-  
-  // Calculate results
-  const canopyCover = (canopyPixels / totalPixels) * 100;
-  const gapLight = 100 - canopyCover;
-  const lightTransmission = gapLight;
-  const leafAreaIndex = -Math.log(gapLight / 100) * 2;
-  
-  self.postMessage({
-    type: 'RESULT',
-    data: {
-      canopyCover,
-      gapLight,
-      lightTransmission,
-      leafAreaIndex,
-      pixelsAnalyzed: totalPixels,
-      method: options.method
-    }
-  } as WorkerResponse);
 }
 
 async function analyzeDaubenmireInWorker(imageData: ImageData, options: any) {

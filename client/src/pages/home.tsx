@@ -65,7 +65,7 @@ export default function Home() {
   const [currentSite, setCurrentSite] = useState<SiteInfo | null>(null);
   const [currentAnalysisResults, setCurrentAnalysisResults] = useState<any>(null);
   const [showSiteCreator, setShowSiteCreator] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { position: currentPosition, getCurrentLocation } = useLocation();
@@ -198,7 +198,7 @@ export default function Home() {
   };
 
 
-  const handleCanopyAnalysis = async (method: 'GLAMA' | 'Canopeo') => {
+  const handleCanopyAnalysis = async () => {
     if (!selectedImage) {
       toast({ title: "Missing Image", description: "Please upload an image first.", variant: "destructive" });
       return;
@@ -216,7 +216,7 @@ export default function Home() {
         if (!uploadResponse.ok) throw new Error("Image upload failed");
         const { url: uploadedImageUrl } = await uploadResponse.json();
         
-        const analysisResults = await analyzeCanopyImage(selectedImage.url, method, (p, s) => {
+        const analysisResults = await analyzeCanopyImage(selectedImage.url, 'GLAMA', (p, s) => {
             setProgress(50 + p * 0.4);
             setCurrentStage(s);
         });
@@ -258,34 +258,34 @@ export default function Home() {
         
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-                  <p className="text-muted-foreground">
-                    Welcome back! Start a new analysis or review past sessions.
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                   <GPSAccuracyIndicator />
-                </div>
+              <div>
+                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                <p className="text-muted-foreground">
+                  Welcome back! Start a new analysis or review past sessions.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <GPSAccuracyIndicator />
+              </div>
             </div>
-             <SiteSelector 
-                currentSite={currentSite}
-                onSiteChange={handleSiteChange}
-                showCreator={showSiteCreator}
-                setShowCreator={setShowSiteCreator}
-                lastPosition={currentPosition}
-             />
+            <SiteSelector 
+              currentSite={currentSite}
+              onSiteChange={handleSiteChange}
+              showCreator={showSiteCreator}
+              setShowCreator={setShowSiteCreator}
+              lastPosition={currentPosition}
+            />
           </section>
 
           {currentAnalysisResults && (
             <Card className="bg-muted/30">
               <CardHeader><CardTitle>Last Analysis Results</CardTitle></CardHeader>
-              <CardContent>
+            <CardContent>
                 <pre className="text-xs bg-background p-4 rounded-md overflow-x-auto">
                   {JSON.stringify(currentAnalysisResults, null, 2)}
                 </pre>
-              </CardContent>
-            </Card>
+            </CardContent>
+          </Card>
           )}
 
           <section id="tools" className="pt-4">
@@ -300,7 +300,7 @@ export default function Home() {
                   <CardHeader>
                     <div className="flex items-center gap-4">
                       <div className={`p-3 rounded-full ${tool.lightColor} ${tool.darkColor}`}>
-                        <tool.icon className={`h-6 w-6 ${tool.textColor}`} />
+                      <tool.icon className={`h-6 w-6 ${tool.textColor}`} />
                       </div>
                       <CardTitle>{tool.title}</CardTitle>
                     </div>
@@ -339,13 +339,13 @@ export default function Home() {
                                   />
                                 </div>
                                 <div className="flex gap-4">
-                                    <Button onClick={() => handleCanopyAnalysis('GLAMA')} disabled={isProcessing}>Analyze with GLAMA</Button>
-                                    <Button onClick={() => handleCanopyAnalysis('Canopeo')} disabled={isProcessing}>Analyze with Canopeo</Button>
+                                    <Button onClick={handleCanopyAnalysis} disabled={isProcessing}>Analyze Canopy</Button>
                                 </div>
                               </>
                             )}
                         </div>
                     )}
+                    
                     {selectedTool === 'horizontal_vegetation' && (
                         <div>
                             <h3 className="text-xl font-semibold mb-4">Horizontal Vegetation Profile</h3>
@@ -373,7 +373,7 @@ export default function Home() {
               </div>
             )}
             <div className="space-y-4">
-              {recentSessions.map((session) => (
+                {recentSessions.map((session) => (
                 <Card key={session.id} className="transition-all hover:shadow-md">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -393,8 +393,8 @@ export default function Home() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
             {sessions.length > 5 && (
               <div className="mt-4 text-center">
                  <Button variant="outline" onClick={() => setLocation('/history')}>View All History <History className="ml-2 h-4 w-4" /></Button>
@@ -402,7 +402,7 @@ export default function Home() {
             )}
           </section>
           <ExportManager sessions={sessions} sites={[]} protocols={[]} />
-        </div>
+                </div>
       </main>
       
       <ProcessingModal isOpen={isProcessing} progress={progress} stage={currentStage} />
