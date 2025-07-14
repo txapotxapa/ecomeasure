@@ -34,10 +34,10 @@ import {
 import BottomNavigation from "@/components/bottom-navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
+import { useLocation } from "@/hooks/use-location";
 import { apiRequest } from "@/lib/queryClient";
 import { AnalysisSettings } from "@shared/schema";
 import { Camera as CapacitorCamera } from '@capacitor/camera';
-import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 
 export default function Settings() {
@@ -62,7 +62,6 @@ export default function Settings() {
   
   // Permission states
   const [permissions, setPermissions] = useState({
-    location: 'unknown',
     camera: 'unknown',
     storage: 'unknown',
     microphone: 'unknown'
@@ -70,6 +69,7 @@ export default function Settings() {
 
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
+  const { locationPermission, requestLocationPermission, openAppSettings } = useLocation();
   const queryClient = useQueryClient();
 
   // Fetch current settings
@@ -96,18 +96,15 @@ export default function Settings() {
   const checkPermissions = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        const locationPerm = await Geolocation.checkPermissions();
         const cameraPerm = await CapacitorCamera.checkPermissions();
         
         setPermissions({
-          location: locationPerm.location,
           camera: cameraPerm.camera,
           storage: cameraPerm.photos,
           microphone: 'prompt' // Will be checked when needed
         });
       } else {
         setPermissions({
-          location: navigator.geolocation ? 'prompt' : 'denied',
           camera: navigator.mediaDevices ? 'prompt' : 'denied',
           storage: 'granted',
           microphone: navigator.mediaDevices ? 'prompt' : 'denied'
@@ -118,20 +115,10 @@ export default function Settings() {
     }
   };
 
-  const requestPermission = async (type: 'location' | 'camera' | 'microphone') => {
+  const requestPermission = async (type: 'camera' | 'microphone') => {
     try {
       if (Capacitor.isNativePlatform()) {
-        if (type === 'location') {
-          const result = await Geolocation.requestPermissions();
-          setPermissions(prev => ({ ...prev, location: result.location }));
-          
-          if (result.location === 'granted') {
-            toast({
-              title: "Location permission granted",
-              description: "GPS features are now available",
-            });
-          }
-        } else if (type === 'camera') {
+        if (type === 'camera') {
           const result = await CapacitorCamera.requestPermissions({ permissions: ['camera', 'photos'] });
           setPermissions(prev => ({ 
             ...prev, 
@@ -165,6 +152,14 @@ export default function Settings() {
         description: "Please grant permission manually in device settings",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleLocationPermissionClick = () => {
+    if (locationPermission === 'denied') {
+      openAppSettings();
+    } else {
+      requestLocationPermission();
     }
   };
 
@@ -391,17 +386,16 @@ export default function Settings() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                {getPermissionIcon(permissions.location)}
-                <span className="text-sm mr-2">{getPermissionText(permissions.location)}</span>
-                {permissions.location !== 'granted' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => requestPermission('location')}
-                  >
-                    Enable
-                  </Button>
-                )}
+                {getPermissionIcon(locationPermission)}
+                <span className="text-sm mr-2">{getPermissionText(locationPermission)}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleLocationPermissionClick}
+                  disabled={locationPermission === 'granted'}
+                >
+                  {locationPermission === 'denied' ? 'Open Settings' : 'Grant'}
+                </Button>
               </div>
             </div>
 
@@ -411,21 +405,20 @@ export default function Settings() {
                 <Camera className="h-4 w-4 text-primary" />
                 <div>
                   <p className="font-medium">Camera Access</p>
-                  <p className="text-xs text-muted-foreground">Photo capture for analysis</p>
+                  <p className="text-xs text-muted-foreground">For photo capture and analysis</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 {getPermissionIcon(permissions.camera)}
                 <span className="text-sm mr-2">{getPermissionText(permissions.camera)}</span>
-                {permissions.camera !== 'granted' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => requestPermission('camera')}
-                  >
-                    Enable
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => requestPermission('camera')}
+                  disabled={permissions.camera === 'granted'}
+                >
+                  Grant
+                </Button>
               </div>
             </div>
 
@@ -462,21 +455,20 @@ export default function Settings() {
                 <Mic className="h-4 w-4 text-primary" />
                 <div>
                   <p className="font-medium">Microphone Access</p>
-                  <p className="text-xs text-muted-foreground">Voice notes and audio recordings</p>
+                  <p className="text-xs text-muted-foreground">For voice notes and annotations</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 {getPermissionIcon(permissions.microphone)}
                 <span className="text-sm mr-2">{getPermissionText(permissions.microphone)}</span>
-                {permissions.microphone !== 'granted' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => requestPermission('microphone')}
-                  >
-                    Enable
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => requestPermission('microphone')}
+                  disabled={permissions.microphone === 'granted'}
+                >
+                  Grant
+                </Button>
               </div>
             </div>
 

@@ -39,7 +39,6 @@ function App() {
     const splashPreference = localStorage.getItem('skip-splash');
     return splashPreference !== 'true';
   });
-  // Permissions now requested silently on launch; no UI flow needed
 
   useEffect(() => {
     const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -78,9 +77,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <LocationProvider>
-          {/* Flow: Splash → App */}
-          
-          {/* 1. Show splash screen first */}
           {showSplash ? (
             <SplashScreen 
               onComplete={handleSplashComplete}
@@ -94,16 +90,6 @@ function App() {
               </div>
             </LocationPermissionGate>
           )}
-          
-          {/* Permissions are now handled by useLocation hook */}
-
-          {/* App after splash */}
-          {!showSplash && (
-            <div className="min-h-screen bg-background">
-              <Router />
-            </div>
-          )}
-          
           <Toaster />
         </LocationProvider>
       </TooltipProvider>
