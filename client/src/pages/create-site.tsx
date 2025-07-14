@@ -243,7 +243,6 @@ export default function CreateSite() {
                   </span>
                 </div>
               )}
-            </div>
 
             {/* Manual Coordinate Entry */}
             <div className="space-y-4">
