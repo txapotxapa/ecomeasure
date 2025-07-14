@@ -1,90 +1,49 @@
-import { useEffect, useState } from "react";
+import { useLocation } from "@/hooks/use-location";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { MapPin, AlertCircle, CheckCircle, Loader2, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { watchLocation, clearLocationWatch } from "@/lib/gps";
 
-interface GPSAccuracy {
-  latitude: number | null;
-  longitude: number | null;
-  accuracy: number | null;
-  altitude: number | null;
-  altitudeAccuracy: number | null;
-  status: 'acquiring' | 'good' | 'fair' | 'poor' | 'error';
-}
+type AccuracyStatus = 'acquiring' | 'good' | 'fair' | 'poor' | 'error' | 'denied' | 'initial';
 
 interface GPSAccuracyIndicatorProps {
-  onAccuracyUpdate?: (accuracy: GPSAccuracy) => void;
   className?: string;
 }
 
-export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GPSAccuracyIndicatorProps) {
-  const [gpsAccuracy, setGpsAccuracy] = useState<GPSAccuracy>({
-    latitude: null,
-    longitude: null,
-    accuracy: null,
-    altitude: null,
-    altitudeAccuracy: null,
-    status: 'acquiring'
-  });
-  const [watchId, setWatchId] = useState<string | null>(null);
+export default function GPSAccuracyIndicator({ className }: GPSAccuracyIndicatorProps) {
+  const { position, status: locationStatus, error } = useLocation();
 
-  useEffect(() => {
-    let activeWatchId: string;
-
-    const startWatch = async () => {
-      try {
-        activeWatchId = await watchLocation(
-          (position) => {
-            const accuracy = position.coords.accuracy;
-            const altitude = position.coords.altitude ?? null;
-            const altitudeAccuracy = position.coords.altitudeAccuracy ?? null;
-
-            let status: GPSAccuracy['status'] = 'good';
-            if (accuracy <= 3) {
-              status = 'good';
-            } else if (accuracy <= 10) {
-              status = 'fair';
-            } else {
-              status = 'poor';
-            }
-
-            const newAccuracy = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy,
-              altitude,
-              altitudeAccuracy,
-              status
-            };
-
-            setGpsAccuracy(newAccuracy);
-            onAccuracyUpdate?.(newAccuracy);
-          },
-          (error) => {
-            console.error('GPS error:', error);
-            setGpsAccuracy(prev => ({ ...prev, status: 'error' }));
-          }
-        );
-
-        setWatchId(activeWatchId);
-      } catch (err) {
-        console.error('Failed to start GPS watch:', err);
-        setGpsAccuracy(prev => ({ ...prev, status: 'error' }));
-      }
-    };
-
-    startWatch();
-
-    return () => {
-      if (activeWatchId) {
-        clearLocationWatch(activeWatchId);
-      }
-    };
-  }, [onAccuracyUpdate]);
+  const getAccuracyStatus = (): AccuracyStatus => {
+    switch (locationStatus) {
+      case 'INITIAL':
+      case 'PERMISSIONS_PENDING':
+        return 'initial';
+      case 'PERMISSIONS_DENIED':
+        return 'denied';
+      case 'ACQUIRING':
+        return 'acquiring';
+      case 'ERROR':
+        return 'error';
+      case 'AVAILABLE':
+      case 'PERMISSIONS_GRANTED':
+        if (position?.coords.accuracy) {
+          if (position.coords.accuracy <= 5) return 'good';
+          if (position.coords.accuracy <= 15) return 'fair';
+          return 'poor';
+        }
+        return 'acquiring'; // Still waiting for first position
+      default:
+        return 'initial';
+    }
+  };
+  
+  const accuracyStatus = getAccuracyStatus();
+  const accuracy = position?.coords.accuracy;
+  const altitude = position?.coords.altitude;
+  const altitudeAccuracy = position?.coords.altitudeAccuracy;
 
   const getStatusIcon = () => {
-    switch (gpsAccuracy.status) {
+    switch (accuracyStatus) {
+      case 'initial':
       case 'acquiring':
         return <Loader2 className="h-3 w-3 animate-spin" />;
       case 'good':
@@ -94,11 +53,13 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
       case 'poor':
       case 'error':
         return <AlertCircle className="h-3 w-3" />;
+      case 'denied':
+        return <Ban className="h-3 w-3" />;
     }
   };
 
   const getStatusColor = () => {
-    switch (gpsAccuracy.status) {
+    switch (accuracyStatus) {
       case 'good':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'fair':
@@ -106,9 +67,29 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
       case 'poor':
         return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
       case 'error':
+      case 'denied':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (accuracyStatus) {
+        case 'initial':
+            return 'Initializing...';
+        case 'acquiring':
+            return 'Acquiring...';
+        case 'denied':
+            return 'Permission Denied';
+        case 'error':
+            return 'Error';
+        case 'good':
+        case 'fair':
+        case 'poor':
+            return accuracy ? `±${accuracy.toFixed(1)}m` : 'N/A';
+        default:
+            return '...';
     }
   };
 
@@ -120,25 +101,20 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
           className={cn("text-xs", getStatusColor())}
         >
           {getStatusIcon()}
-          <span className="ml-1">
-            GPS: {gpsAccuracy.status === 'acquiring' ? 'Acquiring...' : 
-                  gpsAccuracy.status === 'error' ? 'Error' :
-                  gpsAccuracy.accuracy ? `±${gpsAccuracy.accuracy.toFixed(1)}m` : 'N/A'}
-          </span>
+          <span className="ml-1">GPS: {getStatusText()}</span>
         </Badge>
         
-        {/* Altimeter Badge */}
-        {gpsAccuracy.altitude !== null && (
+        {altitude !== null && altitude !== undefined && (
           <Badge 
             variant="outline" 
             className={cn("text-xs", getStatusColor())}
           >
             <MapPin className="h-3 w-3 mr-1" />
             <span>
-              Alt: {gpsAccuracy.altitude.toFixed(1)}m
-              {gpsAccuracy.altitudeAccuracy && (
+              Alt: {altitude.toFixed(1)}m
+              {altitudeAccuracy && (
                 <span className="text-xs opacity-75">
-                  {` ±${gpsAccuracy.altitudeAccuracy.toFixed(1)}m`}
+                  {` ±${altitudeAccuracy.toFixed(1)}m`}
                 </span>
               )}
             </span>
@@ -146,15 +122,15 @@ export default function GPSAccuracyIndicator({ onAccuracyUpdate, className }: GP
         )}
       </div>
       
-      {gpsAccuracy.status === 'poor' && (
+      {accuracyStatus === 'poor' && (
         <p className="text-xs text-muted-foreground">
-          Poor GPS accuracy. Move to open area for better signal.
+          Poor GPS accuracy. Move to an open area for a better signal.
         </p>
       )}
       
-      {gpsAccuracy.status === 'error' && (
+      {(accuracyStatus === 'error' || accuracyStatus === 'denied') && (
         <p className="text-xs text-destructive">
-          GPS unavailable. Check location permissions.
+          GPS unavailable. {error?.message || 'Check location settings.'}
         </p>
       )}
     </div>

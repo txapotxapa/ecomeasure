@@ -15,7 +15,7 @@ import AccuracyReference from "@/pages/accuracy-reference";
 import DocsPage from "@/pages/docs";
 import CreateSite from "@/pages/create-site";
 import SplashScreen from "@/components/splash-screen";
-import PermissionManager from "@/components/permission-manager";
+import { LocationProvider } from "@/hooks/use-location";
 
 function Router() {
   return (
@@ -76,28 +76,29 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Flow: Splash → Permissions → App */}
-        
-        {/* 1. Show splash screen first */}
-        {showSplash && (
-          <SplashScreen 
-            onComplete={handleSplashComplete}
-            duration={3500}
-            saveSkipPreference={true}
-          />
-        )}
-        
-        {/* Permissions are requested in background via PermissionManager */}
-        <PermissionManager />
+        <LocationProvider>
+          {/* Flow: Splash → App */}
+          
+          {/* 1. Show splash screen first */}
+          {showSplash && (
+            <SplashScreen 
+              onComplete={handleSplashComplete}
+              duration={3500}
+              saveSkipPreference={true}
+            />
+          )}
+          
+          {/* Permissions are now handled by useLocation hook */}
 
-        {/* App after splash */}
-        {!showSplash && (
-          <div className="min-h-screen bg-background">
-            <Router />
-          </div>
-        )}
-        
-        <Toaster />
+          {/* App after splash */}
+          {!showSplash && (
+            <div className="min-h-screen bg-background">
+              <Router />
+            </div>
+          )}
+          
+          <Toaster />
+        </LocationProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
