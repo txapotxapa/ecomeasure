@@ -348,24 +348,10 @@ export default function Home() {
   };
 
   const handleHorizontalVegetationAnalysis = async (results: HorizontalVegetationAnalysis) => {
-    // Get GPS location if available - simple and reliable
-    let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
+    // Get GPS location if available - now uses centralized helper
+    let gpsData: GpsPosition | null = null;
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error('GPS not supported'));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
-      gpsData = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      };
+      gpsData = await getCurrentLocation();
     } catch (error) {
       console.log('GPS not available, continuing without location');
     }
@@ -376,8 +362,8 @@ export default function Home() {
       toolType: 'horizontal_vegetation',
       analysisMethod: "Digital Robel Pole",
       pixelsAnalyzed: 0,
-      latitude: currentSite?.latitude || gpsData.latitude,
-      longitude: currentSite?.longitude || gpsData.longitude,
+      latitude: currentSite?.latitude || gpsData?.coords.latitude,
+      longitude: currentSite?.longitude || gpsData?.coords.longitude,
       horizontalVegetationData: results,
       isCompleted: true,
     };
@@ -389,24 +375,10 @@ export default function Home() {
   };
 
   const handleDaubenmireAnalysis = async (results: DaubenmireResult, imageUrl?: string) => {
-    // Get GPS location if available - simple and reliable
-    let gpsData: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
+    // Get GPS location if available - now uses centralized helper
+    let gpsData: GpsPosition | null = null;
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        if (!navigator.geolocation) {
-          reject(new Error('GPS not supported'));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
-        });
-      });
-      gpsData = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      };
+      gpsData = await getCurrentLocation();
     } catch (error) {
       console.log('GPS not available, continuing without location');
     }
@@ -419,8 +391,8 @@ export default function Home() {
       analysisMethod: "Frame-free Analysis",
       pixelsAnalyzed: results.samplingArea * 1000000, // Convert m² to approximate pixels
       processingTime: results.processingTime,
-      latitude: currentSite?.latitude || gpsData.latitude,
-      longitude: currentSite?.longitude || gpsData.longitude,
+      latitude: currentSite?.latitude || gpsData?.coords.latitude,
+      longitude: currentSite?.longitude || gpsData?.coords.longitude,
       // Daubenmire specific fields
       totalCoverage: results.totalCoverage,
       speciesDiversity: results.speciesDiversity,
