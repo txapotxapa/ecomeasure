@@ -223,29 +223,33 @@ export default function CreateSite() {
           </CardHeader>
           <CardContent className="space-y-4">
             {!useManualCoords && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  onClick={getCurrentLocationForSite}
-                  disabled={isGettingLocation || useManualCoords}
-                  className="flex-grow"
-                >
-                  <Navigation className="h-4 w-4 mr-2" />
-                  {isGettingLocation ? "Acquiring..." : "Use Current GPS Location"}
-                </Button>
-              </div>
-
-              {siteLocation && !useManualCoords && (
-                <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>
-                    Location set: {formatCoordinates(siteLocation.latitude, siteLocation.longitude)}
-                    {siteLocation.altitude && ` at ${siteLocation.altitude.toFixed(1)}m altitude`}
-                  </span>
+              <>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    onClick={getCurrentLocationForSite}
+                    disabled={isGettingLocation || useManualCoords}
+                    className="flex-grow"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    {isGettingLocation ? "Acquiring..." : "Use Current GPS Location"}
+                  </Button>
                 </div>
-              )}
+
+                {siteLocation && (
+                  <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>
+                      Location set: {formatCoordinates(siteLocation.latitude, siteLocation.longitude)}
+                      {siteLocation.altitude && ` at ${siteLocation.altitude.toFixed(1)}m altitude`}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Manual Coordinate Entry */}
-            <div className="space-y-4">
+            {useManualCoords && (
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="latitude">Latitude</Label>
