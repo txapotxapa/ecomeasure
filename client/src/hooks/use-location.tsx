@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { Geolocation, Position, PermissionStatus } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 type LocationStatus = 'INITIAL' | 'PERMISSIONS_PENDING' | 'PERMISSIONS_DENIED' | 'PERMISSIONS_GRANTED' | 'ACQUIRING' | 'AVAILABLE' | 'ERROR';
 
@@ -9,6 +10,7 @@ interface LocationState {
   status: LocationStatus;
   error: Error | null;
   requestPermissions: () => Promise<void>;
+  openAppSettings: () => Promise<void>;
   getCurrentLocation: () => Promise<Position | null>;
 }
 
@@ -160,12 +162,16 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [status, position]);
 
+  const openAppSettings = async () => {
+    await CapacitorApp.openAppSettings();
+  };
 
   const value: LocationState = {
     position,
     status,
     error,
     requestPermissions,
+    openAppSettings,
     getCurrentLocation,
   };
 

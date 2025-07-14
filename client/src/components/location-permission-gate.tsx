@@ -9,9 +9,9 @@ interface LocationPermissionGateProps {
 }
 
 export default function LocationPermissionGate({ children }: LocationPermissionGateProps) {
-  const { status, error, requestPermissions } = useLocation();
+  const { status, error, requestPermissions, openAppSettings } = useLocation();
 
-  const renderOverlay = (title: string, message: string, showButton: boolean) => (
+  const renderOverlay = (title: string, message: string, buttonLabel?: string, onButtonClick?: () => void) => (
     <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center text-center p-8">
         <EcoMeasureLogo className="h-20 w-20 mb-6" />
         <div className="max-w-md">
@@ -24,9 +24,9 @@ export default function LocationPermissionGate({ children }: LocationPermissionG
             <p className="text-muted-foreground mb-6">
                 {message}
             </p>
-            {showButton && (
-                <Button onClick={requestPermissions} size="lg">
-                    Enable Location Services
+            {buttonLabel && onButtonClick && (
+                <Button onClick={onButtonClick} size="lg">
+                    {buttonLabel}
                 </Button>
             )}
             {error && <p className="text-destructive text-sm mt-4">{error.message}</p>}
@@ -38,26 +38,27 @@ export default function LocationPermissionGate({ children }: LocationPermissionG
     return renderOverlay(
         'Location Required', 
         'This app requires access to your location to accurately tag ecological measurements. Please press the button below to grant permission.', 
-        true
+        'Enable Location Services',
+        requestPermissions
     );
   }
 
   if (status === 'PERMISSIONS_PENDING') {
-    return renderOverlay('Requesting...', 'Waiting for you to grant location permission from the system prompt.', false);
+    return renderOverlay('Requesting...', 'Waiting for you to grant location permission from the system prompt.');
   }
 
   if (status === 'PERMISSIONS_DENIED') {
     return renderOverlay(
         'Permission Denied',
-        'Location access is required. Please enable it in your browser or system settings, then refresh the app.',
-        false // Or a button to show instructions
+        'You have previously denied location access. To use this app, please enable it in your device settings.',
+        'Open Settings',
+        openAppSettings
     );
   }
 
   if (status === 'ERROR') {
-    return renderOverlay('Error', error?.message || 'An unknown error occurred while checking permissions.', false);
+    return renderOverlay('Error', error?.message || 'An unknown error occurred while checking permissions.');
   }
 
-  // If status is PERMISSIONS_GRANTED, ACQUIRING, or AVAILABLE, render the app
   return <>{children}</>;
 } 
