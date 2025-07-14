@@ -11,11 +11,11 @@ import {
   ArrowLeft,
   CheckCircle
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation as useAppLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import BottomNavigation from "@/components/bottom-navigation";
 import EcoMeasureLogo from "@/components/eco-measure-logo";
-import { getCurrentLocation } from "@/lib/gps"; // <-- IMPORT THE HELPER
+import { useLocation } from "@/hooks/use-location";
 
 interface SiteInfo {
   name: string;
@@ -33,7 +33,7 @@ interface SiteInfo {
 }
 
 export default function CreateSite() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useAppLocation();
   const [siteName, setSiteName] = useState("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [siteLocation, setSiteLocation] = useState<{
@@ -48,20 +48,25 @@ export default function CreateSite() {
   const [useManualCoords, setUseManualCoords] = useState(false);
   const [siteNotes, setSiteNotes] = useState("");
   const { toast } = useToast();
+  const { getCurrentLocation } = useLocation();
 
   const getCurrentLocationForSite = async () => {
     setIsGettingLocation(true);
     try {
-      const position = await getCurrentLocation(); // <-- USE THE HELPER
-      setSiteLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        altitude: position.coords.altitude,
-      });
-      toast({
-        title: "Location acquired",
-        description: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
-      });
+      const position = await getCurrentLocation();
+      if (position) {
+        setSiteLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          altitude: position.coords.altitude ?? undefined,
+        });
+        toast({
+          title: "Location acquired",
+          description: `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`,
+        });
+      } else {
+        throw new Error("Failed to get position from hook.");
+      }
     } catch (error: any) {
       console.error('GPS error:', error);
       toast({
