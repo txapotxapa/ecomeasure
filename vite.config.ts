@@ -32,6 +32,19 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    // Proxy API requests to the backend server
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001', // Your backend server address
+        changeOrigin: true,
+        secure: false,
+      },
+      '/uploads': {
+        target: 'http://localhost:3001', // Proxy for uploaded images
+        changeOrigin: true,
+        secure: false,
+      }
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
